@@ -16,8 +16,8 @@
 
 package org.eknet.publet.james
 
-import com.google.inject.{TypeLiteral, AbstractModule}
-import data.UserRepository
+import com.google.inject.{Scopes, TypeLiteral, AbstractModule}
+import data.{PubletDomainList, RecipientTable, UserRepository}
 import guice._
 import org.eknet.publet.web.guice.{PubletModule, PubletBinding}
 import org.apache.james.smtpserver.netty.SMTPServerFactory
@@ -28,6 +28,10 @@ import org.apache.james.filesystem.api.FileSystem
 import com.google.inject.matcher.{AbstractMatcher, Matchers, Matcher}
 import com.google.inject.spi.{TypeEncounter, TypeListener}
 import org.apache.james.user.api.UsersRepository
+import org.apache.james.rrt.api.RecipientRewriteTable
+import org.apache.james.domainlist.api.DomainList
+import org.apache.james.queue.api.MailQueueFactory
+import org.apache.james.queue.file.FileMailQueueFactory
 
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
 
@@ -49,6 +53,9 @@ class PubletJamesModule extends AbstractModule with PubletBinding with PubletMod
     binder.set[FileSystem].toType[PubletFilesystem]
 
     binder.set[UsersRepository].toType[UserRepository]
+    binder.set[RecipientRewriteTable].toType[RecipientTable]
+    binder.set[DomainList].toType[PubletDomainList]
+    binder.set[MailQueueFactory].toType[FileMailQueueFactory] in Scopes.SINGLETON
 
     binder.bindEagerly[SMTPServerFactory]
 

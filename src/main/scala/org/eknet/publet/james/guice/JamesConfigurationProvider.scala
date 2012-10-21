@@ -40,6 +40,7 @@ import org.apache.james.smtpserver.netty.{SMTPServerFactory, SMTPServer}
 import com.google.inject.Singleton
 import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
+import org.eknet.publet.james.data.{RecipientTable, PubletDomainList}
 
 /**
  * This class is a duplicate of james `ConfigurationProviderImpl` which is in a module
@@ -63,7 +64,9 @@ class JamesConfigurationProvider {
 
   val nameMap = Map[Class[_], String](
     classOf[SMTPServerFactory] -> "smtpserver",
-    classOf[DNSJavaService] -> "dnsservice"
+    classOf[DNSJavaService] -> "dnsservice",
+    classOf[PubletDomainList] -> "domainlist",
+    classOf[RecipientTable] -> "recipientrewritetable"
   )
 
   configMappings.foreach(mapping => {

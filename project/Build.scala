@@ -51,6 +51,7 @@ object Dependencies {
   val jamesServerFsApi = jamesServer("filesystem-api")
   val jamesServerLifecycleApi = jamesServer("lifecycle-api")
   val jamesServerMailetApi = jamesServer("mailetcontainer-api")
+  val jamesServerMailetCamel = jamesServer("mailetcontainer-camel")
   val jamesServerQueueApi = jamesServer("queue-api")
   val jamesServerMailboxAdapater = jamesServer("mailbox-adapter")
   val jamesServerProtoLib = jamesServer("protocols-library")
@@ -67,9 +68,9 @@ object Dependencies {
     "commons-daemon" % "commons-daemon" % "1.0.10"
   )
   val jamesServerAll = Seq(jamesServerCore, jamesServerDataApi, jamesServerDnsLib, jamesServerDnsApi,
-    jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi, jamesServerQueueApi,
-    jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil, jamesServerDataLib, jamesServerProtoSmtp,
-    jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile, jamesServerMailets)
+    jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi, jamesServerMailetCamel,
+    jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil, jamesServerDataLib,
+    jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile, jamesServerMailets)
 }
 
 // Root Module 

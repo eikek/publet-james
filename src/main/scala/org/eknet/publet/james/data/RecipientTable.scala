@@ -14,30 +14,25 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.guice
+package org.eknet.publet.james.data
 
-import org.apache.james.filesystem.api.FileSystem
-import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.web.Config
-import java.io.File
-import org.eknet.publet.vfs.Path
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTable
+import collection.JavaConversions._
+import com.google.inject.Singleton
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 20.10.12 15:54
+ * @since 21.10.12 12:38
  */
 @Singleton
-class PubletFilesystem @Inject() (config: Config) extends FileSystem {
+class RecipientTable extends AbstractRecipientRewriteTable {
+  def addMappingInternal(user: String, domain: String, mapping: String) {}
 
-  val baseDir = config.newStaticTempDir("james")
+  def removeMappingInternal(user: String, domain: String, mapping: String) {}
 
-  def getResource(url: String) = null
+  def getUserDomainMappingsInternal(user: String, domain: String) = Set(user+"@"+domain)
 
-  def getBasedir = baseDir
+  def getAllMappingsInternal = Map("eike"-> getUserDomainMappings("eike", "eknet.org"))
 
-  def getFile(fileURL: String) = {
-    val path = Path(fileURL.substring(fileURL.indexOf("://")))
-    new File(baseDir, path.asString)
-  }
-
+  def mapAddressInternal(user: String, domain: String) = ""
 }
