@@ -16,12 +16,42 @@
 
 package org.eknet.publet.james
 
-import com.google.inject.AbstractModule
+import com.google.inject.{TypeLiteral, AbstractModule}
+import data.UserRepository
+import guice._
 import org.eknet.publet.web.guice.{PubletModule, PubletBinding}
+import org.apache.james.smtpserver.netty.SMTPServerFactory
+import org.apache.james.dnsservice.api.DNSService
+import org.apache.james.dnsservice.dnsjava.DNSJavaService
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader
+import org.apache.james.filesystem.api.FileSystem
+import com.google.inject.matcher.{AbstractMatcher, Matchers, Matcher}
+import com.google.inject.spi.{TypeEncounter, TypeListener}
+import org.apache.james.user.api.UsersRepository
 
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
 
+  object JamesMatcher extends AbstractMatcher[TypeLiteral[_]] {
+    private val jamesPackage = Matchers.inSubpackage("org.apache.james")
+    private val eknetJamesPackage = Matchers.inSubpackage("org.eknet.publet.james")
+
+    def matches(t: TypeLiteral[_]) =
+      jamesPackage.matches(t.getRawType) || eknetJamesPackage.matches(t.getRawType)
+
+  }
+
   def configure() {
+    bind(classOf[JamesConfigurationProvider])
+    bindListener(JamesMatcher, new JamesTypeListener)
+
+    binder.set[DNSService].toType[DNSJavaService]
+    binder.set[ProtocolHandlerLoader].toType[GuiceProtocolHandlerLoader]
+    binder.set[FileSystem].toType[PubletFilesystem]
+
+    binder.set[UsersRepository].toType[UserRepository]
+
+    binder.bindEagerly[SMTPServerFactory]
+
   }
 
 }
