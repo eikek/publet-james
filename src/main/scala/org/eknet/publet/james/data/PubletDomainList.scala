@@ -26,7 +26,7 @@ import com.google.inject.Singleton
 @Singleton
 class PubletDomainList extends AbstractDomainList {
 
-  def containsDomain(domain: String) = false
+  def containsDomain(domain: String) = domain == "zuub.com" || domain == "localhost"
 
   def addDomain(domain: String) {}
 

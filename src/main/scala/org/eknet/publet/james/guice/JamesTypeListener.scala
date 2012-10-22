@@ -17,11 +17,10 @@
 package org.eknet.publet.james.guice
 
 import com.google.inject.spi.{InjectionListener, TypeEncounter, TypeListener}
-import com.google.inject.{MembersInjector, Injector, TypeLiteral}
+import com.google.inject.{Injector, TypeLiteral}
 import org.apache.james.lifecycle.api.{Configurable, LogEnabled}
 import org.slf4j.LoggerFactory
 import javax.annotation.{PostConstruct, Resource}
-import collection.mutable
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

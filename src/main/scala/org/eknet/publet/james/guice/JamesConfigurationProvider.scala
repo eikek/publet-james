@@ -78,12 +78,13 @@ class JamesConfigurationProvider {
   }
 
   def getConfigByName(name: String) = {
-    this._configs.get(name) getOrElse {
-      val confName = ConfigName(name)
+    val n = if (name == "smtpserver") "org/eknet/publet/james/conf/smtpserver" else name
+    this._configs.get(n) getOrElse {
+      val confName = ConfigName(n)
       val conf = loadResource(confName)
         .map(getConfig)
         .map(cfg => confName.part.map(cfg.configurationAt(_)).getOrElse(cfg))
-      this._configs.put(name, conf.getOrElse(sys.error("Cannot load configuration: "+name)))
+      this._configs.put(n, conf.getOrElse(sys.error("Cannot load configuration: "+n)))
       conf.get
     }
   }

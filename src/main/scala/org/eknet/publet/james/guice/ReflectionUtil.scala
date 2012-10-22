@@ -26,12 +26,12 @@ import java.lang.annotation.Annotation
 trait ReflectionUtil {
 
   def findMethods(c: Class[_], f: Method => Boolean): List[Method] = {
-    val methods = c.getMethods.filter(f).toList
+    val methods = c.getMethods.filter(f).toList.distinct
     Option(c.getSuperclass).map(s => methods ::: findMethods(s, f)).getOrElse(methods)
   }
 
   def findAnnotatedMethods(c: Class[_], annots: Class[_ <: Annotation]*) = findMethods(c, { m =>
     annots.map(ac => m.isAnnotationPresent(ac)).foldLeft(true)(_ && _)
-  })
+  }).distinct
 
 }
