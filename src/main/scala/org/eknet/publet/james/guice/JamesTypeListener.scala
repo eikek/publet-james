@@ -21,6 +21,7 @@ import com.google.inject.{Injector, TypeLiteral}
 import org.apache.james.lifecycle.api.{Configurable, LogEnabled}
 import org.slf4j.LoggerFactory
 import javax.annotation.{PostConstruct, Resource}
+import org.apache.camel.{CamelContext, CamelContextAware}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -39,6 +40,7 @@ class JamesTypeListener extends TypeListener with ReflectionUtil {
         injectLogger(injectee)
         injectConfig(configProvider.get(), injectee)
         injectResourceMethods(injectorProvider.get(), injectee.asInstanceOf[AnyRef])
+        injectCamelContext(injectorProvider.get(), injectee.asInstanceOf[AnyRef])
 
         findAnnotatedMethods(c, classOf[PostConstruct]).foreach(_.invoke(injectee))
         findMethods(c, m => m.getName == afterPropertiesSet).foreach(_.invoke(injectee))
@@ -64,12 +66,19 @@ class JamesTypeListener extends TypeListener with ReflectionUtil {
   def injectResourceMethods(injector: Injector, instance: AnyRef) {
     val setter = findAnnotatedMethods(instance.getClass, classOf[Resource])
     for (m <- setter) {
-      val args = m.getParameterTypes.map(par => par.cast(injector.getInstance(par)))
+      val args = m.getParameterTypes.map(par => injector.getInstance(par))
       if (args.size == 1) {
         m.invoke(instance, args(0).asInstanceOf[AnyRef])
       } else {
         m.invoke(instance, args)
       }
+    }
+  }
+
+  def injectCamelContext(injector: Injector, intance: AnyRef) {
+    intance match {
+      case ca: CamelContextAware => ca.setCamelContext(injector.getInstance(classOf[CamelContext]))
+      case _ =>
     }
   }
 }

@@ -41,6 +41,7 @@ import com.google.inject.Singleton
 import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
 import org.eknet.publet.james.data.{RecipientTable, PubletDomainList}
+import org.apache.james.imapserver.netty.IMAPServerFactory
 
 /**
  * This class is a duplicate of james `ConfigurationProviderImpl` which is in a module
@@ -64,6 +65,7 @@ class JamesConfigurationProvider {
 
   val nameMap = Map[Class[_], String](
     classOf[SMTPServerFactory] -> "smtpserver",
+    classOf[IMAPServerFactory] -> "imapserver",
     classOf[DNSJavaService] -> "dnsservice",
     classOf[PubletDomainList] -> "domainlist",
     classOf[RecipientTable] -> "recipientrewritetable"
@@ -78,7 +80,12 @@ class JamesConfigurationProvider {
   }
 
   def getConfigByName(name: String) = {
-    val n = if (name == "smtpserver") "org/eknet/publet/james/conf/smtpserver" else name
+    val n = if (name == "smtpserver")
+        "org/eknet/publet/james/conf/smtpserver"
+      else if (name == "imapserver")
+        "org/eknet/publet/james/conf/imapserver"
+      else name
+
     this._configs.get(n) getOrElse {
       val confName = ConfigName(n)
       val conf = loadResource(confName)

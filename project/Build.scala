@@ -31,6 +31,7 @@ object Version {
   val servlet = "3.0.1"
   val publet = "1.0.0-SNAPSHOT"
   val james = "3.0-beta4"
+  val camel = "2.5.0" //version which is used by james
 }
 
 object Dependencies {
@@ -65,12 +66,13 @@ object Dependencies {
   val jamesServerMailets = jamesServer("mailets")
 
   val jamesDeps = Seq(
-    "commons-daemon" % "commons-daemon" % "1.0.10"
+    //"commons-daemon" % "commons-daemon" % "1.0.10",
   )
-  val jamesServerAll = Seq(jamesServerCore, jamesServerDataApi, jamesServerDnsLib, jamesServerDnsApi,
+  val jamesServerAll = jamesDeps ++ Seq(jamesServerCore, jamesServerDataApi, jamesServerDnsLib, jamesServerDnsApi,
     jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi, jamesServerMailetCamel,
     jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil, jamesServerDataLib,
-    jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile, jamesServerMailets)
+    jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile, jamesServerMailets
+  )
 }
 
 // Root Module 
