@@ -21,6 +21,7 @@ import org.eknet.publet.sbt._
 
 object Resolvers {
   val eknet = "eknet.org" at "https://eknet.org/maven2"
+  val apacheSnapshots = "apache-snapshots" at "https://repository.apache.org/content/repositories/snapshots/"
 }
 object Version {
   val slf4j = "1.6.4"
@@ -30,8 +31,9 @@ object Version {
   val scala = "2.9.2"
   val servlet = "3.0.1"
   val publet = "1.0.0-SNAPSHOT"
-  val james = "3.0-beta4"
-  val camel = "2.5.0" //version which is used by james
+  val james = "3.0-beta5-SNAPSHOT"
+  val jamesMailbox = "0.5-SNAPSHOT" //used in james-server
+  val camel = "2.10.1" //version which is used by james
 }
 
 object Dependencies {
@@ -40,7 +42,7 @@ object Dependencies {
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
   val servletApi = "javax.servlet" % "javax.servlet-api" % Version.servlet % "provided" withSources()
 
-  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james withSources()
+  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james
 
   val jamesServerCore = jamesServer("core")
   val jamesServerDataApi = jamesServer("data-api")
@@ -67,11 +69,13 @@ object Dependencies {
 
   val jamesDeps = Seq(
     //"commons-daemon" % "commons-daemon" % "1.0.10",
+    "org.apache.james" % "apache-james-mailbox-tool" % Version.jamesMailbox
   )
-  val jamesServerAll = jamesDeps ++ Seq(jamesServerCore, jamesServerDataApi, jamesServerDnsLib, jamesServerDnsApi,
-    jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi, jamesServerMailetCamel,
-    jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil, jamesServerDataLib,
-    jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile, jamesServerMailets
+  val jamesServerAll = jamesDeps ++ Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
+    jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
+    jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
+    jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
+    jamesServerMailets
   )
 }
 
@@ -96,7 +100,7 @@ object RootBuild extends Build {
     scalaVersion := Version.scala,
     exportJars := true,
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
-    resolvers += Resolvers.eknet,
+    resolvers ++= Seq(Resolvers.eknet, Resolvers.apacheSnapshots),
     pomExtra := <licenses>
       <license>
         <name>Apache 2</name>

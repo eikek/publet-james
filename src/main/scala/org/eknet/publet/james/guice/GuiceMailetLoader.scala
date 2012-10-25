@@ -29,7 +29,7 @@ import javax.mail
 @Singleton
 class GuiceMailetLoader @Inject() (injector: Injector) extends MailetLoader {
 
-  def getMailet(config: MailetConfig) = {
+  def getMailet(config: MailetConfig) = synchronized {
     val name = config.getMailetName match {
       case x if (x.indexOf('.') < 1) => standardPackage +"."+ x
       case x => x

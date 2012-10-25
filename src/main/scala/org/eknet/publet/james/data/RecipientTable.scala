@@ -16,9 +16,10 @@
 
 package org.eknet.publet.james.data
 
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTable
+import org.apache.james.rrt.lib.{RecipientRewriteTableUtil, AbstractRecipientRewriteTable}
 import collection.JavaConversions._
 import com.google.inject.Singleton
+import org.apache.james.rrt.api.RecipientRewriteTableException
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -26,13 +27,25 @@ import com.google.inject.Singleton
  */
 @Singleton
 class RecipientTable extends AbstractRecipientRewriteTable {
-  def addMappingInternal(user: String, domain: String, mapping: String) {}
+  private val mappings = Map(
+    "superadmin@localhost" -> "superadmin",
+    "superadmin@zuub.com" -> "superadmin"
+  )
 
-  def removeMappingInternal(user: String, domain: String, mapping: String) {}
+  def addMappingInternal(user: String, domain: String, mapping: String) {
+    throw new RecipientRewriteTableException("Read-Only implementation")
+  }
 
-  def getUserDomainMappingsInternal(user: String, domain: String) = Set(user+"@"+domain)
+  def removeMappingInternal(user: String, domain: String, mapping: String) {
+    throw new RecipientRewriteTableException("Read-Only implementation")
+  }
 
-  def getAllMappingsInternal = Map("eike"-> getUserDomainMappings("eike", "eknet.org"))
+  def getUserDomainMappingsInternal(user: String, domain: String) =
+    mappings.get(user + "@" + domain)
+      .map(v => RecipientRewriteTableUtil.mappingToCollection(v))
+      .orNull
 
-  def mapAddressInternal(user: String, domain: String) = ""
+  def getAllMappingsInternal = mappings.map(t => (t._1,  RecipientRewriteTableUtil.mappingToCollection(t._2)))
+
+  def mapAddressInternal(user: String, domain: String) = RecipientRewriteTableUtil.getTargetString(user, domain, mappings)
 }

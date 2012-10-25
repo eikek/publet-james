@@ -28,7 +28,8 @@ import com.google.inject.{Injector, Inject, Singleton}
  */
 @Singleton
 class GuiceMatcherLoader @Inject() (injector: Injector) extends MatcherLoader {
-  def getMatcher(config: MatcherConfig) = {
+
+  def getMatcher(config: MatcherConfig) = synchronized {
     val name = config.getMatcherName match {
       case x if (x.indexOf('.') < 1) => standardPackage +"."+ x
       case x => x

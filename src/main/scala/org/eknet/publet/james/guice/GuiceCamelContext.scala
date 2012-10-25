@@ -39,7 +39,7 @@ import org.apache.camel.spi.{Injector => CamelInjector, _}
 import javax.naming.{InitialContext, Context}
 import org.apache.camel.builder.ErrorHandlerBuilder
 import java.util
-import org.apache.camel.{IsSingleton, TypeConverter}
+import org.apache.camel.{ErrorHandlerFactory, IsSingleton, TypeConverter}
 
 /**
  * extending CamelContext to allow guice bindings to be injected.
@@ -89,7 +89,7 @@ class GuiceCamelContext @Inject() (injector: Injector) extends DefaultCamelConte
   }
 
   @Inject(optional = true)
-  override def setErrorHandlerBuilder(errorHandlerBuilder: ErrorHandlerBuilder) {
+  override def setErrorHandlerBuilder(errorHandlerBuilder: ErrorHandlerFactory) {
     super.setErrorHandlerBuilder(errorHandlerBuilder)
   }
 
@@ -143,7 +143,7 @@ class GuiceCamelContext @Inject() (injector: Injector) extends DefaultCamelConte
 }
 
 class GuiceCamelInjector(injector: Injector) extends CamelInjector {
-  def newInstance[T](clazz: Class[T]) = injector.getInstance(clazz)
+  def newInstance[T](clazz: Class[T]) = synchronized(injector.getInstance(clazz))
 
   def newInstance[T](clazz: Class[T], instance: Any) = instance match {
       case s: IsSingleton if (s.isSingleton) => clazz.cast(s)

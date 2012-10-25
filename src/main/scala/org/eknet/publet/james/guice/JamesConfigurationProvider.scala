@@ -40,8 +40,10 @@ import org.apache.james.smtpserver.netty.{SMTPServerFactory, SMTPServer}
 import com.google.inject.Singleton
 import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
-import org.eknet.publet.james.data.{RecipientTable, PubletDomainList}
+import org.eknet.publet.james.data.{MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
 import org.apache.james.imapserver.netty.IMAPServerFactory
+import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor
+import org.apache.james.mailetcontainer.impl.{JamesMailetContext, JamesMailSpooler}
 
 /**
  * This class is a duplicate of james `ConfigurationProviderImpl` which is in a module
@@ -68,7 +70,11 @@ class JamesConfigurationProvider {
     classOf[IMAPServerFactory] -> "imapserver",
     classOf[DNSJavaService] -> "dnsservice",
     classOf[PubletDomainList] -> "domainlist",
-    classOf[RecipientTable] -> "recipientrewritetable"
+    classOf[RecipientTable] -> "recipientrewritetable",
+    classOf[CamelCompositeProcessor] -> "mailprocessor",
+    classOf[JamesMailSpooler] -> "mailspooler",
+    classOf[JamesMailetContext] -> "mailetcontext",
+    classOf[MailRepositoryStoreImpl] -> "mailrepositorystore"
   )
 
   configMappings.foreach(mapping => {
@@ -79,7 +85,7 @@ class JamesConfigurationProvider {
     this._configs.put(beanName, conf)
   }
 
-  def getConfigByName(name: String) = {
+  def getConfigByName(name: String) = synchronized {
     val n = if (name == "smtpserver")
         "org/eknet/publet/james/conf/smtpserver"
       else if (name == "imapserver")
@@ -96,7 +102,7 @@ class JamesConfigurationProvider {
     }
   }
 
-  def getConfiguration(c: Class[_]) = {
+  def getConfiguration(c: Class[_]) = synchronized {
     val name = nameMap.get(c).getOrElse(c.getName)
     getConfigByName(name)
   }

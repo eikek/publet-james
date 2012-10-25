@@ -17,7 +17,7 @@
 package org.eknet.publet.james
 
 import com.google.inject._
-import data.{PubletDomainList, RecipientTable, UserRepository}
+import org.eknet.publet.james.data.{MailRepositoryStoreImpl, PubletDomainList, RecipientTable, UserRepository}
 import guice._
 import org.eknet.publet.web.guice.{PubletModule, PubletBinding}
 import org.apache.james.smtpserver.netty.SMTPServerFactory
@@ -25,8 +25,6 @@ import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader
 import org.apache.james.filesystem.api.FileSystem
-import com.google.inject.matcher.{AbstractMatcher, Matchers, Matcher}
-import com.google.inject.spi.{TypeEncounter, TypeListener}
 import org.apache.james.user.api.UsersRepository
 import org.apache.james.rrt.api.RecipientRewriteTable
 import org.apache.james.domainlist.api.DomainList
@@ -35,10 +33,10 @@ import org.apache.james.queue.file.FileMailQueueFactory
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor
 import org.apache.mailet.MailetContext
 import org.apache.james.mailetcontainer.impl.{JamesMailSpooler, JamesMailetContext}
-import org.apache.james.mailetcontainer.api.{MatcherLoader, MailetLoader}
+import org.apache.james.mailetcontainer.api.{MailProcessor, MatcherLoader, MailetLoader}
 import org.apache.camel.CamelContext
-import org.apache.james.mailbox.{SubscriptionManager, MailboxPathLocker}
-import org.apache.james.mailbox.store.{StoreSubscriptionManager, StoreMailboxManager, Authenticator, JVMMailboxPathLocker}
+import org.apache.james.mailbox._
+import org.apache.james.mailbox.store._
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator
 import org.apache.james.mailbox.maildir.{MaildirMailboxSessionMapperFactory, MaildirStore}
 import org.apache.james.mailbox.acl.{SimpleGroupMembershipResolver, GroupMembershipResolver, UnionMailboxACLResolver, MailboxACLResolver}
@@ -50,75 +48,61 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory
 import org.apache.james.imapserver.netty.IMAPServerFactory
 import org.apache.james.imap.api.process.ImapProcessor
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory
+import org.apache.james.mailbox.copier.{MailboxCopierImpl, MailboxCopier}
+import com.google.inject.name.Names
+import org.apache.james.mailrepository.api.MailRepositoryStore
+import org.apache.james.adapter.mailbox.MailboxManagerManagement
 
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
-
-  object JamesMatcher extends AbstractMatcher[TypeLiteral[_]] {
-    private val jamesPackage = Matchers.inSubpackage("org.apache.james")
-    private val eknetJamesPackage = Matchers.inSubpackage("org.eknet.publet.james")
-
-    def matches(t: TypeLiteral[_]) =
-      jamesPackage.matches(t.getRawType) || eknetJamesPackage.matches(t.getRawType)
-
-  }
 
   def configure() {
     bind(classOf[JamesConfigurationProvider])
     bindListener(JamesMatcher, new JamesTypeListener)
+    bindListener(MBeanMatcher, new MBeanExporter)
+    binder.bindEagerly[PreDestroyHandler]
 
-    binder.set[DNSService].toType[DNSJavaService]
-    binder.set[ProtocolHandlerLoader].toType[GuiceProtocolHandlerLoader]
-    binder.set[FileSystem].toType[PubletFilesystem]
+    binder.set[DNSService].toType[DNSJavaService] in Scopes.SINGLETON
+    binder.set[ProtocolHandlerLoader].toType[GuiceProtocolHandlerLoader] in Scopes.SINGLETON
+    binder.set[FileSystem].toType[PubletFilesystem] in Scopes.SINGLETON
 
-    binder.set[UsersRepository].toType[UserRepository]
-    binder.set[RecipientRewriteTable].toType[RecipientTable]
-    binder.set[DomainList].toType[PubletDomainList]
+    binder.set[UsersRepository].toType[UserRepository] in Scopes.SINGLETON
+    binder.set[RecipientRewriteTable].toType[RecipientTable] in Scopes.SINGLETON
+    binder.set[DomainList].toType[PubletDomainList] in Scopes.SINGLETON
 
     binder.set[MailQueueFactory].toType[FileMailQueueFactory] in Scopes.SINGLETON
 
     binder.bindEagerly[SMTPServerFactory]
 
     //mailet container
-    bind(classOf[CamelCompositeProcessor])
-    binder.set[MailetContext].toType[JamesMailetContext]
-    bind(classOf[JamesMailSpooler])
-    binder.set[MailetLoader].toType[GuiceMailetLoader] //todo merge same code of those two classes
-    binder.set[MatcherLoader].toType[GuiceMatcherLoader]
+    binder.set[MailProcessor].toType[CamelCompositeProcessor] in Scopes.SINGLETON
+    binder.set[MailetContext].toType[JamesMailetContext] asEagerSingleton()
+    binder.bindEagerly[JamesMailSpooler]
+    binder.set[MailetLoader].toType[GuiceMailetLoader] in Scopes.SINGLETON //todo merge same code of those two classes
+    binder.set[MatcherLoader].toType[GuiceMatcherLoader] in Scopes.SINGLETON
     bind(classOf[CamelContext]).toType[GuiceCamelContext] asEagerSingleton()
 
     //maildir
-    binder.set[MailboxPathLocker].toType[JVMMailboxPathLocker]
-    binder.set[Authenticator].toType[UserRepositoryAuthenticator]
-    binder.set[MailboxACLResolver].toType[UnionMailboxACLResolver]
-    binder.set[GroupMembershipResolver].toType[SimpleGroupMembershipResolver]
+    binder.set[MailboxPathLocker].toType[JVMMailboxPathLocker] in Scopes.SINGLETON
+    binder.set[Authenticator].toType[UserRepositoryAuthenticator] in Scopes.SINGLETON
+    binder.set[MailboxACLResolver].toType[UnionMailboxACLResolver] in Scopes.SINGLETON
+    binder.set[GroupMembershipResolver].toType[SimpleGroupMembershipResolver] in Scopes.SINGLETON
+    binder.set[MaildirStore].toType[GMaildirStore] asEagerSingleton()
+    binder.set[MailboxSessionIdGenerator].toType[RandomMailboxSessionIdGenerator] in Scopes.SINGLETON
+    binder.set[MaildirMailboxSessionMapperFactory].toType[GMaildirMailboxSessionMapperFactory] in Scopes.SINGLETON
+    // bean "maildir-mailboxmanager" aliased to "mailboxmanager" by config file
+    binder.set[MailboxManager].toType[GStoreMailboxManager] asEagerSingleton()
+    // bean "maildir-subscriptionmanager" aliased to "subscriptionmanager" by config file
+    binder.set[SubscriptionManager].toType[GStoreSubscriptionManager] asEagerSingleton()
+    binder.set[MailRepositoryStore].toType[MailRepositoryStoreImpl] asEagerSingleton()
+    binder.bindEagerly[MailboxManagerManagement]
 
     //imap
-    binder.set[ImapDecoderFactory].toType[DefaultImapDecoderFactory]
-    binder.set[ImapEncoderFactory].toType[DefaultImapEncoderFactory]
+    binder.set[ImapDecoderFactory].toType[DefaultImapDecoderFactory] in Scopes.SINGLETON
+    binder.set[ImapEncoderFactory].toType[DefaultImapEncoderFactory] in Scopes.SINGLETON
     binder.bindEagerly[IMAPServerFactory]
+    binder.set[MailboxCopier].toType[MailboxCopierImpl] in Scopes.SINGLETON
   }
 
-  //maildir
-  @Provides@Singleton
-  def createMaildirStore(locker:MailboxPathLocker): MaildirStore = new MaildirStore("var/mailboxes/%domain/%user", locker)
-
-  @Provides@Singleton
-  def createMaildirMapperFactory(maildirStore: MaildirStore): MaildirMailboxSessionMapperFactory
-    = new MaildirMailboxSessionMapperFactory(maildirStore)
-
-  // bean "maildir-mailboxmanager" aliased to "mailboxmanager" by config file
-  @Provides@Singleton
-  def createStoreMailboxMan(fac: MaildirMailboxSessionMapperFactory,
-                            auth: Authenticator,
-                            locker:MailboxPathLocker,
-                            acl:MailboxACLResolver,
-                            group:GroupMembershipResolver): StoreMailboxManager[java.lang.Integer] =
-    new StoreMailboxManager(fac, auth, locker, acl, group)
-
-  // bean "maildir-subscriptionmanager" aliased to "subscriptionmanager" by config file
-  @Singleton@Provides
-  def createSubscriptionMan(fac: MaildirMailboxSessionMapperFactory): SubscriptionManager =
-    new StoreSubscriptionManager(fac)
 
   //imap
 
@@ -129,7 +113,7 @@ class PubletJamesModule extends AbstractModule with PubletBinding with PubletMod
   def createEncode(encfac: ImapEncoderFactory): ImapEncoder = encfac.buildImapEncoder()
 
   @Provides@Singleton
-  def createImapProcessor(boxman: StoreMailboxManager[java.lang.Integer], subman: SubscriptionManager): ImapProcessor = {
+  def createImapProcessor(boxman: MailboxManager, subman: SubscriptionManager): ImapProcessor = {
     import collection.JavaConversions._
     DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
   }

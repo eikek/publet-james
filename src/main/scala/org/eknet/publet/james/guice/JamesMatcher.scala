@@ -16,28 +16,19 @@
 
 package org.eknet.publet.james.guice
 
-import org.apache.james.filesystem.api.FileSystem
-import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.web.Config
-import java.io.File
-import org.eknet.publet.vfs.Path
+import com.google.inject.matcher.{AbstractMatcher, Matchers}
+import com.google.inject.TypeLiteral
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 20.10.12 15:54
+ * @since 24.10.12 19:29
  */
-@Singleton
-class PubletFilesystem @Inject() (config: Config) extends FileSystem {
+object JamesMatcher extends AbstractMatcher[TypeLiteral[_]] {
 
-  val baseDir = config.workDir("james")
+  private val jamesPackage = Matchers.inSubpackage("org.apache.james")
+  private val eknetJamesPackage = Matchers.inSubpackage("org.eknet.publet.james")
 
-  def getResource(url: String) = null
-
-  def getBasedir = baseDir
-
-  def getFile(fileURL: String) = {
-    val path = Path(fileURL.substring(fileURL.indexOf("://")))
-    new File(baseDir, path.asString)
-  }
+  def matches(t: TypeLiteral[_]) =
+    jamesPackage.matches(t.getRawType) || eknetJamesPackage.matches(t.getRawType)
 
 }

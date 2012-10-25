@@ -29,7 +29,7 @@ import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtoc
 @Singleton
 class GuiceProtocolHandlerLoader @Inject() (injector: Injector) extends ProtocolHandlerLoader {
 
-  def load(name: String, config: Configuration) = {
+  def load(name: String, config: Configuration) = synchronized {
     val clazz = getClass.getClassLoader.loadClass(name)
     val ph = injector.getInstance(clazz).asInstanceOf[ProtocolHandler]
     ph match {

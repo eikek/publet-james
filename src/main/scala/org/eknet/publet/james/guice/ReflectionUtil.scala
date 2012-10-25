@@ -16,8 +16,9 @@
 
 package org.eknet.publet.james.guice
 
-import java.lang.reflect.Method
+import java.lang.reflect.{Field, Method}
 import java.lang.annotation.Annotation
+import com.google.common.reflect.TypeToken
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -26,12 +27,19 @@ import java.lang.annotation.Annotation
 trait ReflectionUtil {
 
   def findMethods(c: Class[_], f: Method => Boolean): List[Method] = {
-    val methods = c.getMethods.filter(f).toList.distinct
-    Option(c.getSuperclass).map(s => methods ::: findMethods(s, f)).getOrElse(methods)
+    c.getMethods.filter(f).toList
+  }
+
+  def findFields(c: Class[_], f: Field => Boolean): List[Field] = {
+    val fields = c.getDeclaredFields.filter(f).toList.distinct
+    Option(c.getSuperclass).map(s => fields ::: findFields(s, f)).getOrElse(fields)
   }
 
   def findAnnotatedMethods(c: Class[_], annots: Class[_ <: Annotation]*) = findMethods(c, { m =>
     annots.map(ac => m.isAnnotationPresent(ac)).foldLeft(true)(_ && _)
   }).distinct
 
+  def findAnnotatedFields(c: Class[_], annots: Class[_ <: Annotation]*) = findFields(c, { f =>
+    annots.map(ac => f.isAnnotationPresent(ac)).foldLeft(true)(_ && _)
+  })
 }

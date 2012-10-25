@@ -1,0 +1,13 @@
+AUTH LOGIN
+c3VwZXJhZG1pbg==
+
+MAIL FROM:<superadmin@localhost>
+RCPT TO:<superadmin@localhost>
+DATA
+From:superadmin@localhost
+To:superadmin@localhost
+Subject: Test
+
+Hi that.
+
+.

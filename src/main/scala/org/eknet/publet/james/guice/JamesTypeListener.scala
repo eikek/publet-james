@@ -22,28 +22,41 @@ import org.apache.james.lifecycle.api.{Configurable, LogEnabled}
 import org.slf4j.LoggerFactory
 import javax.annotation.{PostConstruct, Resource}
 import org.apache.camel.{CamelContext, CamelContextAware}
+import org.apache.james.mailrepository.api.MailRepository
+import java.util.concurrent.ConcurrentHashMap
+import grizzled.slf4j.Logging
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 21.10.12 00:42
  */
-class JamesTypeListener extends TypeListener with ReflectionUtil {
+class JamesTypeListener extends TypeListener with ReflectionUtil with Logging {
 
   private val afterPropertiesSet = "afterPropertiesSet"
+
+//  private val map = new ConcurrentHashMap[Any, java.lang.Integer]()
 
   def hear[I](literal: TypeLiteral[I], encounter: TypeEncounter[I]) {
     val configProvider = encounter.getProvider(classOf[JamesConfigurationProvider])
     val injectorProvider = encounter.getProvider(classOf[Injector])
     encounter.register(new InjectionListener[I] {
       def afterInjection(injectee:I) {
-        val c = injectee.asInstanceOf[AnyRef].getClass
-        injectLogger(injectee)
-        injectConfig(configProvider.get(), injectee)
-        injectResourceMethods(injectorProvider.get(), injectee.asInstanceOf[AnyRef])
-        injectCamelContext(injectorProvider.get(), injectee.asInstanceOf[AnyRef])
+        synchronized {
+          injectLogger(injectee)
+          val inst = injectee.asInstanceOf[AnyRef]
+//          if (map.putIfAbsent(inst.getClass, 1) != null) {
+//            warn("\n\n\n>>>>> duplicate init: " + inst + "\n\n\n")
+//          }
+          injectResourceFields(injectorProvider.get(), inst)
+          injectResourceMethods(injectorProvider.get(), inst)
+          injectCamelContext(injectorProvider.get(), inst)
 
-        findAnnotatedMethods(c, classOf[PostConstruct]).foreach(_.invoke(injectee))
-        findMethods(c, m => m.getName == afterPropertiesSet).foreach(_.invoke(injectee))
+          if (!inst.isInstanceOf[MailRepository]) {
+            //todo special handling for MailRepository
+            injectConfig(configProvider.get(), injectee)
+            initialize(inst)
+          }
+        }
       }
     })
   }
@@ -74,11 +87,24 @@ class JamesTypeListener extends TypeListener with ReflectionUtil {
       }
     }
   }
+  def injectResourceFields(injector: Injector, instance: AnyRef) {
+    val fields = findAnnotatedFields(instance.getClass, classOf[Resource])
+    for (f <- fields) {
+      f.setAccessible(true)
+      f.set(instance, injector.getInstance(f.getType))
+    }
+  }
 
   def injectCamelContext(injector: Injector, intance: AnyRef) {
     intance match {
       case ca: CamelContextAware => ca.setCamelContext(injector.getInstance(classOf[CamelContext]))
       case _ =>
     }
+  }
+
+  def initialize(instance: AnyRef) {
+    val c = instance.getClass
+    val all = findAnnotatedMethods(c, classOf[PostConstruct]) ::: findMethods(c, m => m.getName == afterPropertiesSet)
+    all.distinct.foreach(_.invoke(instance))
   }
 }
