@@ -27,7 +27,7 @@ import org.eknet.publet.web.Config
  * @since 21.10.12 12:38
  */
 @Singleton
-class RecipientTable @Inject() (config: Config) extends AbstractRecipientRewriteTable {
+class RecipientTable @Inject() (maildb: MailDb) extends AbstractRecipientRewriteTable {
   private val mappings = Map(
     "superadmin@localhost" -> "superadmin",
     "superadmin@zuub.com" -> "superadmin"

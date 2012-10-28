@@ -16,29 +16,28 @@
 
 package org.eknet.publet.james.data
 
-import org.apache.james.domainlist.lib.AbstractDomainList
+import org.eknet.publet.ext.orient.OrientDb
 import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.web.Config
-import org.apache.james.domainlist.api.DomainListException
-import org.eknet.publet.ext.orient.{OrientDb, OrientDbProvider}
-import com.google.inject.name.Named
+import org.apache.james.domainlist.api.DomainList
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 21.10.12 12:47
+ * @since 28.10.12 20:00
  */
 @Singleton
-class PubletDomainList @Inject() (maildb: MailDb) extends AbstractDomainList {
+class MailDb @Inject() (db: OrientDb, domainList: DomainList) {
 
-  def containsDomain(domain: String) = maildb.containsDomain(domain)
+  addDomain(domainList.getDefaultDomain)
 
   def addDomain(domain: String) {
-    maildb.addDomain(domain)
+
   }
 
   def removeDomain(domain: String) {
-    maildb.removeDomain(domain)
+
   }
 
-  def getDomainListInternal = null
+  def containsDomain(domain: String): Boolean = domain == domainList.getDefaultDomain
+
+  def getDomainList: List[String] = Nil
 }

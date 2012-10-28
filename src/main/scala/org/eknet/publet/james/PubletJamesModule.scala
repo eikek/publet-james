@@ -17,7 +17,7 @@
 package org.eknet.publet.james
 
 import com.google.inject._
-import org.eknet.publet.james.data.{MailRepositoryStoreImpl, PubletDomainList, RecipientTable, UserRepository}
+import org.eknet.publet.james.data._
 import guice._
 import org.eknet.publet.web.guice.{PubletModule, PubletBinding}
 import org.apache.james.smtpserver.netty.SMTPServerFactory
@@ -51,6 +51,8 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory
 import org.apache.james.mailbox.copier.{MailboxCopierImpl, MailboxCopier}
 import org.apache.james.mailrepository.api.MailRepositoryStore
 import org.apache.james.adapter.mailbox.MailboxManagerManagement
+import org.eknet.publet.ext.orient.OrientDbProvider
+import com.google.inject.name.Named
 
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
 
@@ -116,4 +118,7 @@ class PubletJamesModule extends AbstractModule with PubletBinding with PubletMod
     import collection.JavaConversions._
     DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
   }
+
+  @Provides@Singleton
+  def createDb(dbprov: OrientDbProvider): MailDb = new MailDb(dbprov.getDatabase("jamesdb"))
 }

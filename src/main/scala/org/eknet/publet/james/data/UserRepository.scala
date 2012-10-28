@@ -34,26 +34,25 @@ class UserRepository @Inject() (auth: PubletAuth, psp: PasswordServiceProvider) 
     case u if (u.groups.contains(Permissions.mailgroup)) => u
   }
 
-  def getUserByName(name: String) = auth.findUser(name)
-    .collect(groupFilter)
+  private def findUser(name: String) = auth.findUser(name).collect(groupFilter)
+  private def allUsers = auth.getAllUser.withFilter(u => groupFilter.isDefinedAt(u))
+
+  def getUserByName(name: String) = findUser(name)
     .map(u => new JamesUser(u, auth, psp))
     .orNull
 
-  def contains(name: String) = auth.findUser(name).isDefined
+  def contains(name: String) = findUser(name).isDefined
 
-  def test(name: String, password: String) = auth.findUser(name)
+  def test(name: String, password: String) = findUser(name)
     .map(u => new JamesUser(u, auth, psp))
     .map(u => u.verifyPassword(password))
     .getOrElse(false)
 
-  def countUsers() = auth.getAllUser.size
+  def countUsers() = list().size
 
-  def list() = auth.getAllUser
-    .withFilter(u => groupFilter.isDefinedAt(u))
-    .map(_.login).iterator
+  def list() = allUsers.map(_.login).iterator
 
   def supportVirtualHosting() = false
-
 
   def addUser(username: String, password: String) {
     throw new UsersRepositoryException("Repository not writeable")

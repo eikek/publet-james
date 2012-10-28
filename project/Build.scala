@@ -42,6 +42,7 @@ object Dependencies {
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
+  val publetExt = "org.eknet.publet" %% "publet-ext" % Version.publet % "provided" withSources()
   val servletApi = "javax.servlet" % "javax.servlet-api" % Version.servlet % "provided" withSources()
 
   def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james
@@ -112,7 +113,7 @@ object RootBuild extends Build {
     </licenses>
   )
 
-  val deps = Seq(publetWeb, publetApp, servletApi) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetExt, publetApp, servletApi) ++ jamesServerAll
 }
 
 
