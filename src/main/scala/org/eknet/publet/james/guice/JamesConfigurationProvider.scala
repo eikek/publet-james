@@ -36,9 +36,8 @@ package org.eknet.publet.james.guice
 
 import org.apache.commons.configuration.{XMLConfiguration, HierarchicalConfiguration}
 import java.net.URL
-import org.apache.james.smtpserver.netty.{SMTPServerFactory, SMTPServer}
+import org.apache.james.smtpserver.netty.SMTPServerFactory
 import com.google.inject.Singleton
-import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
 import org.eknet.publet.james.data.{MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
 import org.apache.james.imapserver.netty.IMAPServerFactory

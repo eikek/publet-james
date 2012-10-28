@@ -18,6 +18,7 @@ import sbt._
 import Keys._
 import Dependencies._
 import org.eknet.publet.sbt._
+import Classpaths.managedJars
 
 object Resolvers {
   val eknet = "eknet.org" at "https://eknet.org/maven2"
@@ -39,6 +40,7 @@ object Version {
 object Dependencies {
 
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
+  val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
   val servletApi = "javax.servlet" % "javax.servlet-api" % Version.servlet % "provided" withSources()
 
@@ -87,12 +89,12 @@ object RootBuild extends Build {
     id = "publet-james",
     base = file("."),
     settings = buildSettings
-  ) 
+  )
 
   val buildSettings = Project.defaultSettings ++ Seq(
     name := "publet-james",
     libraryDependencies ++= deps
-  ) ++ PubletSbtPlugin.publetSettings
+  ) ++ PubletPlugin.publetSettings
 
   override lazy val settings = super.settings ++ Seq(
     version := "1.0.0-SNAPSHOT",
@@ -110,7 +112,7 @@ object RootBuild extends Build {
     </licenses>
   )
 
-  val deps = Seq(publetWeb, servletApi) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetApp, servletApi) ++ jamesServerAll
 }
 
 

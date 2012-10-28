@@ -49,7 +49,6 @@ import org.apache.james.imapserver.netty.IMAPServerFactory
 import org.apache.james.imap.api.process.ImapProcessor
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory
 import org.apache.james.mailbox.copier.{MailboxCopierImpl, MailboxCopier}
-import com.google.inject.name.Names
 import org.apache.james.mailrepository.api.MailRepositoryStore
 import org.apache.james.adapter.mailbox.MailboxManagerManagement
 
