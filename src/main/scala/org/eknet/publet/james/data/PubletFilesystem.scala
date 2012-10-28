@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james
+package org.eknet.publet.james.data
+
+import org.apache.james.filesystem.api.FileSystem
+import java.io.{InputStream, File}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 26.10.12 23:19
+ * @since 28.10.12 17:29
  */
-object Permissions {
+trait PubletFilesystem extends FileSystem {
 
-  val mailgroup = "mailgroup"
+  def resolveFile(fileUrl: String, filter: File => Boolean): Option[File]
+
+  def findResource(url: String): Option[InputStream]
 }

@@ -55,14 +55,14 @@ import org.apache.james.adapter.mailbox.MailboxManagerManagement
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
 
   def configure() {
-    bind(classOf[JamesConfigurationProvider])
+    binder.set[ConfigurationProvider].toType[JamesConfigurationProvider] in  Scopes.SINGLETON
     bindListener(JamesMatcher, new JamesTypeListener)
     bindListener(MBeanMatcher, new MBeanExporter)
     binder.bindEagerly[PreDestroyHandler]
 
     binder.set[DNSService].toType[DNSJavaService] in Scopes.SINGLETON
     binder.set[ProtocolHandlerLoader].toType[GuiceProtocolHandlerLoader] in Scopes.SINGLETON
-    binder.set[FileSystem].toType[PubletFilesystem] in Scopes.SINGLETON
+    binder.set[FileSystem].toType[PubletFilesystemImpl] in Scopes.SINGLETON
 
     binder.set[UsersRepository].toType[UserRepository] in Scopes.SINGLETON
     binder.set[RecipientRewriteTable].toType[RecipientTable] in Scopes.SINGLETON
@@ -76,8 +76,8 @@ class PubletJamesModule extends AbstractModule with PubletBinding with PubletMod
     binder.set[MailProcessor].toType[CamelCompositeProcessor] in Scopes.SINGLETON
     binder.set[MailetContext].toType[JamesMailetContext] asEagerSingleton()
     binder.bindEagerly[JamesMailSpooler]
-    binder.set[MailetLoader].toType[GuiceMailetLoader] in Scopes.SINGLETON //todo merge same code of those two classes
-    binder.set[MatcherLoader].toType[GuiceMatcherLoader] in Scopes.SINGLETON
+    binder.set[MailetLoader].toType[MailetMatcherLoader] in Scopes.SINGLETON
+    binder.set[MatcherLoader].toType[MailetMatcherLoader] in Scopes.SINGLETON
     bind(classOf[CamelContext]).toType[GuiceCamelContext] asEagerSingleton()
 
     //maildir

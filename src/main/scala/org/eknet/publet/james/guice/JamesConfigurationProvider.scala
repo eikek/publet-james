@@ -37,23 +37,27 @@ package org.eknet.publet.james.guice
 import org.apache.commons.configuration.{XMLConfiguration, HierarchicalConfiguration}
 import java.net.URL
 import org.apache.james.smtpserver.netty.SMTPServerFactory
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
-import org.eknet.publet.james.data.{MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
+import org.eknet.publet.james.data.{PubletFilesystem, MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
 import org.apache.james.imapserver.netty.IMAPServerFactory
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor
 import org.apache.james.mailetcontainer.impl.{JamesMailetContext, JamesMailSpooler}
+import org.eknet.publet.web.Config
+import org.apache.james.filesystem.api.FileSystem
+import java.io.{FileNotFoundException, InputStream}
+import grizzled.slf4j.Logging
 
 /**
- * This class is a duplicate of james `ConfigurationProviderImpl` which is in a module
- * that needs spring. As I don't want to depend on spring classes, I'm copying (and scalafying)
- * the class to here.
+ * This class looks up configuration files for apache services. It will first
+ * look at publet's config directory and then fallback to publets and then to
+ * james' default configurations.
  *
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 20.10.12 18:53
  */
 @Singleton
-class JamesConfigurationProvider {
+class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends ConfigurationProvider with Logging {
 
   private val configFileSuffix = ".conf"
   private val _configs = collection.mutable.Map[String, HierarchicalConfiguration]()
@@ -80,24 +84,19 @@ class JamesConfigurationProvider {
     registerConfiguration(mapping._1, getConfigByName(mapping._2))
   })
 
+  private def fs = filesystem.asInstanceOf[PubletFilesystem]
+
   def registerConfiguration(beanName: String, conf: HierarchicalConfiguration) {
     this._configs.put(beanName, conf)
   }
 
   def getConfigByName(name: String) = synchronized {
-    val n = if (name == "smtpserver")
-        "org/eknet/publet/james/conf/smtpserver"
-      else if (name == "imapserver")
-        "org/eknet/publet/james/conf/imapserver"
-      else name
-
-    this._configs.get(n) getOrElse {
-      val confName = ConfigName(n)
-      val conf = loadResource(confName)
-        .map(getConfig)
-        .map(cfg => confName.part.map(cfg.configurationAt(_)).getOrElse(cfg))
-      this._configs.put(n, conf.getOrElse(sys.error("Cannot load configuration: "+n)))
-      conf.get
+    this._configs.get(name) getOrElse {
+      val confName = ConfigName(name)
+      val config = confName.part.map(part =>
+        getConfig(confName.load).configurationAt(part)).getOrElse(getConfig(confName.load))
+      this._configs.put(name, config)
+      config
     }
   }
 
@@ -106,18 +105,36 @@ class JamesConfigurationProvider {
     getConfigByName(name)
   }
 
-  private def loadResource(cn: ConfigName) =
-    Option(getClass.getResource("/" + cn.name + configFileSuffix))
-
-  private def getConfig(resource: URL): XMLConfiguration = {
+  private def getConfig(in: InputStream): XMLConfiguration = {
     val xmlconfig = new XMLConfiguration()
     xmlconfig.setDelimiterParsingDisabled(true)
     xmlconfig.setAttributeSplittingDisabled(true)
-    xmlconfig.load(resource.openStream())
+    xmlconfig.load(in)
+    in.close()
     xmlconfig
   }
 
-  case class ConfigName(name: String, part:Option[String])
+  case class ConfigName(name: String, part:Option[String]) {
+
+    private val locations = List(
+      FileSystem.FILE_PROTOCOL_AND_CONF + name + configFileSuffix,
+      "classpath:/org/eknet/publet/james/conf/"+ name + configFileSuffix,
+      "classpath:/"+ name + configFileSuffix
+    )
+
+
+    def load = {
+      def loadRecursive(urls: List[String]): InputStream = urls match {
+        case a::as => fs.findResource(a) match {
+          case Some(in) => debug("Found resource "+ a); in
+          case _ => loadRecursive(as)
+        }
+        case _ => throw new FileNotFoundException("Config not found: "+ this)
+      }
+      loadRecursive(locations)
+    }
+  }
+
   object ConfigName {
     def apply(str: String): ConfigName = str.indexOf(".") match {
       case i if (i > -1) => ConfigName(str.substring(0, i), Some(str.substring(i+1)))

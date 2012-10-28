@@ -18,15 +18,16 @@ package org.eknet.publet.james.data
 
 import org.apache.james.rrt.lib.{RecipientRewriteTableUtil, AbstractRecipientRewriteTable}
 import collection.JavaConversions._
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import org.apache.james.rrt.api.RecipientRewriteTableException
+import org.eknet.publet.web.Config
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 21.10.12 12:38
  */
 @Singleton
-class RecipientTable extends AbstractRecipientRewriteTable {
+class RecipientTable @Inject() (config: Config) extends AbstractRecipientRewriteTable {
   private val mappings = Map(
     "superadmin@localhost" -> "superadmin",
     "superadmin@zuub.com" -> "superadmin"

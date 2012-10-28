@@ -34,19 +34,14 @@ class JamesTypeListener extends TypeListener with ReflectionUtil with Logging {
 
   private val afterPropertiesSet = "afterPropertiesSet"
 
-//  private val map = new ConcurrentHashMap[Any, java.lang.Integer]()
-
   def hear[I](literal: TypeLiteral[I], encounter: TypeEncounter[I]) {
-    val configProvider = encounter.getProvider(classOf[JamesConfigurationProvider])
+    val configProvider = encounter.getProvider(classOf[ConfigurationProvider])
     val injectorProvider = encounter.getProvider(classOf[Injector])
     encounter.register(new InjectionListener[I] {
       def afterInjection(injectee:I) {
         synchronized {
           injectLogger(injectee)
           val inst = injectee.asInstanceOf[AnyRef]
-//          if (map.putIfAbsent(inst.getClass, 1) != null) {
-//            warn("\n\n\n>>>>> duplicate init: " + inst + "\n\n\n")
-//          }
           injectResourceFields(injectorProvider.get(), inst)
           injectResourceMethods(injectorProvider.get(), inst)
           injectCamelContext(injectorProvider.get(), inst)
@@ -69,7 +64,7 @@ class JamesTypeListener extends TypeListener with ReflectionUtil with Logging {
     }
   }
 
-  def injectConfig(provider: JamesConfigurationProvider, injectee: Any) {
+  def injectConfig(provider: ConfigurationProvider, injectee: Any) {
     injectee match {
       case c: Configurable => c.configure(provider.getConfiguration(c.getClass))
       case _ =>

@@ -16,11 +16,12 @@
 
 package org.eknet.publet.james.data
 
-import org.apache.james.user.api.model.User
+import org.apache.james.user.api.model.{User => JAUser}
 import com.google.inject.{Inject, Singleton}
-import org.apache.james.user.api.UsersRepository
-import org.eknet.publet.auth.{PasswordServiceProvider, PubletAuth}
+import org.apache.james.user.api.{UsersRepositoryException, UsersRepository}
+import org.eknet.publet.auth.{User, PasswordServiceProvider, PubletAuth}
 import collection.JavaConversions._
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -28,15 +29,15 @@ import collection.JavaConversions._
  */
 @Singleton
 class UserRepository @Inject() (auth: PubletAuth, psp: PasswordServiceProvider) extends UsersRepository {
-  def addUser(username: String, password: String) {}
+
+  private def groupFilter: PartialFunction[User, User] = {
+    case u if (u.groups.contains(Permissions.mailgroup)) => u
+  }
 
   def getUserByName(name: String) = auth.findUser(name)
+    .collect(groupFilter)
     .map(u => new JamesUser(u, auth, psp))
     .orNull
-
-  def updateUser(user: User) {}
-
-  def removeUser(name: String) {}
 
   def contains(name: String) = auth.findUser(name).isDefined
 
@@ -47,7 +48,23 @@ class UserRepository @Inject() (auth: PubletAuth, psp: PasswordServiceProvider) 
 
   def countUsers() = auth.getAllUser.size
 
-  def list() = auth.getAllUser.map(_.login).iterator
+  def list() = auth.getAllUser
+    .withFilter(u => groupFilter.isDefinedAt(u))
+    .map(_.login).iterator
 
   def supportVirtualHosting() = false
+
+
+  def addUser(username: String, password: String) {
+    throw new UsersRepositoryException("Repository not writeable")
+  }
+
+  def updateUser(user: JAUser) {
+    throw new UsersRepositoryException("Repository not writeable")
+  }
+
+  def removeUser(name: String) {
+    throw new UsersRepositoryException("Repository not writeable")
+  }
+
 }

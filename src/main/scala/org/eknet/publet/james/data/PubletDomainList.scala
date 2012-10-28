@@ -17,14 +17,15 @@
 package org.eknet.publet.james.data
 
 import org.apache.james.domainlist.lib.AbstractDomainList
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
+import org.eknet.publet.web.Config
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 21.10.12 12:47
  */
 @Singleton
-class PubletDomainList extends AbstractDomainList {
+class PubletDomainList @Inject() (config: Config) extends AbstractDomainList {
 
   def containsDomain(domain: String) = domain == "zuub.com" || domain == "localhost"
 

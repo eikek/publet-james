@@ -16,28 +16,21 @@
 
 package org.eknet.publet.james.guice
 
-import org.apache.james.filesystem.api.FileSystem
-import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.web.Config
-import java.io.File
-import org.eknet.publet.vfs.Path
+import org.apache.commons.configuration.HierarchicalConfiguration
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 20.10.12 15:54
+ * @since 28.10.12 14:34
  */
-@Singleton
-class PubletFilesystem @Inject() (config: Config) extends FileSystem {
+trait ConfigurationProvider {
 
-  val baseDir = config.workDir("james")
-
-  def getResource(url: String) = null
-
-  def getBasedir = baseDir
-
-  def getFile(fileURL: String) = {
-    val path = Path(fileURL.substring(fileURL.indexOf("://")))
-    new File(baseDir, path.asString)
-  }
+  /**
+   * Returns and possibly creates a configuration object for the given
+   * class.
+   *
+   * @param c
+   * @return
+   */
+  def getConfiguration(c: Class[_]): HierarchicalConfiguration
 
 }
