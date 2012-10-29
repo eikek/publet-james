@@ -19,8 +19,6 @@ package org.eknet.publet.james.data
 import org.apache.james.rrt.lib.{RecipientRewriteTableUtil, AbstractRecipientRewriteTable}
 import collection.JavaConversions._
 import com.google.inject.{Inject, Singleton}
-import org.apache.james.rrt.api.RecipientRewriteTableException
-import org.eknet.publet.web.Config
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -28,17 +26,14 @@ import org.eknet.publet.web.Config
  */
 @Singleton
 class RecipientTable @Inject() (maildb: MailDb) extends AbstractRecipientRewriteTable {
-  private val mappings = Map(
-    "superadmin@localhost" -> "superadmin",
-    "superadmin@zuub.com" -> "superadmin"
-  )
+  private def mappings = maildb.getAllMappings
 
   def addMappingInternal(user: String, domain: String, mapping: String) {
-    throw new RecipientRewriteTableException("Read-Only implementation")
+    maildb.addMapping(user, domain, mapping)
   }
 
   def removeMappingInternal(user: String, domain: String, mapping: String) {
-    throw new RecipientRewriteTableException("Read-Only implementation")
+    maildb.removeMapping(user, domain, mapping)
   }
 
   def getUserDomainMappingsInternal(user: String, domain: String) =

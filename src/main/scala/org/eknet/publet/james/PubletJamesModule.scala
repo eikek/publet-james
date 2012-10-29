@@ -40,7 +40,6 @@ import org.apache.james.mailbox.store._
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator
 import org.apache.james.mailbox.maildir.{MaildirMailboxSessionMapperFactory, MaildirStore}
 import org.apache.james.mailbox.acl.{SimpleGroupMembershipResolver, GroupMembershipResolver, UnionMailboxACLResolver, MailboxACLResolver}
-import org.apache.james.mailbox.store.user.SubscriptionMapperFactory
 import org.apache.james.imap.decode.{ImapDecoder, ImapDecoderFactory}
 import org.apache.james.imap.main.DefaultImapDecoderFactory
 import org.apache.james.imap.encode.{ImapEncoder, ImapEncoderFactory}
@@ -51,8 +50,9 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory
 import org.apache.james.mailbox.copier.{MailboxCopierImpl, MailboxCopier}
 import org.apache.james.mailrepository.api.MailRepositoryStore
 import org.apache.james.adapter.mailbox.MailboxManagerManagement
-import org.eknet.publet.ext.orient.OrientDbProvider
-import com.google.inject.name.Named
+import org.eknet.publet.ext.orient.GraphDbProvider
+import org.apache.james.rrt.lib.RecipientRewriteTableManagement
+import org.apache.james.domainlist.lib.DomainListManagement
 
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
 
@@ -96,6 +96,8 @@ class PubletJamesModule extends AbstractModule with PubletBinding with PubletMod
     binder.set[SubscriptionManager].toType[GStoreSubscriptionManager] asEagerSingleton()
     binder.set[MailRepositoryStore].toType[MailRepositoryStoreImpl] asEagerSingleton()
     binder.bindEagerly[MailboxManagerManagement]
+    binder.bindEagerly[RecipientRewriteTableManagement]
+    binder.bindEagerly[DomainListManagement]
 
     //imap
     binder.set[ImapDecoderFactory].toType[DefaultImapDecoderFactory] in Scopes.SINGLETON
@@ -120,5 +122,5 @@ class PubletJamesModule extends AbstractModule with PubletBinding with PubletMod
   }
 
   @Provides@Singleton
-  def createDb(dbprov: OrientDbProvider): MailDb = new MailDb(dbprov.getDatabase("jamesdb"))
+  def createDb(dbprov: GraphDbProvider): MailDb = new MailDb(dbprov.getDatabase("jamesdb"))
 }

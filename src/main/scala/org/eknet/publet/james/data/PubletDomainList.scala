@@ -18,10 +18,6 @@ package org.eknet.publet.james.data
 
 import org.apache.james.domainlist.lib.AbstractDomainList
 import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.web.Config
-import org.apache.james.domainlist.api.DomainListException
-import org.eknet.publet.ext.orient.{OrientDb, OrientDbProvider}
-import com.google.inject.name.Named
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
