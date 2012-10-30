@@ -16,7 +16,8 @@
 
 package org.eknet.publet.james.data
 
-import org.eknet.publet.ext.orient.{GraphDb, GraphDsl}
+import org.eknet.publet.ext.orient.GraphDb
+import org.eknet.scue.GraphDsl
 import com.google.inject.{Inject, Singleton}
 
 /**
@@ -24,15 +25,14 @@ import com.google.inject.{Inject, Singleton}
  * @since 28.10.12 20:00
  */
 @Singleton
-class MailDb @Inject() (maildb: GraphDb) {
+class MailDb @Inject() (db: GraphDb) {
 
-  private implicit val graph = maildb.graph
-  import maildb._
+  private implicit val graph = db.graph
   import GraphDsl._
 
-  lazy val domains = referenceNode --> "domains" -->| vertex("name", "domainNames")
-  lazy val users =  referenceNode --> "users" -->| vertex("name", "userNames")
-  lazy val mappings = referenceNode --> "mappings" -->| vertex("name", "allMappings")
+  lazy val domains = db.referenceNode --> "domains" -->| vertex("name", "domainNames")
+  lazy val users =  db.referenceNode --> "users" -->| vertex("name", "userNames")
+  lazy val mappings = db.referenceNode --> "mappings" -->| vertex("name", "allMappings")
 
   private val domainNameProp = "domainName"
   private val domainNameLabel = "domain"
@@ -42,17 +42,17 @@ class MailDb @Inject() (maildb: GraphDb) {
   }
 
   def removeDomain(domain: String) {
-    withTx {
+    db.withTx {
       (domains ->- domainNameLabel findEnd(v => v(domainNameProp) == domain))
         .map { v => graph.removeVertex(v) }
     }
   }
 
-  def containsDomain(domain: String): Boolean = withTx {
+  def containsDomain(domain: String): Boolean = db.withTx {
     (domains ->- domainNameLabel findEnd(v => v(domainNameProp) == domain)).isDefined
   }
 
-  def getDomainList: List[String] = withTx {
+  def getDomainList: List[String] = db.withTx {
     (domains ->- domainNameLabel mapEnds (v => v(domainNameProp).toString)).toList
   }
 
@@ -70,7 +70,7 @@ class MailDb @Inject() (maildb: GraphDb) {
 
 
   def addMapping(user: String, domain: String, mapping: String) {
-    withTx {
+    db.withTx {
       val un = users --> usernameLabel -->| vertex(usernameProp, user)
       val mn = un --> domain -->| vertex(mappingProp, mapping)
       mn --> mappingLabel --> mappings
@@ -78,7 +78,7 @@ class MailDb @Inject() (maildb: GraphDb) {
   }
 
   def removeMapping(user: String, domain: String, mapping: String) {
-    withTx {
+    db.withTx {
       (mappings -<- mappingLabel).foreachEnd(mn => {
         graph.removeVertex(mn)
       })

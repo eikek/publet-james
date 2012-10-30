@@ -39,7 +39,7 @@ import org.apache.camel.spi.{Injector => CamelInjector, _}
 import javax.naming.{InitialContext, Context}
 import org.apache.camel.builder.ErrorHandlerBuilder
 import java.util
-import org.apache.camel.{ErrorHandlerFactory, IsSingleton, TypeConverter}
+import org.apache.camel.{IsSingleton, TypeConverter}
 
 /**
  * extending CamelContext to allow guice bindings to be injected.
@@ -89,7 +89,7 @@ class GuiceCamelContext @Inject() (injector: Injector) extends DefaultCamelConte
   }
 
   @Inject(optional = true)
-  override def setErrorHandlerBuilder(errorHandlerBuilder: ErrorHandlerFactory) {
+  override def setErrorHandlerBuilder(errorHandlerBuilder: ErrorHandlerBuilder) {
     super.setErrorHandlerBuilder(errorHandlerBuilder)
   }
 

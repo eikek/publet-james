@@ -32,13 +32,13 @@ object Version {
   val scala = "2.9.2"
   val servlet = "3.0.1"
   val publet = "1.0.0-SNAPSHOT"
-  val james = "3.0-beta5-SNAPSHOT"
-  val jamesMailbox = "0.5-SNAPSHOT" //used in james-server
-  val camel = "2.10.1" //version which is used by james
+  val james = "3.0-beta4"
+  val jamesMailbox = "0.4" //used in james-server
 }
 
 object Dependencies {
 
+  val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() //scala 2.9.2 only
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
@@ -113,7 +113,7 @@ object RootBuild extends Build {
     </licenses>
   )
 
-  val deps = Seq(publetWeb, publetExt, publetApp, servletApi) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j) ++ jamesServerAll
 }
 
 
