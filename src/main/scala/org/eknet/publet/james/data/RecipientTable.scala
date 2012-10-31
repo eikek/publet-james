@@ -19,6 +19,8 @@ package org.eknet.publet.james.data
 import org.apache.james.rrt.lib.{RecipientRewriteTableUtil, AbstractRecipientRewriteTable}
 import collection.JavaConversions._
 import com.google.inject.{Inject, Singleton}
+import org.apache.james.rrt.api.RecipientRewriteTable
+import java.util
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -26,7 +28,6 @@ import com.google.inject.{Inject, Singleton}
  */
 @Singleton
 class RecipientTable @Inject() (maildb: MailDb) extends AbstractRecipientRewriteTable {
-  private def mappings = maildb.getAllMappings
 
   def addMappingInternal(user: String, domain: String, mapping: String) {
     maildb.addMapping(user, domain, mapping)
@@ -37,11 +38,24 @@ class RecipientTable @Inject() (maildb: MailDb) extends AbstractRecipientRewrite
   }
 
   def getUserDomainMappingsInternal(user: String, domain: String) =
-    mappings.get(user + "@" + domain)
-      .map(v => RecipientRewriteTableUtil.mappingToCollection(v))
-      .orNull
+    maildb.userDomainMappings(user, domain)
 
-  def getAllMappingsInternal = mappings.map(t => (t._1,  RecipientRewriteTableUtil.mappingToCollection(t._2)))
+  def getAllMappingsInternal = {
+    val map = new util.HashMap[String, util.Collection[String]]()
+    maildb.allMappings foreach { t => map.put(t._1, t._2) }
+    map
+  }
 
-  def mapAddressInternal(user: String, domain: String) = RecipientRewriteTableUtil.getTargetString(user, domain, mappings)
+  def mapAddressInternal(user: String, domain: String) = {
+    maildb.userDomainMappings(user, domain) match {
+      case list if (!list.isEmpty) => RecipientRewriteTableUtil.CollectionToMapping(list)
+      case _ => maildb.userDomainMappings(user, RecipientRewriteTable.WILDCARD) match {
+        case list if (!list.isEmpty) => RecipientRewriteTableUtil.CollectionToMapping(list)
+        case _ => maildb.userDomainMappings(RecipientRewriteTable.WILDCARD, domain) match {
+          case list if (!list.isEmpty) => RecipientRewriteTableUtil.CollectionToMapping(list)
+          case _ => null
+        }
+      }
+    }
+  }
 }

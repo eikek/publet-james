@@ -34,10 +34,12 @@ object Version {
   val publet = "1.0.0-SNAPSHOT"
   val james = "3.0-beta4"
   val jamesMailbox = "0.4" //used in james-server
+  val standardMailets = "1.1"
 }
 
 object Dependencies {
 
+  val junit = "junit" % "junit" % "4.10" % "test"
   val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() //scala 2.9.2 only
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
@@ -74,11 +76,16 @@ object Dependencies {
     //"commons-daemon" % "commons-daemon" % "1.0.10",
     "org.apache.james" % "apache-james-mailbox-tool" % Version.jamesMailbox
   )
+
+  // for tests
+  val jamesServerDataLibTest = jamesServerDataLib % "test" classifier("tests") withSources()
+
   val jamesServerAll = jamesDeps ++ Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
     jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
     jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
-    jamesServerMailets
+    jamesServerMailets,
+    jamesServerDataLibTest
   )
 }
 
@@ -113,7 +120,7 @@ object RootBuild extends Build {
     </licenses>
   )
 
-  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, junit, scalaTest) ++ jamesServerAll
 }
 
 
