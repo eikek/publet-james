@@ -19,6 +19,9 @@ package org.eknet.publet.james.data
 import org.apache.james.domainlist.lib.AbstractDomainList
 import com.google.inject.{Inject, Singleton}
 import org.apache.james.domainlist.api.DomainListException
+import org.apache.commons.configuration.HierarchicalConfiguration
+import java.util
+import java.util.Locale
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -26,14 +29,29 @@ import org.apache.james.domainlist.api.DomainListException
  */
 @Singleton
 class PubletDomainList @Inject() (maildb: MailDb) extends AbstractDomainList {
-  import collection.JavaConversions._
 
-  def containsDomain(domain: String) = maildb.containsDomain(domain)
+  def containsDomain(domain: String) =
+    domain.toLowerCase(Locale.ROOT) == getDefaultDomain || maildb.containsDomain(domain)
+
   def addDomain(domain: String) {
+    if (domain == null || domain.isEmpty)
+      throw new DomainListException("Cannot add empty domains.")
     if (containsDomain(domain.toLowerCase))
       throw new DomainListException("Domain '"+domain.toLowerCase+"' alread added.")
     maildb.addDomain(domain)
   }
-  def removeDomain(domain: String) { maildb.removeDomain(domain) }
-  def getDomainListInternal = maildb.getDomainList
+
+  def removeDomain(domain: String) {
+    if (domain==null||domain.isEmpty)
+      throw new DomainListException("Cannot remove empty domains!")
+    maildb.removeDomain(domain)
+  }
+
+  def getDomainListInternal = {
+    //note: James expects this list to be modifyable!
+    val list = maildb.getDomainList.distinct
+    val result = new util.ArrayList[String]()
+    for (d <- list if (!d.isEmpty)) result.add(d)
+    result
+  }
 }

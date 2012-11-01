@@ -20,13 +20,14 @@ import org.eknet.publet.ext.orient.GraphDb
 import org.eknet.scue.GraphDsl
 import com.google.inject.{Inject, Singleton}
 import org.apache.james.rrt.api.RecipientRewriteTable
+import grizzled.slf4j.Logging
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 28.10.12 20:00
  */
 @Singleton
-class MailDb @Inject() (db: GraphDb) {
+class MailDb @Inject() (db: GraphDb) extends Logging {
 
   private implicit val graph = db.graph
   import GraphDsl._
@@ -39,23 +40,36 @@ class MailDb @Inject() (db: GraphDb) {
   private val domainNameLabel = "domain"
 
   def addDomain(domain: String) {
+    if (domain == null || domain.isEmpty)
+      throw new IllegalArgumentException("Cannot add empty domain names!")
+
     withTx {
       vertex(domainNameProp := domain.toLowerCase, v => domains --> domainNameLabel --> v)
     }
   }
 
   def removeDomain(domain: String) {
+    if (domain == null || domain.isEmpty)
+      throw new IllegalArgumentException("Cannot remove empty domain names!")
+
     withTx {
-      vertices(domainNameProp := domain) foreach (dv => graph.removeVertex(dv))
+      vertices(domainNameProp := domain) foreach (dv => {
+        info("Remove domain vertex: "+ dv)
+        graph.removeVertex(dv)
+      })
     }
   }
 
-  def containsDomain(domain: String): Boolean = db.withTx {
+  def containsDomain(domain: String): Boolean = withTx {
+    if (domain == null || domain.isEmpty)
+      throw new IllegalArgumentException("Empty domain names are not allowed!")
+
     vertices(domainNameProp := domain).headOption.isDefined
   }
 
-  def getDomainList: List[String] = db.withTx {
-    (domains ->- domainNameLabel mapEnds (v => v(domainNameProp).map(_.toString))).flatten.toList
+  def getDomainList: List[String] = withTx {
+    (domains ->- domainNameLabel mapEnds (v => v.get[String](domainNameProp)
+      .collect({case x if (!x.isEmpty) => x}))).flatten.toList.distinct
   }
 
   /*

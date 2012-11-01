@@ -1,0 +1,15 @@
+h2 Domains
+
+:markdown
+  Configure the domains of the mail server.
+
+-
+  def urlOf(script: String) = PubletWebContext.urlOf("/publet/james/action/"+ script)
+
+.manageDomains
+  form#domainAddForm.form.form-inline(action={ urlOf("adddomain.json") } method="post")
+    input(type="text" placeholder="Add Domain" name="domain")
+    button.btn Add
+
+  .feedback
+  ul.domainList

@@ -57,6 +57,7 @@ import org.apache.james.domainlist.lib.DomainListManagement
 class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
 
   def configure() {
+    binder.bindEagerly[Setup]
     binder.set[ConfigurationProvider].toType[JamesConfigurationProvider] in  Scopes.SINGLETON
     bindListener(JamesMatcher, new JamesTypeListener)
     bindListener(MBeanMatcher, new MBeanExporter)
