@@ -38,12 +38,16 @@ class RecipientTable @Inject() (maildb: MailDb) extends AbstractRecipientRewrite
   }
 
   def getUserDomainMappingsInternal(user: String, domain: String) =
-    maildb.userDomainMappings(user, domain)
+    maildb.userDomainMappings(user, domain) match {
+      case Nil => null
+      case x => x
+    }
 
   def getAllMappingsInternal = {
     val map = new util.HashMap[String, util.Collection[String]]()
     maildb.allMappings foreach { t => map.put(t._1, t._2) }
-    map
+    if (map.isEmpty) null
+    else map
   }
 
   def mapAddressInternal(user: String, domain: String) = {

@@ -18,6 +18,7 @@ package org.eknet.publet.james.data
 
 import org.apache.james.domainlist.lib.AbstractDomainList
 import com.google.inject.{Inject, Singleton}
+import org.apache.james.domainlist.api.DomainListException
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -25,16 +26,14 @@ import com.google.inject.{Inject, Singleton}
  */
 @Singleton
 class PubletDomainList @Inject() (maildb: MailDb) extends AbstractDomainList {
+  import collection.JavaConversions._
 
   def containsDomain(domain: String) = maildb.containsDomain(domain)
-
   def addDomain(domain: String) {
+    if (containsDomain(domain.toLowerCase))
+      throw new DomainListException("Domain '"+domain.toLowerCase+"' alread added.")
     maildb.addDomain(domain)
   }
-
-  def removeDomain(domain: String) {
-    maildb.removeDomain(domain)
-  }
-
-  def getDomainListInternal = null
+  def removeDomain(domain: String) { maildb.removeDomain(domain) }
+  def getDomainListInternal = maildb.getDomainList
 }

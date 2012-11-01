@@ -31,32 +31,31 @@ class MailDb @Inject() (db: GraphDb) {
   private implicit val graph = db.graph
   import GraphDsl._
 
-  lazy val domains = db.referenceNode --> "domains" -->| vertex("name", "domainNames")
-  lazy val virtualAddr =  db.referenceNode --> "virtualAddresses" -->| vertex("name", "virtualAddress")
-  lazy val mappings = db.referenceNode --> "mappings" -->| vertex("name", "allMappings")
+  lazy val domains = vertex("name" := "domainNames", v => db.referenceNode --> "domains" -->| v)
+  lazy val virtualAddr =  vertex("name" := "virtualAddress", v => db.referenceNode --> "virtualAddresses" -->| v)
+  lazy val mappings = vertex("name" := "allMappings", v => db.referenceNode --> "mappings" -->| v)
 
   private val domainNameProp = "domainName"
   private val domainNameLabel = "domain"
 
   def addDomain(domain: String) {
     withTx {
-      domains --> domainNameLabel --> vertex(domainNameProp, domain)
+      vertex(domainNameProp := domain.toLowerCase, v => domains --> domainNameLabel --> v)
     }
   }
 
   def removeDomain(domain: String) {
     withTx {
-      (domains ->- domainNameLabel findEnd(v => v(domainNameProp) == domain))
-        .map { v => graph.removeVertex(v) }
+      vertices(domainNameProp := domain) foreach (dv => graph.removeVertex(dv))
     }
   }
 
   def containsDomain(domain: String): Boolean = db.withTx {
-    (domains ->- domainNameLabel findEnd(v => v(domainNameProp) == domain)).isDefined
+    vertices(domainNameProp := domain).headOption.isDefined
   }
 
   def getDomainList: List[String] = db.withTx {
-    (domains ->- domainNameLabel mapEnds (v => v(domainNameProp).toString)).toList
+    (domains ->- domainNameLabel mapEnds (v => v(domainNameProp).map(_.toString))).flatten.toList
   }
 
   /*
@@ -73,25 +72,30 @@ class MailDb @Inject() (db: GraphDb) {
     "@" + Option(domain).getOrElse(RecipientRewriteTable.WILDCARD)
 
   def addMapping(user: String, domain: String, mapping: String) {
-    db.withTx {
-      virtualAddr --> addressLabel -->|
-        vertex(vaddressProp, key(user, domain)) --> mappingLabel -->|
-        newVertex(v => v(mappingProp) = mapping) <-- mappingLabel <-- mappings
+    withTx {
+      vertex(vaddressProp := key(user, domain), v => {
+        virtualAddr --> addressLabel --> v
+      }) --> mappingLabel -->| newVertex(mappingProp := mapping) <-- mappingLabel <-- mappings
     }
   }
 
   def removeMapping(user: String, domain: String, mapping: String) {
     db.withTx {
-      virtualAddr ->- addressLabel findEnd(v => v(vaddressProp) == key(user, domain)) map {
-        _ ->- mappingLabel findEnd(v => v(mappingProp) == mapping) map (graph.removeVertex(_))
+      vertices(vaddressProp := key(user, domain)).headOption.map(v => {
+        (v ->- mappingLabel findEnd(_.has(mappingProp := mapping))).foreach(graph.removeVertex(_))
+      })
+    }
+    withTx {
+      if (userDomainMappings(user, domain) == Nil) {
+        vertices(vaddressProp := key(user, domain)).headOption.map(v => graph.removeVertex(v))
       }
     }
   }
 
   def userDomainMappings(user: String, domain: String) = {
-    virtualAddr ->- addressLabel findEnd(_(mappingProp) == key(user, domain)) map {
-      _ ->- mappingLabel mapEnds(mn => mn(mappingProp).toString)
-    } getOrElse(Nil)
+    vertices(vaddressProp := key(user, domain)).headOption.map(v => {
+      (v ->- mappingLabel mapEnds(mn => mn(mappingProp).map(_.toString))).flatten
+    }).getOrElse(Nil)
   }
 
   def allMappings = (virtualAddr ->- addressLabel mapEnds {van => (van(vaddressProp).toString ->

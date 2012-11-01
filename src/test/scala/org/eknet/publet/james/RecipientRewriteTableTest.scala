@@ -21,13 +21,17 @@ import org.slf4j.LoggerFactory
 import java.util
 import org.apache.james.rrt.api.RecipientRewriteTable
 import org.scalatest.junit.AssertionsForJUnit
+import org.eknet.publet.james.data.{MailDb, RecipientTable}
+import org.eknet.publet.ext.orient.{BlueprintGraph, GraphDb}
+import org.eknet.scue.OrientDbFactory
+import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import org.apache.james.domainlist.api.DomainList
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 31.10.12 19:00
  */
 class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with AssertionsForJUnit {
-
   val logger = LoggerFactory.getLogger(classOf[RecipientRewriteTableTest])
 
   val REGEX_TYPE: Int = 0
@@ -35,9 +39,53 @@ class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with A
   val ADDRESS_TYPE: Int = 2
   val ALIASDOMAIN_TYPE: Int = 3
 
-  def getRecipientRewriteTable = null
-  def addMapping(p1: String, p2: String, p3: String, p4: Int) = false
-  def removeMapping(p1: String, p2: String, p3: String, p4: Int) = false
+  type MappingFun = (AbstractRecipientRewriteTable, String, String, String) => Unit
+
+  def function(mappingType: Int, remove: Boolean): MappingFun = {
+    (mappingType, remove) match {
+      case (REGEX_TYPE, x) => (rrt, user, domain, mapping) => {
+        if (x) rrt.removeRegexMapping(user, domain, mapping)
+        else rrt.addRegexMapping(user, domain, mapping)
+      }
+      case (ERROR_TYPE, x) => (rrt, user, domain, mapping) => {
+        if (x) rrt.removeErrorMapping(user, domain, mapping)
+        else rrt.addErrorMapping(user, domain, mapping)
+      }
+      case (ALIASDOMAIN_TYPE, x) => (rrt, user, domain, mapping) => {
+        if (x) rrt.removeAliasDomainMapping(domain, mapping)
+        else rrt.addAliasDomainMapping(domain, mapping)
+      }
+      case (ADDRESS_TYPE, x) => (rrt, user, domain, mapping) => {
+        if (x) rrt.removeAddressMapping(user, domain, mapping)
+        else rrt.addAddressMapping(user, domain, mapping)
+      }
+    }
+  }
+
+  def getRecipientRewriteTable = {
+    val provider = new TestGraphDbProvider
+    val rrt = new RecipientTable(new MailDb(new GraphDb(provider.getNext)))
+    rrt.setLog(logger)
+    rrt.setDomainList(new DomainList {
+      def getDomains = Array("mydomain.com")
+      def getDefaultDomain = "mydomain.com"
+      def containsDomain(domain: String) = domain == "mydomain.com"
+      def removeDomain(domain: String) {}
+      def addDomain(domain: String) {}
+    })
+    rrt.setMappingLimit(10)
+    rrt.setRecursiveMapping(true)
+    rrt
+  }
+
+  def addMapping(user: String, domain: String, mapping: String, mappingType: Int) = {
+    val rrt = virtualUserTable
+    function(mappingType, remove = false)(rrt, user, domain, mapping)
+    true
+  }
+  def removeMapping(user: String, domain: String, mapping: String, mappingType: Int) = {
+    val rrt = virtualUserTable
+    function(mappingType, remove = true)(rrt, user, domain, mapping)
+    true
+  }
 }
-
-

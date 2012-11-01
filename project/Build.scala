@@ -32,6 +32,7 @@ object Version {
   val scala = "2.9.2"
   val servlet = "3.0.1"
   val publet = "1.0.0-SNAPSHOT"
+  val scue = "1.0.0-SNAPSHOT"
   val james = "3.0-beta4"
   val jamesMailbox = "0.4" //used in james-server
   val standardMailets = "1.1"
@@ -45,6 +46,7 @@ object Dependencies {
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
   val publetExt = "org.eknet.publet" %% "publet-ext" % Version.publet % "provided" withSources()
+  val scueTest = "org.eknet.scue" %% "scue" % Version.scue % "test" classifier("test")
   val servletApi = "javax.servlet" % "javax.servlet-api" % Version.servlet % "provided" withSources()
 
   def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james
@@ -79,13 +81,15 @@ object Dependencies {
 
   // for tests
   val jamesServerDataLibTest = jamesServerDataLib % "test" classifier("tests") withSources()
+  val jamesServerDataApiTest = jamesServerDataApi % "test" classifier("tests") withSources()
+  val jamesServerDnsApiTest = jamesServerDnsApi % "test" classifier("tests") withSources()
 
   val jamesServerAll = jamesDeps ++ Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
     jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
     jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
     jamesServerMailets,
-    jamesServerDataLibTest
+    jamesServerDataLibTest, jamesServerDataApiTest, jamesServerDnsApiTest
   )
 }
 
@@ -120,7 +124,7 @@ object RootBuild extends Build {
     </licenses>
   )
 
-  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, junit, scalaTest) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, junit, scalaTest, scueTest) ++ jamesServerAll
 }
 
 
