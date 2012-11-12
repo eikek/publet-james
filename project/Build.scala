@@ -25,8 +25,8 @@ object Resolvers {
   val apacheSnapshots = "apache-snapshots" at "https://repository.apache.org/content/repositories/snapshots/"
 }
 object Version {
-  val slf4j = "1.6.4"
-  val logback = "1.0.1"
+  val slf4j = "1.7.2"
+  val logback = "1.0.7"
   val scalaTest = "1.8"
   val grizzled = "0.6.9"
   val scala = "2.9.2"
@@ -40,12 +40,15 @@ object Version {
 
 object Dependencies {
 
+  val slf4jApi = "org.slf4j" % "slf4j-api" % Version.slf4j
+  val slf4jSimple = "org.slf4j" % "slf4j-simple" % Version.slf4j % "test"
   val junit = "junit" % "junit" % "4.10" % "test"
   val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() //scala 2.9.2 only
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
   val publetExt = "org.eknet.publet" %% "publet-ext" % Version.publet % "provided" withSources()
+  val scue = "org.eknet.scue" %% "scue" % Version.scue % "test"
   val scueTest = "org.eknet.scue" %% "scue" % Version.scue % "test" classifier("test")
   val servletApi = "javax.servlet" % "javax.servlet-api" % Version.servlet % "provided" withSources()
 
@@ -124,7 +127,7 @@ object RootBuild extends Build {
     </licenses>
   )
 
-  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, junit, scalaTest, scueTest) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, junit, scalaTest, scue, scueTest, slf4jSimple) ++ jamesServerAll
 }
 
 

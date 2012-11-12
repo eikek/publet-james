@@ -19,7 +19,8 @@ package org.eknet.publet.james
 import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.matchers.ShouldMatchers
 import org.eknet.publet.james.data.MailDb
-import org.eknet.publet.ext.orient.GraphDb
+import org.eknet.publet.ext.graphdb.GraphDb
+import org.eknet.scue.TitanDbFactory
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -32,6 +33,10 @@ class MailDbSuite extends FunSuite with ShouldMatchers with BeforeAndAfter {
 
   before {
     this.maildb = new MailDb(new GraphDb(provider.getNext))
+  }
+  after {
+    this.provider.shutdownAll()
+    TitanDbFactory.deleteAll()
   }
 
   test ("add and remove domain node") {

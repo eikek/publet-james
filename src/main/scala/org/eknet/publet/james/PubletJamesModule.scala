@@ -50,61 +50,67 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory
 import org.apache.james.mailbox.copier.{MailboxCopierImpl, MailboxCopier}
 import org.apache.james.mailrepository.api.MailRepositoryStore
 import org.apache.james.adapter.mailbox.MailboxManagerManagement
-import org.eknet.publet.ext.orient.GraphDbProvider
 import org.apache.james.rrt.lib.RecipientRewriteTableManagement
 import org.apache.james.domainlist.lib.DomainListManagement
+import org.eknet.publet.james.guice.test.TestUserStore
+import org.eknet.guice.squire.SquireModule
+import org.eknet.publet.ext.graphdb.GraphDbProvider
+import org.eknet.publet.auth.store.UserStore
 
-class PubletJamesModule extends AbstractModule with PubletBinding with PubletModule {
+class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
 
   def configure() {
-    binder.bindEagerly[Setup]
-    binder.set[ConfigurationProvider].toType[JamesConfigurationProvider] in  Scopes.SINGLETON
+    bind[Setup].asEagerSingleton()
+    bind[ConfigurationProvider].to[JamesConfigurationProvider] in  Scopes.SINGLETON
     bindListener(JamesMatcher, new JamesTypeListener)
     bindListener(MBeanMatcher, new MBeanExporter)
-    binder.bindEagerly[PreDestroyHandler]
+    bind[PreDestroyHandler].asEagerSingleton()
 
-    binder.set[DNSService].toType[DNSJavaService] in Scopes.SINGLETON
-    binder.set[ProtocolHandlerLoader].toType[GuiceProtocolHandlerLoader] in Scopes.SINGLETON
-    binder.set[FileSystem].toType[PubletFilesystemImpl] in Scopes.SINGLETON
+    bind[DNSService].to[DNSJavaService] in Scopes.SINGLETON
+    bind[ProtocolHandlerLoader].to[GuiceProtocolHandlerLoader] in Scopes.SINGLETON
+    bind[FileSystem].to[PubletFilesystemImpl] in Scopes.SINGLETON
 
-    binder.set[UsersRepository].toType[UserRepository] in Scopes.SINGLETON
-    binder.set[RecipientRewriteTable].toType[RecipientTable] in Scopes.SINGLETON
-    binder.set[DomainList].toType[PubletDomainList] in Scopes.SINGLETON
+    bind[UsersRepository].to[UserRepository] in Scopes.SINGLETON
+    bind[RecipientRewriteTable].to[RecipientTable] in Scopes.SINGLETON
+    bind[DomainList].to[PubletDomainList] in Scopes.SINGLETON
 
-    binder.set[MailQueueFactory].toType[FileMailQueueFactory] in Scopes.SINGLETON
+    bind[MailQueueFactory].to[FileMailQueueFactory] in Scopes.SINGLETON
 
-    binder.bindEagerly[SMTPServerFactory]
+    bind[SMTPServerFactory].asEagerSingleton()
 
     //mailet container
-    binder.set[MailProcessor].toType[CamelCompositeProcessor] in Scopes.SINGLETON
-    binder.set[MailetContext].toType[JamesMailetContext] asEagerSingleton()
-    binder.bindEagerly[JamesMailSpooler]
-    binder.set[MailetLoader].toType[MailetMatcherLoader] in Scopes.SINGLETON
-    binder.set[MatcherLoader].toType[MailetMatcherLoader] in Scopes.SINGLETON
-    bind(classOf[CamelContext]).toType[GuiceCamelContext] asEagerSingleton()
+    bind[MailProcessor].to[CamelCompositeProcessor] in Scopes.SINGLETON
+    bind[MailetContext].to[JamesMailetContext].asEagerSingleton()
+    bind[JamesMailSpooler].asEagerSingleton()
+    bind[MailetLoader].to[MailetMatcherLoader] in Scopes.SINGLETON
+    bind[MatcherLoader].to[MailetMatcherLoader] in Scopes.SINGLETON
+    bind[CamelContext].to[GuiceCamelContext].asEagerSingleton()
 
     //maildir
-    binder.set[MailboxPathLocker].toType[JVMMailboxPathLocker] in Scopes.SINGLETON
-    binder.set[Authenticator].toType[UserRepositoryAuthenticator] in Scopes.SINGLETON
-    binder.set[MailboxACLResolver].toType[UnionMailboxACLResolver] in Scopes.SINGLETON
-    binder.set[GroupMembershipResolver].toType[SimpleGroupMembershipResolver] in Scopes.SINGLETON
-    binder.set[MaildirStore].toType[GMaildirStore] asEagerSingleton()
-    binder.set[MailboxSessionIdGenerator].toType[RandomMailboxSessionIdGenerator] in Scopes.SINGLETON
-    binder.set[MaildirMailboxSessionMapperFactory].toType[GMaildirMailboxSessionMapperFactory] in Scopes.SINGLETON
+    bind[MailboxPathLocker].to[JVMMailboxPathLocker] in Scopes.SINGLETON
+    bind[Authenticator].to[UserRepositoryAuthenticator] in Scopes.SINGLETON
+    bind[MailboxACLResolver].to[UnionMailboxACLResolver] in Scopes.SINGLETON
+    bind[GroupMembershipResolver].to[SimpleGroupMembershipResolver] in Scopes.SINGLETON
+    bind[MaildirStore].to[GMaildirStore] asEagerSingleton()
+    bind[MailboxSessionIdGenerator].to[RandomMailboxSessionIdGenerator] in Scopes.SINGLETON
+    bind[MaildirMailboxSessionMapperFactory].to[GMaildirMailboxSessionMapperFactory] in Scopes.SINGLETON
     // bean "maildir-mailboxmanager" aliased to "mailboxmanager" by config file
-    binder.set[MailboxManager].toType[GStoreMailboxManager] asEagerSingleton()
+    bind[MailboxManager].to[GStoreMailboxManager] asEagerSingleton()
     // bean "maildir-subscriptionmanager" aliased to "subscriptionmanager" by config file
-    binder.set[SubscriptionManager].toType[GStoreSubscriptionManager] asEagerSingleton()
-    binder.set[MailRepositoryStore].toType[MailRepositoryStoreImpl] asEagerSingleton()
-    binder.bindEagerly[MailboxManagerManagement]
-    binder.bindEagerly[RecipientRewriteTableManagement]
-    binder.bindEagerly[DomainListManagement]
+    bind[SubscriptionManager].to[GStoreSubscriptionManager] asEagerSingleton()
+    bind[MailRepositoryStore].to[MailRepositoryStoreImpl] asEagerSingleton()
+    bind[MailboxManagerManagement]
+    bind[RecipientRewriteTableManagement].asEagerSingleton()
+    bind[DomainListManagement].asEagerSingleton()
 
     //imap
-    binder.set[ImapDecoderFactory].toType[DefaultImapDecoderFactory] in Scopes.SINGLETON
-    binder.set[ImapEncoderFactory].toType[DefaultImapEncoderFactory] in Scopes.SINGLETON
-    binder.bindEagerly[IMAPServerFactory]
-    binder.set[MailboxCopier].toType[MailboxCopierImpl] in Scopes.SINGLETON
+    bind[ImapDecoderFactory].to[DefaultImapDecoderFactory] in Scopes.SINGLETON
+    bind[ImapEncoderFactory].to[DefaultImapEncoderFactory] in Scopes.SINGLETON
+    bind[IMAPServerFactory].asEagerSingleton()
+    bind[MailboxCopier].to[MailboxCopierImpl] in Scopes.SINGLETON
+
+    ///test
+    setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
   }
 
 

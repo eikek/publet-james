@@ -17,7 +17,7 @@
 package org.eknet.publet.james
 
 import org.eknet.publet.engine.scala.ScalaScript
-import org.eknet.publet.web.util.{PubletWebContext, PubletWeb}
+import org.eknet.publet.web.util.{RenderUtils, PubletWebContext, PubletWeb}
 import org.apache.james.domainlist.api.DomainList
 import org.eknet.publet.vfs.Content
 import org.eknet.publet.james.data.MailDb
@@ -29,23 +29,23 @@ import org.eknet.publet.james.data.MailDb
  */
 package object ui {
 
-  def domainList = PubletWeb.instance[DomainList]
-  def maildb = PubletWeb.instance[MailDb]
+  def domainList = PubletWeb.instance[DomainList].get
+  def maildb = PubletWeb.instance[MailDb].get
   def param(name: String) = PubletWebContext.param(name)
 
-  def success(msg: String) = ScalaScript.makeJson(Map("success"->true, "message"->msg))
-  def failure(msg: String) = ScalaScript.makeJson(Map("success"->false, "message"->msg))
+  def success(msg: String) = RenderUtils.makeJson(Map("success"->true, "message"->msg))
+  def failure(msg: String) = RenderUtils.makeJson(Map("success"->false, "message"->msg))
 
   def safeCall(f: => Option[Content]) = try { f } catch {
       case e: Exception => failure(e.getMessage)
     }
 
   class GetDomains extends ScalaScript {
-    def serve() = ScalaScript.makeJson((domainList.getDefaultDomain :: maildb.getDomainList).distinct)
+    def serve() = RenderUtils.makeJson((domainList.getDefaultDomain :: maildb.getDomainList).distinct)
   }
 
   class GetDefaultDomain extends ScalaScript {
-    def serve() = ScalaScript.makeJson(domainList.getDefaultDomain)
+    def serve() = RenderUtils.makeJson(domainList.getDefaultDomain)
   }
 
   class AddDomain extends ScalaScript {

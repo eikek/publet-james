@@ -16,11 +16,11 @@
 
 package org.eknet.publet.james.data
 
-import org.eknet.publet.ext.orient.GraphDb
 import org.eknet.scue.GraphDsl
 import com.google.inject.{Inject, Singleton}
 import org.apache.james.rrt.api.RecipientRewriteTable
 import grizzled.slf4j.Logging
+import org.eknet.publet.ext.graphdb.GraphDb
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -32,9 +32,9 @@ class MailDb @Inject() (db: GraphDb) extends Logging {
   private implicit val graph = db.graph
   import GraphDsl._
 
-  lazy val domains = vertex("name" := "domainNames", v => db.referenceNode --> "domains" -->| v)
-  lazy val virtualAddr =  vertex("name" := "virtualAddress", v => db.referenceNode --> "virtualAddresses" -->| v)
-  lazy val mappings = vertex("name" := "allMappings", v => db.referenceNode --> "mappings" -->| v)
+  private[this] def domains = withTx(vertex("name" := "domainNames", v => db.referenceNode --> "domains" -->| v))
+  private[this] def virtualAddr =  withTx(vertex("name" := "virtualAddress", v => db.referenceNode --> "virtualAddresses" -->| v))
+  private[this] def mappings = withTx(vertex("name" := "allMappings", v => db.referenceNode --> "mappings" -->| v))
 
   private val domainNameProp = "domainName"
   private val domainNameLabel = "domain"
@@ -94,7 +94,7 @@ class MailDb @Inject() (db: GraphDb) extends Logging {
   }
 
   def removeMapping(user: String, domain: String, mapping: String) {
-    db.withTx {
+    withTx {
       vertices(vaddressProp := key(user, domain)).headOption.map(v => {
         (v ->- mappingLabel findEnd(_.has(mappingProp := mapping))).foreach(graph.removeVertex(_))
       })
@@ -106,12 +106,14 @@ class MailDb @Inject() (db: GraphDb) extends Logging {
     }
   }
 
-  def userDomainMappings(user: String, domain: String) = {
+  def userDomainMappings(user: String, domain: String) = withTx {
     vertices(vaddressProp := key(user, domain)).headOption.map(v => {
       (v ->- mappingLabel mapEnds(mn => mn(mappingProp).map(_.toString))).flatten
     }).getOrElse(Nil)
   }
 
-  def allMappings = (virtualAddr ->- addressLabel mapEnds {van => (van(vaddressProp).toString ->
-    (van ->- mappingLabel mapEnds(_(mappingProp).toString)).toList) }).toMap
+  def allMappings = withTx {
+    (virtualAddr ->- addressLabel mapEnds {van => (van.get[String](vaddressProp).get ->
+      (van ->- mappingLabel mapEnds(_(mappingProp).toString)).toList) }).toMap
+  }
 }

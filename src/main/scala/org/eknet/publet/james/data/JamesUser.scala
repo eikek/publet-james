@@ -17,19 +17,20 @@
 package org.eknet.publet.james.data
 
 import org.apache.james.user.api.model.{User => AJUser}
-import org.eknet.publet.auth.{Algorithm, PasswordServiceProvider, PubletAuth, User}
+import org.eknet.publet.auth.store.{UserProperty, DefaultAuthStore, User}
+import org.eknet.publet.auth.{Algorithm, PasswordServiceProvider}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 21.10.12 02:03
  */
-class JamesUser(u: User, auth: PubletAuth, passwordServiceProv: PasswordServiceProvider) extends AJUser {
+class JamesUser(u: User, auth: DefaultAuthStore, passwordServiceProv: PasswordServiceProvider) extends AJUser {
   def getUserName = u.login
 
-  def verifyPassword(pass: String) = u.algorithm
+  def verifyPassword(pass: String) = u.get(UserProperty.algorithm)
     .map(a => passwordServiceProv.forAlgorithm(Algorithm.withName(a.toUpperCase)))
-    .map(ps => ps.passwordsMatch(pass, u.password.mkString))
-    .getOrElse(pass == u.password.mkString)
+    .map(ps => ps.passwordsMatch(pass, u.get(UserProperty.password).getOrElse("")))
+    .getOrElse(pass == u.get(UserProperty.password).getOrElse(""))
 
   def setPassword(newPass: String) = {
     auth.setPassword(u.login, newPass, None)

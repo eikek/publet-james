@@ -19,8 +19,7 @@ package org.eknet.publet.james
 import org.apache.james.domainlist.lib.AbstractDomainListTest
 import org.slf4j.LoggerFactory
 import org.eknet.publet.james.data.{MailDb, PubletDomainList}
-import org.eknet.publet.ext.orient.GraphDb
-import org.apache.james.dnsservice.dnsjava.DNSJavaService
+import org.eknet.publet.ext.graphdb.GraphDb
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

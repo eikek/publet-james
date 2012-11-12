@@ -16,16 +16,13 @@
 
 package org.eknet.publet.james
 
-import org.apache.james.rrt.lib.{RecipientRewriteTableUtil, AbstractRecipientRewriteTable, AbstractRecipientRewriteTableTest}
+import org.apache.james.rrt.lib.{AbstractRecipientRewriteTable, AbstractRecipientRewriteTableTest}
 import org.slf4j.LoggerFactory
 import java.util
-import org.apache.james.rrt.api.RecipientRewriteTable
 import org.scalatest.junit.AssertionsForJUnit
 import org.eknet.publet.james.data.{MailDb, RecipientTable}
-import org.eknet.publet.ext.orient.{BlueprintGraph, GraphDb}
-import org.eknet.scue.OrientDbFactory
-import com.tinkerpop.blueprints.impls.orient.OrientGraph
 import org.apache.james.domainlist.api.DomainList
+import org.eknet.publet.ext.graphdb.GraphDb
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

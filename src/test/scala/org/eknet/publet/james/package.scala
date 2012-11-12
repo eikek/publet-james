@@ -17,10 +17,12 @@
 package org.eknet.publet
 
 import _root_.com.google.common.eventbus.EventBus
-import _root_.com.tinkerpop.blueprints.impls.orient.OrientGraph
-import org.eknet.publet.ext.orient.{BlueprintGraph, DefaultGraphDbProvider}
+import _root_.com.thinkaurelius.titan.core.{TitanFactory, TitanGraph}
+import _root_.com.tinkerpop.blueprints.TransactionalGraph.Conclusion
+import _root_.com.tinkerpop.blueprints.{Element, Edge, Vertex}
 import org.eknet.publet.web.Config
-import org.eknet.scue.OrientDbFactory
+import org.eknet.publet.ext.graphdb.{BlueprintGraph, DefaultGraphDbProvider}
+import org.eknet.scue.TitanDbFactory
 
 /**
  *
@@ -30,9 +32,27 @@ import org.eknet.scue.OrientDbFactory
 package object james {
 
   class TestGraphDbProvider extends DefaultGraphDbProvider(new Config("", new EventBus())) {
-    override def toOrientUri(dbname: String) = OrientDbFactory.dbUrl(dbname)
 
-    def getNext = new OrientGraph(OrientDbFactory.nextDb) with BlueprintGraph
+    def getNext: BlueprintGraph = new TitanWrapper(TitanFactory.open(TitanDbFactory.nextDb)) with BlueprintGraph
+  }
+
+  private class TitanWrapper(titan: TitanGraph) extends BlueprintGraph {
+    def getFeatures = titan.getFeatures
+    def addVertex(id: Any) = titan.addVertex(id)
+    def getVertex(id: Any) = titan.getVertex(id)
+    def removeVertex(vertex: Vertex) { titan.removeVertex(vertex) }
+    def getVertices = titan.getVertices
+    def getVertices(key: String, value: Any) = titan.getVertices(key, value)
+    def addEdge(id: Any, outVertex: Vertex, inVertex: Vertex, label: String) = titan.addEdge(id, outVertex, inVertex, label)
+    def getEdge(id: Any) = titan.getEdge(id)
+    def removeEdge(edge: Edge) { titan.removeEdge(edge) }
+    def getEdges = titan.getEdges
+    def getEdges(key: String, value: Any) = titan.getEdges(key, value)
+    def dropKeyIndex[T <: Element](key: String, elementClass: Class[T]) { titan.dropKeyIndex(key, elementClass) }
+    def createKeyIndex[T <: Element](key: String, elementClass: Class[T]) { titan.createKeyIndex(key, elementClass) }
+    def getIndexedKeys[T <: Element](elementClass: Class[T]) = titan.getIndexedKeys(elementClass)
+    def stopTransaction(conclusion: Conclusion) { titan.stopTransaction(conclusion) }
+    def shutdown() { titan.shutdown() }
   }
 
 }
