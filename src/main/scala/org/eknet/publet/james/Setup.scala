@@ -23,9 +23,11 @@ import org.eknet.publet.Publet
 import org.eknet.publet.vfs.util.{MapContainer, ClasspathContainer}
 import org.eknet.publet.vfs.Path
 import org.eknet.publet.web.scripts.WebScriptResource
-import org.eknet.publet.james.ui.{GetDefaultDomain, RemoveDomain, AddDomain, GetDomains}
+import org.eknet.publet.james.ui._
 import org.eknet.publet.web.asset.{Group, AssetCollection, AssetManager}
 import org.eknet.publet.web.template.DefaultLayout
+import org.eknet.publet.web.asset.Group
+import org.eknet.publet.web.guice.PubletStartedEvent
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -45,6 +47,8 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     scripts.addResource(new WebScriptResource("adddomain.json".rn, new AddDomain))
     scripts.addResource(new WebScriptResource("removedomain.json".rn, new RemoveDomain))
     scripts.addResource(new WebScriptResource("getdefaultdomain.json".rn, new GetDefaultDomain))
+    scripts.addResource(new WebScriptResource("getmappings.json".rn, new GetMappings))
+    scripts.addResource(new WebScriptResource("addmapping.json".rn, new AddMapping))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
   }
 
@@ -62,6 +66,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     val jamesGroup = Group("publet.james")
       .add(resource("css/james.css"))
       .add(resource("js/managedomains.js"))
+      .add(resource("js/managemappings.js"))
       .require(DefaultLayout.Assets.jquery.name)
 
     val jamesManager = Group("publet.james.manager")

@@ -71,4 +71,26 @@ package object ui {
       }
     }
   }
+
+  class GetMappings extends ScalaScript {
+    def serve() = {
+      RenderUtils.makeJson(maildb.allMappings)
+    }
+  }
+
+  class AddMapping extends ScalaScript {
+    def serve() = {
+      val user = param("user").filter(!_.trim.isEmpty)
+      val domain = param("domain").filter(!_.trim.isEmpty)
+      val mapping = param("mapping").filter(!_.trim.isEmpty)
+
+      (user, domain, mapping) match {
+        case (u, d, Some(m)) if (d != None || u != None) => {
+          maildb.addMapping(u.getOrElse("*"), d.getOrElse("*"), m)
+          success("Mapping added.")
+        }
+        case _ => failure("Too less parameters.")
+      }
+    }
+  }
 }

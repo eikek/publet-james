@@ -1,0 +1,20 @@
+h2 Mappings
+
+:markdown
+  Configure the domains of the mail server.
+
+-
+  def urlOf(script: String) = PubletWebContext.urlOf("/publet/james/action/"+ script)
+
+.manageMappings
+  form#mappingAddForm.form.form-inline(method="post" action={ urlOf("addmapping.json") })
+    .control-group
+      .controls
+        input(type="text" name="user" placeholder="user")
+        input(type="text" name="domain" placeholder="domain")
+    .control-group
+      .controls
+        input(type="text" name="mapping" placeholder="mapping")
+        button.btn Add
+  .mappingFeedback
+  ul.mappingList

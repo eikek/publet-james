@@ -114,6 +114,6 @@ class MailDb @Inject() (db: GraphDb) extends Logging {
 
   def allMappings = withTx {
     (virtualAddr ->- addressLabel mapEnds {van => (van.get[String](vaddressProp).get ->
-      (van ->- mappingLabel mapEnds(_(mappingProp).toString)).toList) }).toMap
+      (van ->- mappingLabel mapEnds(_.get[String](mappingProp).get)).toList) }).toMap
   }
 }

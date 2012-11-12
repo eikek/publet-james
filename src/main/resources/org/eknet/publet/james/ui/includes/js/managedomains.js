@@ -46,7 +46,7 @@ $(function() {
             html: data.message,
             class: data.success ? "alert alert-success" : "alert alert-error"
         });
-        $('.feedback').html(msg).animate({delay:1}, 3500, function() { $('.feedback').html(""); })
+        $('.domainFeedback').html(msg).animate({delay:1}, 3500, function() { $('.domainFeedback').html(""); })
     }
 
     $('#domainAddForm').ajaxForm({
