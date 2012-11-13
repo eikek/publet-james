@@ -43,7 +43,7 @@ object Dependencies {
   val slf4jApi = "org.slf4j" % "slf4j-api" % Version.slf4j
   val slf4jSimple = "org.slf4j" % "slf4j-simple" % Version.slf4j % "test"
   val junit = "junit" % "junit" % "4.10" % "test"
-  val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() //scala 2.9.2 only
+  val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() exclude("org.slf4j", "slf4j-api") //scala 2.9.2 only
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
