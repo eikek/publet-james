@@ -26,20 +26,9 @@ import org.eknet.scue.TitanDbFactory
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 01.11.12 10:26
  */
-class MailDbSuite extends FunSuite with ShouldMatchers with BeforeAndAfter {
+class MailDbSuite extends MaildbFixture with ShouldMatchers with BeforeAndAfter {
 
-  val provider = new TestGraphDbProvider
-  var maildb: MailDb = _
-
-  before {
-    this.maildb = new MailDb(new GraphDb(provider.getNext))
-  }
-  after {
-    this.provider.shutdownAll()
-    TitanDbFactory.deleteAll()
-  }
-
-  test ("add and remove domain node") {
+  test ("add and remove domain node") { maildb =>
     maildb.addDomain("mydomain.com")
     maildb.getDomainList should have size (1)
     maildb.getDomainList.head should be ("mydomain.com")
@@ -56,7 +45,7 @@ class MailDbSuite extends FunSuite with ShouldMatchers with BeforeAndAfter {
     maildb.containsDomain("mydomain1.com") should be (false)
   }
 
-  test ("double add has no effect") {
+  test ("double add has no effect") { maildb =>
     maildb.addDomain("mydomain1.com")
     maildb.addDomain("mydomain1.com")
     maildb.getDomainList should have size (1)
@@ -64,7 +53,7 @@ class MailDbSuite extends FunSuite with ShouldMatchers with BeforeAndAfter {
     maildb.containsDomain("mydomain1.com") should be (true)
   }
 
-  test ("add and remove mappings") {
+  test ("add and remove mappings") { maildb =>
     maildb.addMapping("user1", "domain.org", "user2")
     maildb.userDomainMappings("user1", "domain.org") should have size (1)
     maildb.userDomainMappings("user1", "domain.org").head should be ("user2")

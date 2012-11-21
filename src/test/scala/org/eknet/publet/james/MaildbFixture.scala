@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package org.eknet.publet
+package org.eknet.publet.james
 
-import _root_.com.google.common.eventbus.EventBus
-import _root_.com.thinkaurelius.titan.core.{TitanFactory, TitanGraph}
-import _root_.com.tinkerpop.blueprints.TransactionalGraph.Conclusion
-import _root_.com.tinkerpop.blueprints.{Element, Edge, Vertex}
-import org.eknet.publet.web.Config
-import org.eknet.publet.ext.graphdb.{BlueprintGraph, DefaultGraphDbProvider}
-import org.eknet.scue.TitanDbFactory
+import org.scalatest.fixture.FunSuite
+import org.eknet.publet.james.data.MailDb
+import org.eknet.scue.{TitanDbFactory, DbFactory}
+import org.eknet.publet.ext.graphdb.{BlueprintGraph, GraphDb}
+import com.thinkaurelius.titan.core.TitanGraph
+import com.tinkerpop.blueprints.{Element, Edge, Vertex}
+import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
 
 /**
- *
- * @author <a href="mailto:eike.kettner@gmail.com">Eike Kettner</a>
- * @since 01.11.12 11:16
+ * @author Eike Kettner eike.kettner@gmail.com
+ * @since 21.11.12 23:04
  */
-package object james {
+trait MaildbFixture extends FunSuite {
 
-  class TestGraphDbProvider extends DefaultGraphDbProvider(new Config("", new EventBus())) {
+  type FixtureParam = MailDb
 
-    def getNext: BlueprintGraph = new TitanWrapper(TitanFactory.open(TitanDbFactory.nextDb)) with BlueprintGraph
+  def withFixture(test: OneArgTest) {
+    DbFactory.withDb(new TitanDbFactory())(db => {
+      val maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
+      test.toNoArgTest(maildb)
+    })
   }
 
   private class TitanWrapper(titan: TitanGraph) extends BlueprintGraph {
@@ -54,5 +57,4 @@ package object james {
     def stopTransaction(conclusion: Conclusion) { titan.stopTransaction(conclusion) }
     def shutdown() { titan.shutdown() }
   }
-
 }
