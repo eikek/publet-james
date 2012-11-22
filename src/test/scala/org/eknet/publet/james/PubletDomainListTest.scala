@@ -20,6 +20,9 @@ import org.apache.james.domainlist.lib.AbstractDomainListTest
 import org.slf4j.LoggerFactory
 import org.eknet.publet.james.data.{MailDb, PubletDomainList}
 import org.eknet.publet.ext.graphdb.GraphDb
+import org.eknet.scue.{NamedGraph, TitanDbFactory, DbFactory}
+import org.junit.{AfterClass, BeforeClass, Before}
+import com.thinkaurelius.titan.core.TitanGraph
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -27,10 +30,26 @@ import org.eknet.publet.ext.graphdb.GraphDb
  */
 class PubletDomainListTest extends AbstractDomainListTest {
   val logger = LoggerFactory.getLogger(classOf[PubletDomainListTest])
-  val provider = new TestGraphDbProvider
+
+  val factory = new TitanDbFactory()
+  var db: NamedGraph[TitanGraph] = _
+  var maildb: MailDb = _
+
+  override def setUp() {
+    db = factory.newRandomDb
+    maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
+    super.setUp()
+  }
+
+  override def tearDown() {
+    super.tearDown()
+    factory.destroy(db)
+    db = null
+    maildb = null
+  }
 
   def createDomainList() = {
-    val dl = new PubletDomainList(new MailDb(new GraphDb(provider.getNext)))
+    val dl = new PubletDomainList(maildb)
     dl.setLog(logger)
     dl.setDNSService(getDNSServer("localhost"))
     dl.setAutoDetect(false)

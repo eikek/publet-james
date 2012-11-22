@@ -23,6 +23,9 @@ import org.scalatest.junit.AssertionsForJUnit
 import org.eknet.publet.james.data.{MailDb, RecipientTable}
 import org.apache.james.domainlist.api.DomainList
 import org.eknet.publet.ext.graphdb.GraphDb
+import org.eknet.scue.{NamedGraph, TitanDbFactory}
+import com.thinkaurelius.titan.core.TitanGraph
+import org.junit.{AfterClass, BeforeClass}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -30,6 +33,24 @@ import org.eknet.publet.ext.graphdb.GraphDb
  */
 class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with AssertionsForJUnit {
   val logger = LoggerFactory.getLogger(classOf[RecipientRewriteTableTest])
+
+  val factory = new TitanDbFactory()
+  var db: NamedGraph[TitanGraph] = _
+  var maildb: MailDb = _
+
+  override def setUp() {
+    db = factory.newRandomDb
+    maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
+    super.setUp()
+  }
+
+  override def tearDown() {
+    super.tearDown()
+    factory.destroy(db)
+    db = null
+    maildb = null
+  }
+
 
   val REGEX_TYPE: Int = 0
   val ERROR_TYPE: Int = 1
@@ -60,8 +81,7 @@ class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with A
   }
 
   def getRecipientRewriteTable = {
-    val provider = new TestGraphDbProvider
-    val rrt = new RecipientTable(new MailDb(new GraphDb(provider.getNext)))
+    val rrt = new RecipientTable(maildb)
     rrt.setLog(logger)
     rrt.setDomainList(new DomainList {
       def getDomains = Array("mydomain.com")

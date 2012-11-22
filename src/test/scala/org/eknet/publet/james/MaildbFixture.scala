@@ -33,28 +33,31 @@ trait MaildbFixture extends FunSuite {
   type FixtureParam = MailDb
 
   def withFixture(test: OneArgTest) {
-    DbFactory.withDb(new TitanDbFactory())(db => {
-      val maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
-      test.toNoArgTest(maildb)
-    })
+    withMailDb(db => test.toNoArgTest(db))
   }
 
-  private class TitanWrapper(titan: TitanGraph) extends BlueprintGraph {
-    def getFeatures = titan.getFeatures
-    def addVertex(id: Any) = titan.addVertex(id)
-    def getVertex(id: Any) = titan.getVertex(id)
-    def removeVertex(vertex: Vertex) { titan.removeVertex(vertex) }
-    def getVertices = titan.getVertices
-    def getVertices(key: String, value: Any) = titan.getVertices(key, value)
-    def addEdge(id: Any, outVertex: Vertex, inVertex: Vertex, label: String) = titan.addEdge(id, outVertex, inVertex, label)
-    def getEdge(id: Any) = titan.getEdge(id)
-    def removeEdge(edge: Edge) { titan.removeEdge(edge) }
-    def getEdges = titan.getEdges
-    def getEdges(key: String, value: Any) = titan.getEdges(key, value)
-    def dropKeyIndex[T <: Element](key: String, elementClass: Class[T]) { titan.dropKeyIndex(key, elementClass) }
-    def createKeyIndex[T <: Element](key: String, elementClass: Class[T]) { titan.createKeyIndex(key, elementClass) }
-    def getIndexedKeys[T <: Element](elementClass: Class[T]) = titan.getIndexedKeys(elementClass)
-    def stopTransaction(conclusion: Conclusion) { titan.stopTransaction(conclusion) }
-    def shutdown() { titan.shutdown() }
+  def withMailDb[A](f: MailDb => Any) {
+    DbFactory.withDb(new TitanDbFactory())(db => {
+      val maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
+      f(maildb)
+    })
   }
+}
+class TitanWrapper(titan: TitanGraph) extends BlueprintGraph {
+  def getFeatures = titan.getFeatures
+  def addVertex(id: Any) = titan.addVertex(id)
+  def getVertex(id: Any) = titan.getVertex(id)
+  def removeVertex(vertex: Vertex) { titan.removeVertex(vertex) }
+  def getVertices = titan.getVertices
+  def getVertices(key: String, value: Any) = titan.getVertices(key, value)
+  def addEdge(id: Any, outVertex: Vertex, inVertex: Vertex, label: String) = titan.addEdge(id, outVertex, inVertex, label)
+  def getEdge(id: Any) = titan.getEdge(id)
+  def removeEdge(edge: Edge) { titan.removeEdge(edge) }
+  def getEdges = titan.getEdges
+  def getEdges(key: String, value: Any) = titan.getEdges(key, value)
+  def dropKeyIndex[T <: Element](key: String, elementClass: Class[T]) { titan.dropKeyIndex(key, elementClass) }
+  def createKeyIndex[T <: Element](key: String, elementClass: Class[T]) { titan.createKeyIndex(key, elementClass) }
+  def getIndexedKeys[T <: Element](elementClass: Class[T]) = titan.getIndexedKeys(elementClass)
+  def stopTransaction(conclusion: Conclusion) { titan.stopTransaction(conclusion) }
+  def shutdown() { titan.shutdown() }
 }
