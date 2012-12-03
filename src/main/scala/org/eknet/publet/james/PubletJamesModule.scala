@@ -63,7 +63,6 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     bind[Setup].asEagerSingleton()
     bind[ConfigurationProvider].to[JamesConfigurationProvider] in  Scopes.SINGLETON
     bindListener(JamesMatcher, new JamesTypeListener)
-    bindListener(MBeanMatcher, new MBeanExporter)
     bind[PreDestroyHandler].asEagerSingleton()
 
     bind[DNSService].to[DNSJavaService] in Scopes.SINGLETON

@@ -27,14 +27,14 @@ import org.eknet.publet.ext.graphdb.GraphDb
  * @since 28.10.12 20:00
  */
 @Singleton
-class MailDb @Inject() (db: GraphDb) extends Logging {
+class MailDb @Inject() (val db: GraphDb) extends Logging {
 
   private implicit val graph = db.graph
   import GraphDsl._
 
-  private[this] def domains = withTx(vertex("name" := "domainNames", v => db.referenceNode --> "domains" -->| v))
-  private[this] def virtualAddr =  withTx(vertex("name" := "virtualAddress", v => db.referenceNode --> "virtualAddresses" -->| v))
-  private[this] def mappings = withTx(vertex("name" := "allMappings", v => db.referenceNode --> "mappings" -->| v))
+  private[this] def domains = withTx(vertex("name" := "domainNames"))
+  private[this] def virtualAddr =  withTx(vertex("name" := "virtualAddress"))
+  private[this] def mappings = withTx(vertex("name" := "allMappings"))
 
   private val domainNameProp = "domainName"
   private val domainNameLabel = "domain"
@@ -89,7 +89,7 @@ class MailDb @Inject() (db: GraphDb) extends Logging {
     withTx {
       vertex(vaddressProp := key(user, domain), v => {
         virtualAddr --> addressLabel --> v
-      }) --> mappingLabel -->| newVertex(mappingProp := mapping) <-- mappingLabel <-- mappings
+      }) --> mappingLabel -->| (newVertex+=(mappingProp := mapping)) <-- mappingLabel <-- mappings
     }
   }
 
@@ -108,7 +108,7 @@ class MailDb @Inject() (db: GraphDb) extends Logging {
 
   def userDomainMappings(user: String, domain: String) = withTx {
     vertices(vaddressProp := key(user, domain)).headOption.map(v => {
-      (v ->- mappingLabel mapEnds(mn => mn(mappingProp).map(_.toString))).flatten
+      (v ->- mappingLabel mapEnds(mn => mn.get[String](mappingProp))).flatten
     }).getOrElse(Nil)
   }
 

@@ -20,9 +20,8 @@ import org.apache.james.domainlist.lib.AbstractDomainListTest
 import org.slf4j.LoggerFactory
 import org.eknet.publet.james.data.{MailDb, PubletDomainList}
 import org.eknet.publet.ext.graphdb.GraphDb
-import org.eknet.scue.{NamedGraph, TitanDbFactory, DbFactory}
-import org.junit.{AfterClass, BeforeClass, Before}
-import com.thinkaurelius.titan.core.TitanGraph
+import org.eknet.scue.{OrientDbFactory, NamedGraph}
+import com.tinkerpop.blueprints.impls.orient.OrientGraph
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -31,13 +30,13 @@ import com.thinkaurelius.titan.core.TitanGraph
 class PubletDomainListTest extends AbstractDomainListTest {
   val logger = LoggerFactory.getLogger(classOf[PubletDomainListTest])
 
-  val factory = new TitanDbFactory()
-  var db: NamedGraph[TitanGraph] = _
+  val factory = new OrientDbFactory()
+  var db: NamedGraph[OrientGraph] = _
   var maildb: MailDb = _
 
   override def setUp() {
     db = factory.newRandomDb
-    maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
+    maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)))
     super.setUp()
   }
 

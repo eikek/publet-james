@@ -27,25 +27,28 @@ object Resolvers {
 object Version {
   val slf4j = "1.7.2"
   val logback = "1.0.7"
-  val scalaTest = "1.8"
+  val scalaTest = "2.0.M6-SNAP1"
   val grizzled = "0.6.9"
   val scala = "2.9.2"
   val servlet = "3.0.1"
   val publet = "1.0.0-SNAPSHOT"
-  val scue = "1.0.0-SNAPSHOT"
+  val scue = "0.1.0-SNAPSHOT"
   val james = "3.0-beta4"
   val jamesMailbox = "0.4" //used in james-server
   val standardMailets = "1.1"
+  val neoswing = "2.0.0-m1"
 }
 
 object Dependencies {
 
   val slf4jApi = "org.slf4j" % "slf4j-api" % Version.slf4j
   val slf4jSimple = "org.slf4j" % "slf4j-simple" % Version.slf4j % "test"
+  val neoswing = "org.eknet.neoswing" % "neoswing" % Version.neoswing % "test"
   val junit = "junit" % "junit" % "4.10" % "test"
   val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() exclude("org.slf4j", "slf4j-api") //scala 2.9.2 only
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
   val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
+  val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet withSources()
   val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
   val publetExt = "org.eknet.publet" %% "publet-ext" % Version.publet % "provided" withSources()
   val scue = "org.eknet.scue" %% "scue" % Version.scue % "test"
@@ -106,28 +109,36 @@ object RootBuild extends Build {
     settings = buildSettings
   )
 
+  lazy val runner = Project(
+    id = "publet-runner",
+    base = file("runner"),
+    settings = Project.defaultSettings ++ Seq(
+      name := "publet-runner",
+      libraryDependencies ++= Seq(publetAppDev)
+    )
+  ) dependsOn (root)
+
   val buildSettings = Project.defaultSettings ++ Seq(
     name := "publet-james",
     libraryDependencies ++= deps
   ) ++ PubletPlugin.publetSettings
 
   override lazy val settings = super.settings ++ Seq(
-    version := "1.0.0-SNAPSHOT",
+    version := "0.1.0-SNAPSHOT",
     organization := "org.eknet.publet.james",
     scalaVersion := Version.scala,
     exportJars := true,
+    publishMavenStyle := true,
+    publishTo := Some("eknet-maven2" at "https://eknet.org/maven2"),
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    pomIncludeRepository := (_ => false),
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
     resolvers ++= Seq(Resolvers.eknet, Resolvers.apacheSnapshots),
-    pomExtra := <licenses>
-      <license>
-        <name>Apache 2</name>
-        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
+    licenses := Seq(("ASL2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
+    scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git"))
   )
 
-  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, junit, scalaTest, scue, scueTest, slf4jSimple) ++ jamesServerAll
+  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, scalaTest, scue, scueTest, neoswing) ++ jamesServerAll
 }
 
 

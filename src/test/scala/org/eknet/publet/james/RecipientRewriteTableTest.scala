@@ -23,9 +23,8 @@ import org.scalatest.junit.AssertionsForJUnit
 import org.eknet.publet.james.data.{MailDb, RecipientTable}
 import org.apache.james.domainlist.api.DomainList
 import org.eknet.publet.ext.graphdb.GraphDb
-import org.eknet.scue.{NamedGraph, TitanDbFactory}
-import com.thinkaurelius.titan.core.TitanGraph
-import org.junit.{AfterClass, BeforeClass}
+import org.eknet.scue.{OrientDbFactory, NamedGraph, TitanDbFactory}
+import com.tinkerpop.blueprints.impls.orient.OrientGraph
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -34,13 +33,13 @@ import org.junit.{AfterClass, BeforeClass}
 class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with AssertionsForJUnit {
   val logger = LoggerFactory.getLogger(classOf[RecipientRewriteTableTest])
 
-  val factory = new TitanDbFactory()
-  var db: NamedGraph[TitanGraph] = _
+  val factory = new OrientDbFactory()
+  var db: NamedGraph[OrientGraph] = _
   var maildb: MailDb = _
 
   override def setUp() {
     db = factory.newRandomDb
-    maildb = new MailDb(new GraphDb(new TitanWrapper(db)))
+    maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)))
     super.setUp()
   }
 
@@ -50,7 +49,6 @@ class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with A
     db = null
     maildb = null
   }
-
 
   val REGEX_TYPE: Int = 0
   val ERROR_TYPE: Int = 1

@@ -16,11 +16,9 @@
 
 package org.eknet.publet.james
 
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
 import org.scalatest.matchers.ShouldMatchers
-import org.eknet.publet.james.data.MailDb
-import org.eknet.publet.ext.graphdb.GraphDb
-import org.eknet.scue.TitanDbFactory
+import org.eknet.neoswing.utils.QuickView
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
