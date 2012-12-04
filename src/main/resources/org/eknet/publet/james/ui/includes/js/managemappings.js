@@ -15,7 +15,7 @@
  */
 $(function() {
   function loadMappings() {
-    var parent = $('.mappingList').mask();
+    var parent = $('#mappingList').mask();
     var removeButton = $('<a/>', {
       html: '<i class="icon-trash"></i>',
       class: 'mappingRemoveButton btn btn-mini'

@@ -1,6 +1,13 @@
 ---
 title: Manage JAMES
 
+--- name:head pipeline:jade
+:javascript
+  $(function() {
+    $('#manageDomains').domainManager();
+  });
+
+
 --- name:content pipeline:jade
 
 .page-header
@@ -8,6 +15,4 @@ title: Manage JAMES
 
 .row
   .span6
-    =include("_managedomains.jade")
-  .span6
-    =include("_managemappings.jade")
+    #manageDomains

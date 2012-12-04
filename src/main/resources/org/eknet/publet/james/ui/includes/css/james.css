@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-ul.domainList  {
+ul.editableList  {
     margin: 0;
 }
-ul.domainList  > li {
+ul.editableList  > li {
     list-style-type: none;
     padding: 5px 5px 5px 0;
     border-top: 1px solid #eee;
 }
-li.defaultDomain {
+ul.editableList > li.defaultEntry {
     font-weight: bold;
 }

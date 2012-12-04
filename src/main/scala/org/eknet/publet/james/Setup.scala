@@ -43,19 +43,15 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
 
     import org.eknet.publet.vfs.ResourceName._
     val scripts = new MapContainer
-    scripts.addResource(new WebScriptResource("getdomains.json".rn, new GetDomains))
-    scripts.addResource(new WebScriptResource("adddomain.json".rn, new AddDomain))
-    scripts.addResource(new WebScriptResource("removedomain.json".rn, new RemoveDomain))
-    scripts.addResource(new WebScriptResource("getdefaultdomain.json".rn, new GetDefaultDomain))
-    scripts.addResource(new WebScriptResource("getmappings.json".rn, new GetMappings))
-    scripts.addResource(new WebScriptResource("addmapping.json".rn, new AddMapping))
+    scripts.addResource(new WebScriptResource("managedomains.json".rn, new ManageDomains))
+    scripts.addResource(new WebScriptResource("managemappings.json".rn, new ManageMappings))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
   }
 
   @Subscribe
   def setupAssets(event: PubletStartedEvent) {
 
-    assetMgr setup (Groups.jamesGroup, Groups.jamesManager)
+    assetMgr setup (Groups.jamesGroup, Groups.jamesManager, Groups.mustache)
     assetMgr setup (Group("default").use(Groups.jamesManager.name))
   }
 
@@ -63,14 +59,18 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
 
     override def classPathBase = "/org/eknet/publet/james/ui/includes"
 
+    val mustache = Group("mustache")
+      .add(resource("js/mustache.js"))
+
     val jamesGroup = Group("publet.james")
       .add(resource("css/james.css"))
-      .add(resource("js/managedomains.js"))
-      .add(resource("js/managemappings.js"))
+      .add(resource("js/domain-manager.js"))
       .require(DefaultLayout.Assets.jquery.name)
+      .require(mustache.name)
 
     val jamesManager = Group("publet.james.manager")
       .forPath("/publet/james/**")
       .require(jamesGroup.name)
+
   }
 }
