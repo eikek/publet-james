@@ -29,10 +29,16 @@ class ManageMappings extends ScalaScript {
   def serve() = param(actionParam) match {
     case Some("get") => getMappings
     case Some("add") => addMapping()
+    case Some("remove") => removeMapping()
     case cmd @_ => failure("Unknown command: "+ cmd)
   }
 
-  def getMappings = RenderUtils.makeJson(maildb.allMappings)
+  def getMappings = param("q") match {
+    case Some(q) if (!q.isEmpty) => RenderUtils.makeJson(maildb.allMappings.filter(t => {
+      t._1.contains(q) || t._2.exists(s => s.contains(q))
+    }))
+    case _ => RenderUtils.makeJson(maildb.allMappings)
+  }
 
   def addMapping() = {
     val user = param("user").filter(!_.trim.isEmpty)
@@ -43,6 +49,23 @@ class ManageMappings extends ScalaScript {
       case (u, d, Some(m)) if (d != None || u != None) => {
         maildb.addMapping(u.getOrElse("*"), d.getOrElse("*"), m)
         success("Mapping added.")
+      }
+      case _ => failure("Too less parameters.")
+    }
+  }
+
+  def removeMapping() = {
+    val user = param("user").filter(!_.trim.isEmpty)
+    val domain = param("domain").filter(!_.trim.isEmpty)
+    val mapping = param("mapping").filter(!_.trim.isEmpty)
+    (user, domain, mapping) match {
+      case (Some(u), Some(d), Some(m)) => {
+        maildb.removeMapping(u, d, m)
+        success("Mapping removed.")
+      }
+      case (Some(u), Some(d), None) => {
+        maildb.removeAllMappings(u, d)
+        success("Mapping(s) removed.")
       }
       case _ => failure("Too less parameters.")
     }

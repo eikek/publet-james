@@ -99,11 +99,25 @@ class MailDb @Inject() (val db: GraphDb) extends Logging {
         (v ->- mappingLabel findEnd(_.has(mappingProp := mapping))).foreach(graph.removeVertex(_))
       })
     }
+    removeUserDomainNodeIfEmpty(user, domain)
+  }
+
+
+  private[this] def removeUserDomainNodeIfEmpty(user: String, domain: String) {
     withTx {
       if (userDomainMappings(user, domain) == Nil) {
         vertices(vaddressProp := key(user, domain)).headOption.map(v => graph.removeVertex(v))
       }
     }
+  }
+
+  def removeAllMappings(user: String, domain: String) {
+    withTx {
+      vertices(vaddressProp := key(user, domain)).headOption.map(v => {
+        v ->- mappingLabel mapEnds(mn => graph.removeVertex(mn))
+      })
+    }
+    removeUserDomainNodeIfEmpty(user, domain)
   }
 
   def userDomainMappings(user: String, domain: String) = withTx {

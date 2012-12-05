@@ -21,13 +21,15 @@
  * @since 04.12.12 21:07
  */
 (function ($) {
-  var actionParam = "do";
   var formTemplate =
-      '<form id="domainAddForm" class="form form-inline" action="{{actionUrl}}" method="post">' +
+      '<div class="well"><form id="domainAddForm" class="form form-inline" action="{{actionUrl}}" method="post">' +
+          ' {{#showLegend}}<legend>{{legendTitle}}</legend> {{/showLegend}}'+
+          ' <input type="hidden" name="{{actionParam}}" value="add"/>' +
+          ' <div class="input-append">' +
           '  <input type="text" placeholder="Add Domain" name="domain"/>' +
-          '  <input type="hidden" name="{{actionParam}}" value="add"/>' +
           '  <button class="btn">Add</button>' +
-          '</form>' +
+          ' </div>' +
+          '</form></div>' +
           '<div class="domainFeedback"></div>' +
           '<div class="domainList"></div>';
 
@@ -95,7 +97,9 @@
 
         if (!data) {
           var settings = $.extend({
-            actionUrl: "action/managedomains.json"
+            actionUrl: "action/managedomains.json",
+            showLegend: true,
+            legendTitle: 'Domains'
           }, options);
 
           $(this).data('domain-manager', {
@@ -104,7 +108,10 @@
           });
 
           //render form
-          $this.append(Mustache.render(formTemplate, {actionUrl: settings.actionUrl, actionParam: actionParam}));
+          var view = $.extend({
+            actionParam: "do"
+          }, settings);
+          $this.append(Mustache.render(formTemplate, view));
           $this.find('#domainAddForm').ajaxForm({
             beforeSubmit: function (arr, form, options) {
               form.mask();
@@ -126,6 +133,7 @@
       var $this = $(this).data('domain-manager').target;
       var settings = $(this).data('domain-manager').settings;
       reload($this, settings);
+      return this;
     }
   };
 

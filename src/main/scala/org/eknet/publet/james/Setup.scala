@@ -65,6 +65,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     val jamesGroup = Group("publet.james")
       .add(resource("css/james.css"))
       .add(resource("js/domain-manager.js"))
+      .add(resource("js/mapping-manager.js"))
       .require(DefaultLayout.Assets.jquery.name)
       .require(mustache.name)
 

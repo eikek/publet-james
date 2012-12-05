@@ -5,6 +5,7 @@ title: Manage JAMES
 :javascript
   $(function() {
     $('#manageDomains').domainManager();
+    $('#manageMappings').mappingManager();
   });
 
 
@@ -16,3 +17,5 @@ title: Manage JAMES
 .row
   .span6
     #manageDomains
+  .span6
+    #manageMappings
