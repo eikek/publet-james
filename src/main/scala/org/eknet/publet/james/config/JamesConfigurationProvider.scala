@@ -32,21 +32,23 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.guice
+package org.eknet.publet.james.config
 
-import org.apache.commons.configuration.{XMLConfiguration, HierarchicalConfiguration}
-import java.net.URL
-import org.apache.james.smtpserver.netty.SMTPServerFactory
 import com.google.inject.{Inject, Singleton}
+import grizzled.slf4j.Logging
+import java.io.{FileNotFoundException, InputStream}
+import java.net.URL
+import org.apache.commons.configuration.{XMLConfiguration, HierarchicalConfiguration}
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
-import org.eknet.publet.james.data.{PubletFilesystem, MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
+import org.apache.james.filesystem.api.FileSystem
 import org.apache.james.imapserver.netty.IMAPServerFactory
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor
 import org.apache.james.mailetcontainer.impl.{JamesMailetContext, JamesMailSpooler}
+import org.apache.james.smtpserver.netty.SMTPServerFactory
+import org.eknet.publet.james.data.{PubletFilesystem, MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
 import org.eknet.publet.web.Config
-import org.apache.james.filesystem.api.FileSystem
-import java.io.{FileNotFoundException, InputStream}
-import grizzled.slf4j.Logging
+import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
+import org.apache.james.pop3server.netty.POP3ServerFactory
 
 /**
  * This class looks up configuration files for apache services. It will first
@@ -70,7 +72,11 @@ class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends Conf
 
   val nameMap = Map[Class[_], String](
     classOf[SMTPServerFactory] -> "smtpserver",
+    classOf[PubletSmtpServerFactory] -> "smtpserver",
     classOf[IMAPServerFactory] -> "imapserver",
+    classOf[PubletImapServerFactory] -> "imapserver",
+    classOf[POP3ServerFactory] -> "pop3server",
+    classOf[PubletPop3ServerFactory] -> "pop3server",
     classOf[DNSJavaService] -> "dnsservice",
     classOf[PubletDomainList] -> "domainlist",
     classOf[RecipientTable] -> "recipientrewritetable",

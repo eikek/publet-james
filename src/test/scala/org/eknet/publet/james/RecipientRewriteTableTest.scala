@@ -18,7 +18,6 @@ package org.eknet.publet.james
 
 import org.apache.james.rrt.lib.{AbstractRecipientRewriteTable, AbstractRecipientRewriteTableTest}
 import org.slf4j.LoggerFactory
-import java.util
 import org.scalatest.junit.AssertionsForJUnit
 import org.eknet.publet.james.data.{MailDb, RecipientTable}
 import org.apache.james.domainlist.api.DomainList

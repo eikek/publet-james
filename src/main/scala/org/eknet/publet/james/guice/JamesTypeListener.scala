@@ -25,6 +25,7 @@ import org.apache.camel.{CamelContext, CamelContextAware}
 import org.apache.james.mailrepository.api.MailRepository
 import java.util.concurrent.ConcurrentHashMap
 import grizzled.slf4j.Logging
+import org.eknet.publet.james.config.ConfigurationProvider
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

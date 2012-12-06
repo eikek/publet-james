@@ -25,6 +25,7 @@ object Resolvers {
   val apacheSnapshots = "apache-snapshots" at "https://repository.apache.org/content/repositories/snapshots/"
 }
 object Version {
+  val bouncyCastle = "1.46"
   val slf4j = "1.7.2"
   val logback = "1.0.7"
   val scalaTest = "2.0.M6-SNAP1"
@@ -42,18 +43,9 @@ object Version {
 object Dependencies {
 
   val slf4jApi = "org.slf4j" % "slf4j-api" % Version.slf4j
-  val slf4jSimple = "org.slf4j" % "slf4j-simple" % Version.slf4j % "test"
-  val neoswing = "org.eknet.neoswing" % "neoswing" % Version.neoswing % "test"
-  val junit = "junit" % "junit" % "4.10" % "test"
-  val grizzledSlf4j = "org.clapper" %% "grizzled-slf4j" % Version.grizzled % "provided" withSources() exclude("org.slf4j", "slf4j-api") //scala 2.9.2 only
-  val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % "test" withSources()
-  val publetApp = "org.eknet.publet" %% "publet-app" % Version.publet % "publet"
-  val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet withSources()
-  val publetWeb = "org.eknet.publet" %% "publet-web" % Version.publet % "provided" withSources()
-  val publetExt = "org.eknet.publet" %% "publet-ext" % Version.publet % "provided" withSources()
-  val scue = "org.eknet.scue" %% "scue" % Version.scue % "test"
-  val scueTest = "org.eknet.scue" %% "scue" % Version.scue % "test" classifier("test")
-  val servletApi = "javax.servlet" % "javax.servlet-api" % Version.servlet % "provided" withSources()
+  val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet
+  val publetAppPlugin = publetAppDev % "publet"
+
 
   def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james
 
@@ -97,6 +89,24 @@ object Dependencies {
     jamesServerMailets,
     jamesServerDataLibTest, jamesServerDataApiTest, jamesServerDnsApiTest
   )
+
+  val providedDeps = Seq(
+    "org.eknet.publet" %% "publet-web" % Version.publet,
+    "org.eknet.publet" %% "publet-ext" % Version.publet,
+    "org.scalatest" %% "scalatest" % Version.scalaTest,
+    "org.clapper" %% "grizzled-slf4j" % Version.grizzled exclude("org.slf4j", "slf4j-api"),
+    "org.bouncycastle" % "bcprov-jdk16" % Version.bouncyCastle,
+    "org.bouncycastle" % "bcmail-jdk16" % Version.bouncyCastle,
+    "javax.servlet" % "javax.servlet-api" % Version.servlet
+  ) map (_ % "provided")
+
+  val testDeps = Seq(
+    "org.slf4j" % "slf4j-simple" % Version.slf4j,
+    "org.eknet.neoswing" % "neoswing" % Version.neoswing,
+    "junit" % "junit" % "4.10",
+    "org.eknet.scue" %% "scue" % Version.scue classifier("test")
+  ) map (_ % "test")
+
 }
 
 // Root Module 
@@ -138,7 +148,7 @@ object RootBuild extends Build {
     scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git"))
   )
 
-  val deps = Seq(publetWeb, publetExt, publetApp, servletApi, grizzledSlf4j, scalaTest, scue, scueTest, neoswing) ++ jamesServerAll
+  val deps = Seq(slf4jApi, publetAppPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
 }
 
 

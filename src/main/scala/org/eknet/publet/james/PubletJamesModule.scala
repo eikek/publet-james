@@ -56,6 +56,8 @@ import org.eknet.publet.james.guice.test.TestUserStore
 import org.eknet.guice.squire.SquireModule
 import org.eknet.publet.ext.graphdb.GraphDbProvider
 import org.eknet.publet.auth.store.UserStore
+import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
+import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 
 class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
 
@@ -75,7 +77,7 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
 
     bind[MailQueueFactory].to[FileMailQueueFactory] in Scopes.SINGLETON
 
-    bind[SMTPServerFactory].asEagerSingleton()
+    bind[PubletSmtpServerFactory].asEagerSingleton()
 
     //mailet container
     bind[MailProcessor].to[CamelCompositeProcessor] in Scopes.SINGLETON
@@ -105,7 +107,11 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     //imap
     bind[ImapDecoderFactory].to[DefaultImapDecoderFactory] in Scopes.SINGLETON
     bind[ImapEncoderFactory].to[DefaultImapEncoderFactory] in Scopes.SINGLETON
-    bind[IMAPServerFactory].asEagerSingleton()
+    bind[PubletImapServerFactory].asEagerSingleton()
+
+    //pop3
+    bind[PubletPop3ServerFactory].asEagerSingleton()
+
     bind[MailboxCopier].to[MailboxCopierImpl] in Scopes.SINGLETON
 
     ///test
