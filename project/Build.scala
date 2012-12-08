@@ -86,7 +86,7 @@ object Dependencies {
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
     jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
     jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
-    jamesServerMailets,
+    jamesServerMailets, jamesServerFetchmail,
     jamesServerDataLibTest, jamesServerDataApiTest, jamesServerDnsApiTest
   )
 
