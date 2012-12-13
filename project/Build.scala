@@ -27,8 +27,8 @@ object Resolvers {
 object Version {
   val bouncyCastle = "1.46"
   val slf4j = "1.7.2"
-  val logback = "1.0.7"
-  val scalaTest = "2.0.M6-SNAP1"
+  val logback = "1.0.9"
+  val scalaTest = "2.0.M6-SNAP3"
   val grizzled = "0.6.9"
   val scala = "2.9.2"
   val servlet = "3.0.1"
