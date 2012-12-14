@@ -25,3 +25,53 @@ ul.editableList  > li {
 ul.editableList > li.defaultEntry {
     font-weight: bold;
 }
+
+ul.serverBoxes {
+
+}
+
+ul.serverBoxes > li {
+    background-color: #f6f6f6;
+    background-image: -webkit-linear-gradient(top, #F9F9F9 0%, #EDEDED 100%);
+    background-image: -moz-linear-gradient(top, #F9F9F9 0%, #EDEDED 100%);
+    background-image: -ms-linear-gradient(top, #F9F9F9 0%, #EDEDED 100%);
+    background-image: -o-linear-gradient(top, #F9F9F9 0%, #EDEDED 100%);
+    background-image: linear-gradient(top, #F9F9F9 0%, #EDEDED 100%);
+    border: 1px solid #D5D5D5;
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 0 1px 0 0 white inset, 0 1px 0 rgba(255, 255, 255, 0.4);
+    display: inline-block;
+    line-height: 18px;
+    margin: 0 10px 10px;
+    padding: 0 10px;
+}
+
+.serverBoxes .left, .serverBoxes .right {
+    text-shadow: 0 1px 0 white;
+    float: left;
+}
+
+.serverBoxes .left {
+    border-right: 1px solid gainsboro;
+    box-shadow: 1px 0 0 0 white;
+    margin-right: 12px;
+    padding: 10px 14px 6px 4px;
+    font-size: 12px;
+    font-weight: bold;
+    width: 150px;
+}
+.left span {
+    margin-bottom: 3px;
+}
+.serverBoxes .right {
+    font-size: 12px;
+    padding: 9px 0 7px 0;
+    text-align: center;
+    width: 60px;
+    color: #666;
+}
+
+.serverBoxes .serverType {
+    text-align: center;
+    font-weight: bold;
+}

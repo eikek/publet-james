@@ -15,6 +15,10 @@ title: Manage JAMES
   h1 Manage JAMES
 
 .row
+  .span12
+    =include("servercontrol.jade")
+
+.row
   .span6
     #manageDomains
   .span6
