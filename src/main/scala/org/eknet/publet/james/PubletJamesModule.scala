@@ -58,10 +58,15 @@ import org.eknet.publet.ext.graphdb.GraphDbProvider
 import org.eknet.publet.auth.store.UserStore
 import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
+import org.eknet.publet.vfs.Resource
 
 class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
 
+  private[this] def doc(name: String) = Resource.classpath("org/eknet/publet/james/doc/"+ name)
+
   def configure() {
+    bindDocumentation(List(doc("james.md")))
+
     bind[Setup].asEagerSingleton()
     bind[ConfigurationProvider].to[JamesConfigurationProvider] in  Scopes.SINGLETON
     bindListener(JamesMatcher, new JamesTypeListener)
@@ -135,4 +140,6 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
 
   @Provides@Singleton
   def createDb(dbprov: GraphDbProvider): MailDb = new MailDb(dbprov.getDatabase("jamesdb"))
+
+  override def toString = "James Mailserver"
 }

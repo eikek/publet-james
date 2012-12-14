@@ -124,7 +124,7 @@ class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends Conf
 
     private val locations = List(
       FileSystem.FILE_PROTOCOL_AND_CONF + name + configFileSuffix,
-      "classpath:/org/eknet/publet/james/conf/"+ name + configFileSuffix,
+      "classpath:/org/eknet/publet/james/config/"+ name + configFileSuffix,
       "classpath:/"+ name + configFileSuffix
     )
 
