@@ -18,7 +18,8 @@ import sbt._
 import Keys._
 import Dependencies._
 import org.eknet.publet.sbt._
-import Classpaths.managedJars
+import sbtassembly.Plugin._
+import AssemblyKeys._
 
 object Resolvers {
   val eknet = "eknet.org" at "https://eknet.org/maven2"
@@ -42,12 +43,12 @@ object Version {
 
 object Dependencies {
 
-  val slf4jApi = "org.slf4j" % "slf4j-api" % Version.slf4j
   val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet
   val publetAppPlugin = publetAppDev % "publet"
 
 
-  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james
+  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) %
+    Version.james exclude("commons-logging", "commons-logging") exclude("commons-logging", "commons-logging-api")
 
   val jamesServerCore = jamesServer("core")
   val jamesServerDataApi = jamesServer("data-api")
@@ -93,18 +94,21 @@ object Dependencies {
   val providedDeps = Seq(
     "org.eknet.publet" %% "publet-web" % Version.publet,
     "org.eknet.publet" %% "publet-ext" % Version.publet,
+    "org.slf4j" % "jcl-over-slf4j" % Version.slf4j,
     "org.scalatest" %% "scalatest" % Version.scalaTest,
     "org.clapper" %% "grizzled-slf4j" % Version.grizzled exclude("org.slf4j", "slf4j-api"),
     "org.bouncycastle" % "bcprov-jdk16" % Version.bouncyCastle,
     "org.bouncycastle" % "bcmail-jdk16" % Version.bouncyCastle,
-    "javax.servlet" % "javax.servlet-api" % Version.servlet
+    "javax.servlet" % "javax.servlet-api" % Version.servlet,
+    "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0-SNAPSHOT"
   ) map (_ % "provided")
 
   val testDeps = Seq(
     "org.slf4j" % "slf4j-simple" % Version.slf4j,
     "org.eknet.neoswing" % "neoswing" % Version.neoswing,
     "junit" % "junit" % "4.10",
-    "org.eknet.scue" %% "scue" % Version.scue classifier("test")
+    "org.eknet.scue" %% "scue" % Version.scue classifier("test"),
+    "org.eknet.scue" %% "scue" % Version.scue
   ) map (_ % "test")
 
 }
@@ -128,9 +132,27 @@ object RootBuild extends Build {
     )
   ) dependsOn (root)
 
-  val buildSettings = Project.defaultSettings ++ Seq(
+  val exludedFiles = Set(
+    "commons-codec-1.5.jar",
+    "commons-collections-3.2.1.jar",
+    "commons-httpclient-3.0.1.jar",
+    "activation-1.1.1.jar",
+    "mail-1.4.4.jar",
+    "junit-3.8.1.jar",
+    "geronimo-javamail_1.4_mail-1.8.3.jar",
+    "slf4j-api-1.7.2.jar",
+    "slf4j-api-1.6.1.jar",
+    "geronimo-annotation_1.0_spec-1.1.1.jar"
+  )
+  def isExcluded(n: String) = exludedFiles contains (n)
+
+  val buildSettings = Project.defaultSettings ++ assemblySettings ++ Seq(
     name := "publet-james",
-    libraryDependencies ++= deps
+    libraryDependencies ++= deps,
+    assembleArtifact in packageScala := false,
+    excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
+      cp filter { f => isExcluded(f.data.getName) }
+    }
   ) ++ PubletPlugin.publetSettings
 
   override lazy val settings = super.settings ++ Seq(
@@ -148,7 +170,7 @@ object RootBuild extends Build {
     scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git"))
   )
 
-  val deps = Seq(slf4jApi, publetAppPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
+  val deps = Seq(publetAppPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
 }
 
 
