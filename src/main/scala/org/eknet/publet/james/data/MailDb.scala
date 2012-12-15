@@ -21,13 +21,25 @@ import com.google.inject.{Inject, Singleton}
 import org.apache.james.rrt.api.RecipientRewriteTable
 import grizzled.slf4j.Logging
 import org.eknet.publet.ext.graphdb.GraphDb
+import com.google.inject.name.Named
+import org.eknet.publet.james.fetchmail.{Account, FetchmailConfig}
+import java.util.concurrent.TimeUnit
+import org.apache.james.fetchmail.{AccountConfiguration, ConfiguredAccount}
+import com.tinkerpop.blueprints.Vertex
+import org.apache.james.user.api.UsersRepository
+import org.apache.james.dnsservice.api.DNSService
+import org.apache.james.domainlist.api.DomainList
+import org.apache.james.queue.api.MailQueue
+import java.util.concurrent.atomic.AtomicInteger
+import javax.mail.Session
+import java.util.Properties
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 28.10.12 20:00
  */
 @Singleton
-class MailDb @Inject() (val db: GraphDb) extends Logging {
+class MailDb @Inject() (@Named("jamesdb") val db: GraphDb) extends Logging {
 
   private implicit val graph = db.graph
   import GraphDsl._
@@ -129,5 +141,98 @@ class MailDb @Inject() (val db: GraphDb) extends Logging {
   def allMappings = withTx {
     (virtualAddr ->- addressLabel mapEnds {van => (van.get[String](vaddressProp).get ->
       (van ->- mappingLabel mapEnds(_.get[String](mappingProp).get)).toList) }).toMap
+  }
+
+  // ~~ fetchmail
+
+  def fetchmailConfig = withTx {
+      val v = vertex("fetchmailConfig" := 0, v => v.setProperty("enabled", false))
+      new FetchmailConfig(v.get[Boolean]("enabled").getOrElse(false),
+        v.get[Long]("interval").getOrElse(10),
+        v.get[String]("unit").map(s => TimeUnit.valueOf(s.toUpperCase)).getOrElse(TimeUnit.MINUTES),
+        v.get[Long]("run").getOrElse(0L)
+      )
+    }
+
+  def updateFetchmailConfig(cfg: FetchmailConfig) {
+    withTx {
+      val v = vertex("fetchmailConfig" := 0, v => v.setProperty("enabled", false))
+      v("enabled") = cfg.enabled
+      v("interval") = cfg.interval
+      v("unit") = cfg.unit.name()
+      v("run") = cfg.run
+    }
+  }
+
+  /**
+   * Returns accounts for the specified run. The objects are not yet configured,
+   * the [[org.apache.james.fetchmail.ConfiguredAccount.configure()]] method must
+   * be called for each account.
+   *
+   * @param run
+   * @param localDomain
+   * @return
+   */
+  def getAccountsForRun(run: Long, localDomain: String): Iterable[ConfiguredAccount] = {
+    def runFilter(v: Vertex) = run % v.get[Int]("runInterval").getOrElse(2) == 0
+    val counter = new AtomicInteger(0)
+    val session = Session.getInstance(new Properties(System.getProperties))
+    withTx {
+      vertices("type" := "fetchmailAccount").withFilter(runFilter).map { v =>
+        val cfg = new AccountConfiguration()
+        cfg.setHost(v.get[String]("host").getOrElse(sys.error("No host specified.")))
+        cfg.setRejectRemoteRecipient(true)
+        cfg.setMarkSeen(false)
+        cfg.setLeaveMaxMessageSizeExceeded(true)
+
+        val account = new ConfiguredAccount()
+        account.setSequenceNumber(counter.getAndIncrement)
+        account.setSession(session)
+        account.setUser(v.get[String]("user").getOrElse(sys.error("No user specified")))
+        account.setPassword(v.get[String]("password").getOrElse(sys.error("No password specified")))
+        val login = v.get[String]("recipient").getOrElse(sys.error("No recipient specified"))
+        account.setRecipient(login +"@"+ localDomain)
+        account.setParsedConfiguration(cfg)
+        account.setCustomRecipientHeader("")
+        account.setIgnoreRecipientHeader(true)
+        account
+      }
+    }
+  }
+
+  def updateAccount(account: Account) {
+    withTx {
+      val key = account.user +"@"+ account.host
+      val v = vertex("fetchmailAccount" := key, v => v("type") = "fetchmailAccount")
+      v("host") = account.host
+      v("user") = account.user
+      v("recipient") = account.login
+      v("password") = account.password
+      v("runInterval") = account.runInterval
+    }
+  }
+
+  def findAccount(user: String, host: String) = {
+    val key = user +"@"+ host
+    withTx {
+      vertices("fetchmailAccount" := key).headOption.map(v => {
+        Account(
+          v.get[String]("recipient").getOrElse(sys.error("no login found")),
+          v.get[String]("host").getOrElse(sys.error("no host found")),
+          v.get[String]("user").getOrElse(sys.error("no remote user found")),
+          v.get[String]("password").getOrElse(sys.error("no password found")),
+          v.get[Int]("runInterval").getOrElse(2)
+        )
+      })
+    }
+  }
+
+  def deleteAccount(user: String, host: String) {
+    val key = user +"@"+ host
+    withTx {
+      vertices("fetchmailAccount" := key).map(v => {
+        graph.removeVertex(v)
+      })
+    }
   }
 }

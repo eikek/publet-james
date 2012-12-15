@@ -43,8 +43,10 @@ object Version {
 
 object Dependencies {
 
+  val publetQuartz = "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0-SNAPSHOT"
   val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet
   val publetAppPlugin = publetAppDev % "publet"
+  val publetQuartzPlugin = publetQuartz % "publet"
 
 
   def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) %
@@ -100,7 +102,7 @@ object Dependencies {
     "org.bouncycastle" % "bcprov-jdk16" % Version.bouncyCastle,
     "org.bouncycastle" % "bcmail-jdk16" % Version.bouncyCastle,
     "javax.servlet" % "javax.servlet-api" % Version.servlet,
-    "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0-SNAPSHOT"
+    publetQuartz
   ) map (_ % "provided")
 
   val testDeps = Seq(
@@ -128,7 +130,7 @@ object RootBuild extends Build {
     base = file("runner"),
     settings = Project.defaultSettings ++ Seq(
       name := "publet-runner",
-      libraryDependencies ++= Seq(publetAppDev)
+      libraryDependencies ++= Seq(publetAppDev, publetQuartz)
     )
   ) dependsOn (root)
 
@@ -170,7 +172,7 @@ object RootBuild extends Build {
     scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git"))
   )
 
-  val deps = Seq(publetAppPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
+  val deps = Seq(publetAppPlugin, publetQuartzPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
 }
 
 

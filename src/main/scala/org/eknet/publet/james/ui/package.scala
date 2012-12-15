@@ -31,6 +31,7 @@ package object ui {
 
   val actionParam = "do"
 
+  def param(name: String) = PubletWebContext.param(name).filter(!_.trim.isEmpty).map(_.toLowerCase)
   def domainList = PubletWeb.instance[DomainList].get
   def maildb = PubletWeb.instance[MailDb].get
 

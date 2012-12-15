@@ -17,10 +17,11 @@
 package org.eknet.publet.james
 
 import com.google.inject._
+import fetchmail.FetchmailScheduler
+import name.Names
 import org.eknet.publet.james.data._
 import guice._
 import org.eknet.publet.web.guice.{PubletModule, PubletBinding}
-import org.apache.james.smtpserver.netty.SMTPServerFactory
 import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader
@@ -54,7 +55,7 @@ import org.apache.james.rrt.lib.RecipientRewriteTableManagement
 import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
 import org.eknet.guice.squire.SquireModule
-import org.eknet.publet.ext.graphdb.GraphDbProvider
+import org.eknet.publet.ext.graphdb.{GraphDb, GraphDbProvider}
 import org.eknet.publet.auth.store.UserStore
 import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
@@ -75,6 +76,9 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     bind[DNSService].to[DNSJavaService] in Scopes.SINGLETON
     bind[ProtocolHandlerLoader].to[GuiceProtocolHandlerLoader] in Scopes.SINGLETON
     bind[FileSystem].to[PubletFilesystemImpl] in Scopes.SINGLETON
+
+    bind[GraphDb].annotatedWith(Names.named("jamesdb")).toProvider(classOf[DbProvider])
+    bind[MailDb].in(Scopes.SINGLETON)
 
     bind[UsersRepository].to[UserRepository] in Scopes.SINGLETON
     bind[RecipientRewriteTable].to[RecipientTable] in Scopes.SINGLETON
@@ -119,6 +123,9 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
 
     bind[MailboxCopier].to[MailboxCopierImpl] in Scopes.SINGLETON
 
+    //fetchmail
+    bind[FetchmailScheduler].asEagerSingleton()
+
     ///test
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
   }
@@ -138,8 +145,12 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
   }
 
-  @Provides@Singleton
-  def createDb(dbprov: GraphDbProvider): MailDb = new MailDb(dbprov.getDatabase("jamesdb"))
-
   override def toString = "James Mailserver"
+}
+
+class DbProvider @Inject() (dbfac: GraphDbProvider) extends Provider[GraphDb] {
+
+  private val name = "jamesdb"
+
+  def get() = dbfac.getDatabase(name)
 }

@@ -24,7 +24,6 @@ import org.eknet.publet.web.util.RenderUtils
  * @since 04.12.12 21:11
  */
 class ManageDomains extends ScalaScript {
-  import org.eknet.publet.web.util.PubletWebContext.param
 
   def serve() = {
     param(actionParam) match {

@@ -10,7 +10,6 @@ import org.apache.james.protocols.lib.netty.{AbstractServerFactory, AbstractConf
  * @since 15.12.12 01:07
  */
 class ManageServer extends ScalaScript {
-  import org.eknet.publet.web.util.PubletWebContext.param
   import collection.JavaConversions._
 
   def serve() = {
@@ -36,6 +35,7 @@ class ManageServer extends ScalaScript {
             if (server.isStarted) server.stop()
             success("Server stopped")
           }
+          case _ => failure("Unkown server to operate on.")
         }
       }
       case (Some("play"), Some(stype)) => {
@@ -45,6 +45,7 @@ class ManageServer extends ScalaScript {
             if (!server.isStarted) server.start()
             success("Server started")
           }
+          case _ => failure("Unkown server to operate on.")
         }
       }
       case cmd @_ => failure("Unknown command: "+ cmd)
