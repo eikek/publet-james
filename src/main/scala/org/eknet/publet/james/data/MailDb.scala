@@ -174,7 +174,9 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb) extends Logging {
    * @return
    */
   def getAccountsForRun(run: Long, localDomain: String): Iterable[ConfiguredAccount] = {
-    def runFilter(v: Vertex) = run % v.get[Int]("runInterval").getOrElse(2) == 0
+    def runFilter(v: Vertex) =
+      v.get[Boolean]("active").exists(_ == true) && (run % v.get[Int]("runInterval").getOrElse(2) == 0)
+
     val counter = new AtomicInteger(0)
     val session = Session.getInstance(new Properties(System.getProperties))
     withTx {
@@ -200,30 +202,43 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb) extends Logging {
     }
   }
 
+  /**
+   * Adds or update the given account. Accounts are identified
+   * by the string "user@host". Accounts are connected to a
+   * node that represents the login.
+   *
+   * @param account
+   */
   def updateAccount(account: Account) {
     withTx {
       val key = account.user +"@"+ account.host
-      val v = vertex("fetchmailAccount" := key, v => v("type") = "fetchmailAccount")
+      val v = vertex("fetchmailAccount" := key, v => {
+        v("type") = "fetchmailAccount"
+        val userv = vertex("login" := account.login)
+        userv --> "fetchmailAccount" --> v
+      })
       v("host") = account.host
       v("user") = account.user
       v("recipient") = account.login
       v("password") = account.password
       v("runInterval") = account.runInterval
+      v("active") = account.active
     }
   }
+
+  private[this] def vertexToAccount(v: Vertex) = Account(
+    v.get[String]("recipient").getOrElse(sys.error("no login found")),
+    v.get[String]("host").getOrElse(sys.error("no host found")),
+    v.get[String]("user").getOrElse(sys.error("no remote user found")),
+    v.get[String]("password").getOrElse(sys.error("no password found")),
+    v.get[Int]("runInterval").getOrElse(2),
+    v.get[Boolean]("active").getOrElse(true)
+  )
 
   def findAccount(user: String, host: String) = {
     val key = user +"@"+ host
     withTx {
-      vertices("fetchmailAccount" := key).headOption.map(v => {
-        Account(
-          v.get[String]("recipient").getOrElse(sys.error("no login found")),
-          v.get[String]("host").getOrElse(sys.error("no host found")),
-          v.get[String]("user").getOrElse(sys.error("no remote user found")),
-          v.get[String]("password").getOrElse(sys.error("no password found")),
-          v.get[Int]("runInterval").getOrElse(2)
-        )
-      })
+      vertices("fetchmailAccount" := key).headOption.map(vertexToAccount)
     }
   }
 
@@ -233,6 +248,13 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb) extends Logging {
       vertices("fetchmailAccount" := key).map(v => {
         graph.removeVertex(v)
       })
+    }
+  }
+
+  def getAccountsForLogin(login: String): Iterable[Account] = {
+    withTx {
+      val loginv = vertices("login" := login).headOption
+      loginv.map(v => v ->- "fetchmailAccount" mapEnds(vertexToAccount)).getOrElse(Nil)
     }
   }
 }

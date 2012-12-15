@@ -17,7 +17,7 @@
 package org.eknet.publet.james
 
 import com.google.inject._
-import fetchmail.FetchmailScheduler
+import fetchmail.{FetchmailAccounts, FetchmailScheduler}
 import name.Names
 import org.eknet.publet.james.data._
 import guice._
@@ -125,6 +125,7 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
 
     //fetchmail
     bind[FetchmailScheduler].asEagerSingleton()
+    bind[FetchmailAccounts].asEagerSingleton()
 
     ///test
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)

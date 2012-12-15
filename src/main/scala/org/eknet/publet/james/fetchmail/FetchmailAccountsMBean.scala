@@ -18,12 +18,15 @@ package org.eknet.publet.james.fetchmail
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 15.12.12 18:54
+ * @since 15.12.12 20:37
  */
-case class Account(login: String, host: String, user: String, password: String, runInterval: Int, active: Boolean) {
-  host.ensuring(h => h != null && !h.isEmpty, "No host given")
-  user.ensuring(h => h != null && !h.isEmpty, "No user given")
-  login.ensuring(h => h != null && !h.isEmpty, "No login given")
-  password.ensuring(h => h != null && !h.isEmpty, "No password given")
-  runInterval.ensuring(_ > 0, "Invalid runInterval.")
+trait FetchmailAccountsMBean {
+
+  def getAccounts(login: String): Array[String]
+
+  def updateAccount(login: String, user: String, host: String, password: String, interval: Int, active: Boolean)
+
+  def setActive(user: String, host: String, active: Boolean)
+
+  def deleteAccount(user: String, host: String)
 }
