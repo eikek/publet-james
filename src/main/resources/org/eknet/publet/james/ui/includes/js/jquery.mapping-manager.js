@@ -68,9 +68,8 @@
 
   function feedback($this, data) {
     var msg = $('<p/>', {
-      html: data.message,
-      class: data.success ? "alert alert-success" : "alert alert-error"
-    });
+      "class": (data.success) ? "alert alert-success" : "alert alert-error"
+    }).html(data.message);
     $this.find('.mappingFeedback').html(msg).animate({delay: 1}, 3500, function () {
       $this.find('.mappingFeedback').html("");
     })
@@ -96,7 +95,7 @@
       var user = userdomain[0];
       var domain = userdomain[1];
       $this.mask();
-      $.post(settings.actionUrl, { do: "remove", user: user, domain: domain}, function(message) {
+      $.post(settings.actionUrl, { "do": "remove", "user": user, "domain": domain}, function(message) {
         $this.unmask().clearForm();
         reload($this, settings);
         feedback($this, message);

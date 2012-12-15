@@ -45,9 +45,8 @@
 
   function feedback($this, data) {
     var msg = $('<p/>', {
-      html: data.message,
-      class: data.success ? "alert alert-success" : "alert alert-error"
-    });
+      "class": (data.success) ? "alert alert-success" : "alert alert-error"
+    }).html(data.message);
     $this.find('.domainFeedback').html(msg).animate({delay: 1}, 3500, function () {
       $this.find('.domainFeedback').html("");
     })
@@ -60,7 +59,7 @@
         var domain = $(event.target).attr("data-domain") || $(event.target.parentElement).attr("data-domain");
         if (domain) {
           $(event.target).mask();
-          $.get(settings.actionUrl, {do: "remove", domain: domain}, function (result) {
+          $.get(settings.actionUrl, { "do": "remove", "domain": domain}, function (result) {
             $(event.target).unmask();
             feedback($this, result);
             reload($this, settings);
@@ -73,8 +72,8 @@
   function reload($this, settings) {
     var target = $this.find('.domainList');
     target.mask();
-    $.get(settings.actionUrl, { do: "get"}, function (data) {
-      $.get(settings.actionUrl, { do: "getdefault"}, function (defaultDomain) {
+    $.get(settings.actionUrl, { "do": "get"}, function (data) {
+      $.get(settings.actionUrl, { "do": "getdefault"}, function (defaultDomain) {
         target.empty().unmask();
         var view = { domains: [] };
         for (var i = 0; i < data.length; i++) {
