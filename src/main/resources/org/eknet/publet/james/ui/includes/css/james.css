@@ -27,7 +27,7 @@ ul.editableList > li.defaultEntry {
 }
 
 ul.serverBoxes {
-
+    margin:0;
 }
 
 ul.serverBoxes > li {

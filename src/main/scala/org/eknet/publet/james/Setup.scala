@@ -45,6 +45,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     val scripts = new MapContainer
     scripts.addResource(new WebScriptResource("managedomains.json".rn, new ManageDomains))
     scripts.addResource(new WebScriptResource("managemappings.json".rn, new ManageMappings))
+    scripts.addResource(new WebScriptResource("manageserver.json".rn, new ManageServer))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
   }
 
@@ -66,6 +67,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
       .add(resource("css/james.css"))
       .add(resource("js/jquery.domain-manager.js"))
       .add(resource("js/jquery.mapping-manager.js"))
+      .add(resource("js/jquery.server-manager.js"))
       .require(DefaultLayout.Assets.jquery.name)
       .require(mustache.name)
 
