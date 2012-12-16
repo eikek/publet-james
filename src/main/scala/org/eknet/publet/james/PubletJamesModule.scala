@@ -61,13 +61,28 @@ import org.eknet.publet.auth.store.UserStore
 import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.vfs.Resource
+import org.eknet.publet.vfs.util.SimpleContentResource
 
 class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
 
-  private[this] def doc(name: String) = Resource.classpath("org/eknet/publet/james/doc/"+ name)
+  private[this] def doc(name: String) = {
+    val r = Resource.classpath("org/eknet/publet/james/"+ name)
+    if (name.endsWith("conf")) {
+      new SimpleContentResource(r.name.withExtension("xml"), r)
+    } else {
+      r
+    }
+  }
 
   def configure() {
-    bindDocumentation(List(doc("james.md")))
+    bindDocumentation(List(
+      doc("doc/james.md"),
+      doc("config/domainlist.conf"),
+      doc("config/imapserver.conf"),
+      doc("config/pop3server.conf"),
+      doc("config/smtpserver.conf"),
+      doc("config/mailetcontainer.conf"))
+    )
 
     bind[Setup].asEagerSingleton()
     bind[ConfigurationProvider].to[JamesConfigurationProvider] in  Scopes.SINGLETON
