@@ -33,3 +33,4 @@ It is possible to define only one job that runs repeatedly in a configured inter
 job goes through all configured accounts, fetches the mails and delivers them locally.
 While there is one job, users can decide on which multiple of a run their accounts
 should be processed. Thus the interval is the minimum interval for all users.
+

@@ -32,6 +32,12 @@ package object ui {
   val actionParam = "do"
 
   def param(name: String) = PubletWebContext.param(name).filter(!_.trim.isEmpty).map(_.toLowerCase)
+  def boolParam(name: String) = param(name) map (s => s match {
+    case "on" | "ON" | "On" => true
+    case "true" | "TRUE" | "True" => true
+    case "yes" | "YES" | "Yes" => true
+    case _ => false
+  })
   def domainList = PubletWeb.instance[DomainList].get
   def maildb = PubletWeb.instance[MailDb].get
 

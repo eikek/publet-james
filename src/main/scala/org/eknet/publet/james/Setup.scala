@@ -46,6 +46,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     scripts.addResource(new WebScriptResource("managedomains.json".rn, new ManageDomains))
     scripts.addResource(new WebScriptResource("managemappings.json".rn, new ManageMappings))
     scripts.addResource(new WebScriptResource("manageserver.json".rn, new ManageServer))
+    scripts.addResource(new WebScriptResource("managefetchmailaccounts.json".rn, new ManageFetchmailAccounts))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
   }
 
@@ -60,7 +61,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
 
     override def classPathBase = "/org/eknet/publet/james/ui/includes"
 
-    val mustache = Group("mustache")
+    val mustache = Group("publet.james.mustache")
       .add(resource("js/mustache.js"))
 
     val jamesGroup = Group("publet.james")
@@ -68,7 +69,8 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
       .add(resource("js/jquery.domain-manager.js"))
       .add(resource("js/jquery.mapping-manager.js"))
       .add(resource("js/jquery.server-manager.js"))
-      .require(DefaultLayout.Assets.jquery.name)
+      .add(resource("js/jquery.fetchmailaccount-manager.js"))
+      .require(DefaultLayout.Assets.jquery.name, DefaultLayout.Assets.bootstrap.name)
       .require(mustache.name)
 
     val jamesManager = Group("publet.james.manager")

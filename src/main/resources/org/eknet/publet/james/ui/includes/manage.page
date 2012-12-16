@@ -9,6 +9,8 @@ title: Manage JAMES
     $('.smtpWidget').serverManager();
     $('.imapWidget').serverManager({ serverType: "imap" });
     $('.pop3Widget').serverManager({ serverType: "pop3" });
+
+    $('#modalTest').fetchmailAccountManager();
   });
 
 
@@ -28,3 +30,5 @@ hr/
     #manageDomains
   .span6
     #manageMappings
+
+#modalTest
