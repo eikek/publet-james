@@ -18,6 +18,7 @@ package org.eknet.publet.james
 
 import com.google.inject._
 import fetchmail.{FetchmailAccountsMBean, FetchmailAccounts, FetchmailScheduler}
+import mailets.SimpleMailingListHeaders
 import name.Names
 import org.eknet.publet.james.data._
 import guice._
@@ -126,6 +127,9 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     //fetchmail
     bind[FetchmailScheduler].asEagerSingleton()
     bind[FetchmailAccountsMBean].to[FetchmailAccounts].asEagerSingleton()
+
+    //simple mailing list headers
+    bind[SimpleMailingListHeaders].asEagerSingleton()
 
     ///test
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
