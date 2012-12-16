@@ -10,7 +10,8 @@ title: Manage JAMES
     $('.imapWidget').serverManager({ serverType: "imap" });
     $('.pop3Widget').serverManager({ serverType: "pop3" });
 
-    $('#modalTest').fetchmailAccountManager();
+    $('#fetchmailAccounts').fetchmailAccountManager();
+    $('.fetchmailWidget').fetchmailSchedulerManager();
   });
 
 
@@ -20,10 +21,12 @@ title: Manage JAMES
   h1 Manage JAMES
 
 .row
-  .span10.offset1
+  .span12
     .smtpWidget.pull-left
     .imapWidget.pull-left
     .pop3Widget.pull-left
+    .fetchmailWidget.pull-left
+
 hr/
 .row
   .span6
@@ -31,4 +34,6 @@ hr/
   .span6
     #manageMappings
 
-#modalTest
+h3 Fetchmail Accounts
+
+#fetchmailAccounts

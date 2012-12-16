@@ -26,7 +26,7 @@
           '  </div>' +
           '</li>' +
           '{{/servers}}' +
-          '</ul>'
+          '</ul>';
 
   function reload($this, settings) {
     $this.mask();
