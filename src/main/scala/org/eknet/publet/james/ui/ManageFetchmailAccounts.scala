@@ -28,7 +28,7 @@ class ManageFetchmailAccounts extends ScalaScript {
   import org.eknet.publet.web.util.RenderUtils.makeJson
 
   def serve() = {
-    param(actionParam) match {
+    paramLc(actionParam) match {
       case Some("get") => {
         val login = param("login").getOrElse(Security.username)
         makeJson(maildb.getAccountsForLogin(login).map(accountToMap).toList)
@@ -41,7 +41,7 @@ class ManageFetchmailAccounts extends ScalaScript {
 
   private[this] def deleteAccount() = {
     val user = param("user")
-    val host = param("host")
+    val host = paramLc("host")
     (user, host) match {
       case (Some(u), Some(h)) => {
         maildb.deleteAccount(u, h)
@@ -53,7 +53,7 @@ class ManageFetchmailAccounts extends ScalaScript {
 
   private[this] def addAccount() = {
     val user = param("user")
-    val host = param("host")
+    val host = paramLc("host")
     (user, host) match {
       case (Some(u), Some(h)) => {
         val password = param("password").orElse(maildb.findAccount(u, h).map(_.password))

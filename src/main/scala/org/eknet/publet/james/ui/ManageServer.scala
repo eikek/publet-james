@@ -13,7 +13,7 @@ class ManageServer extends ScalaScript {
   import collection.JavaConversions._
 
   def serve() = {
-    (param(actionParam), param("serverType")) match {
+    (paramLc(actionParam), paramLc("serverType")) match {
       case (Some("get"), Some(stype)) => safeCall {
         val servers = getServer(stype)
         val maps = servers.zip(0 to servers.size).map(s => Map(

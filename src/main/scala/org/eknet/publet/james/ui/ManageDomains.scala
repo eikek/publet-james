@@ -26,7 +26,7 @@ import org.eknet.publet.web.util.RenderUtils
 class ManageDomains extends ScalaScript {
 
   def serve() = {
-    param(actionParam) match {
+    paramLc(actionParam) match {
       case Some("get") => getDomains
       case Some("add") => addDomain()
       case Some("remove") => removeDomain()
@@ -39,7 +39,7 @@ class ManageDomains extends ScalaScript {
 
   def getDefaultDomain = RenderUtils.makeJson(domainList.getDefaultDomain)
 
-  def addDomain() = param("domain") match {
+  def addDomain() = paramLc("domain") match {
     case Some(d) => safeCall {
       domainList.addDomain(d)
       success("Domain '"+d+"' created")
@@ -47,7 +47,7 @@ class ManageDomains extends ScalaScript {
     case _ => failure("No domain specified.")
   }
 
-  def removeDomain() = param("domain") match {
+  def removeDomain() = paramLc("domain") match {
     case Some(d) => safeCall {
       maildb.removeDomain(d)
       success("Domain '"+d+"' removed.")

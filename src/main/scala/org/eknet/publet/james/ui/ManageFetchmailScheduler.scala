@@ -30,7 +30,7 @@ class ManageFetchmailScheduler extends ScalaScript {
 
   def serve() = {
     val fm = fetchmail
-    param(actionParam) match {
+    paramLc(actionParam) match {
       case Some("get") => makeJson(Map(
         "startedLabel" -> ( if (fm.isScheduled) "success" else "important" ),
         "schedulerState" -> (if (fm.isScheduled) "Running" else "Stopped"),
@@ -52,6 +52,7 @@ class ManageFetchmailScheduler extends ScalaScript {
         }
         case _ => failure("Interval missing.")
       }
+      case _ => failure("Too less parameters.")
     }
   }
 

@@ -25,14 +25,14 @@ import org.eknet.publet.web.util.RenderUtils
  */
 class ManageMappings extends ScalaScript {
 
-  def serve() = param(actionParam) match {
+  def serve() = paramLc(actionParam) match {
     case Some("get") => getMappings
     case Some("add") => addMapping()
     case Some("remove") => removeMapping()
     case cmd @_ => failure("Unknown command: "+ cmd)
   }
 
-  def getMappings = param("q") match {
+  def getMappings = paramLc("q") match {
     case Some(q) => RenderUtils.makeJson(maildb.allMappings.filter(t => {
       t._1.contains(q) || t._2.exists(s => s.contains(q))
     }))
@@ -40,9 +40,9 @@ class ManageMappings extends ScalaScript {
   }
 
   def addMapping() = {
-    val user = param("user")
-    val domain = param("domain")
-    val mapping = param("mapping")
+    val user = paramLc("user")
+    val domain = paramLc("domain")
+    val mapping = paramLc("mapping")
 
     (user, domain, mapping) match {
       case (u, d, Some(m)) if (d != None || u != None) => {
@@ -54,9 +54,9 @@ class ManageMappings extends ScalaScript {
   }
 
   def removeMapping() = {
-    val user = param("user")
-    val domain = param("domain")
-    val mapping = param("mapping")
+    val user = paramLc("user")
+    val domain = paramLc("domain")
+    val mapping = paramLc("mapping")
     (user, domain, mapping) match {
       case (Some(u), Some(d), Some(m)) => {
         maildb.removeMapping(u, d, m)

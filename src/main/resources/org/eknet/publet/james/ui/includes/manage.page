@@ -21,19 +21,32 @@ title: Manage JAMES
   h1 Manage JAMES
 
 .row
-  .span12
+  .span4
     .smtpWidget.pull-left
+      br/
+      p.span4 Loading...
+      br/
     .imapWidget.pull-left
+      br/
+      p.span4 Loading...
+      br/
     .pop3Widget.pull-left
+      br/
+      p.span4 Loading...
+      br/
     .fetchmailWidget.pull-left
-
-hr/
-.row
-  .span6
-    #manageDomains
-  .span6
-    #manageMappings
-
-h3 Fetchmail Accounts
-
-#fetchmailAccounts
+      br/
+      p.span4 Loading...
+      br/
+  .span8
+    ul.nav.nav-tabs
+      li.active
+        a(href="#manageDomains" data-toggle="tab") Domains
+      li
+        a(href="#manageMappings" data-toggle="tab") Mappings
+      li
+        a(href="#fetchmailAccounts" data-toggle="tab") Fetchmail Accounts
+    .tab-content
+      #manageDomains.tab-pane.active
+      #manageMappings.tab-pane
+      #fetchmailAccounts.tab-pane

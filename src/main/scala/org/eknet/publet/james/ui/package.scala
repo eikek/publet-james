@@ -31,7 +31,8 @@ package object ui {
 
   val actionParam = "do"
 
-  def param(name: String) = PubletWebContext.param(name).filter(!_.trim.isEmpty).map(_.toLowerCase)
+  def param(name: String) = PubletWebContext.param(name).filter(!_.trim.isEmpty)
+  def paramLc(name: String) = param(name).map(_.toLowerCase)
   def intParam(name: String) = param(name) map (s => s.toInt)
   def boolParam(name: String) = param(name) map (s => s match {
     case "on" | "ON" | "On" => true
