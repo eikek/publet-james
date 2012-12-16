@@ -53,9 +53,9 @@ should be processed. Thus the interval is the minimum interval for all users.
 ### Custom Mailets
 
 It is very easy to hook into the mail processing chain with Apache James. This is done
-by implementing a `Mailet` and configure it in `mailetcontainer.conf` configuration file.
+by implementing a `Mailet` and configuring it in `mailetcontainer.conf` configuration file.
 
-The default mailetcontainer contains a mailet from this extension that will forward any
+This extension provides a mailet (it is active for all mails by default) that will forward any
 mail to publet's event bus. Thus, to hook into the mail processing chain, just add a
 singleton to your guice module and `@Subscribe` to the `IncomeMailEvent`. The `IncomeMailEvent`
 object holds a reference to the mail and the `MailetConfig` such that subscribers can
