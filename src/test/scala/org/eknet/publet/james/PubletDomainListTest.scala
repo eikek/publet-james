@@ -36,7 +36,7 @@ class PubletDomainListTest extends AbstractDomainListTest {
 
   override def setUp() {
     db = factory.newRandomDb
-    maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)))
+    maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)), new NullUsersRepository)
     super.setUp()
   }
 

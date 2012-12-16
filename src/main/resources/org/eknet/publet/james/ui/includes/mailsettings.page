@@ -1,0 +1,21 @@
+---
+title: Mail Settings
+
+--- name:head pipeline:jade
+:javascript
+  $(function() {
+    $('#mailAlias').mailAliasManager();
+    $('#fetchmailAccounts').fetchmailAccountManager({ forCurrentUser: true });
+  });
+
+
+--- name:content pipeline:jade
+
+.page-header
+  h1 Mail Settings
+
+#mailAlias
+
+h3 Fetchmail Accounts
+
+#fetchmailAccounts

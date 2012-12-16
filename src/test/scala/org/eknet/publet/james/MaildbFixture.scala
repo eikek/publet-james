@@ -38,7 +38,7 @@ trait MaildbFixture extends FunSuite {
 
   def withMailDb[A](f: MailDb => Any) {
     DbFactory.withDb(new OrientDbFactory())(db => {
-      val maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)))
+      val maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)), new NullUsersRepository)
       f(maildb)
     })
   }

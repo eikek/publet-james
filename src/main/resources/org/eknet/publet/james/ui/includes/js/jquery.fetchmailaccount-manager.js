@@ -29,10 +29,10 @@
       '      <h3>Fetchmail Account</h3>\n' +
       '    </div>\n'+
       '    <div class="modal-body">\n' +
-      '      {{^login}}' +
+      '      {{^forCurrentUser}}' +
       '      <label>Local user (login)</label>\n' +
       '      <input type="text" placeholder="login" name="login" required="required"/>\n' +
-      '      {{/login}}' +
+      '      {{/forCurrentUser}}' +
       '      <label>Remote user</label>\n' +
       '      <input type="text" placeholder="remote user" name="user" required="required"/>\n' +
       '      <label>Pop3 Host</label>\n' +
@@ -58,10 +58,10 @@
       '<form class="form-inline listAccountForm" action="{{actionUrl}}" method="post">' +
       '  <input type="hidden" name="do" value="get"/>\n ' +
       '  <div class="input-append">\n' +
-      '      {{^login}}' +
+      '      {{^forCurrentUser}}' +
       '    <input type="text" placeholder="Login" name="login" />\n' +
       '    <button class="btn listAccountsButton">List</button>\n' +
-      '      {{/login}}' +
+      '      {{/forCurrentUser}}' +
       '  </div>\n' +
       '  <a class="btn newAccountButton" href="#" role="button" data-toggle="modal">New</a>\n' +
       '  <span class="feedback"></span>' +
@@ -93,9 +93,8 @@
     })
   }
 
-  function addHandlers($this, settings) {
-    //list accounts
-    var options = {
+  function _listAccountSubmitOptions($this, settings) {
+    return {
       beforeSubmit: function (arr, form, options) {
         form.mask();
       },
@@ -107,7 +106,11 @@
         addTableHandlers($this, settings);
       }
     };
-    $this.find('.listAccountForm').ajaxForm(options);
+  }
+
+  function addHandlers($this, settings) {
+    //list accounts
+    $this.find('.listAccountForm').ajaxForm(_listAccountSubmitOptions($this, settings));
 
     //new account button
     $this.find(".newAccountButton").on('click', function(ev) {
@@ -124,7 +127,7 @@
         form.unmask();
         if (data.success) {
           $this.find('.fetchmailAccountModal').modal('hide');
-          reloadAccounts($this);
+          reloadAccounts($this, settings);
         } else {
           feedback(form.find(".feedback"), data)
         }
@@ -165,7 +168,7 @@
             var target = $(ev.currentTarget);
             feedback(target.parents(".feedback"), data);
             if (data.success) {
-              reloadAccounts($this);
+              reloadAccounts($this, settings);
             }
           });
         }
@@ -182,10 +185,17 @@
     });
     $this.append(table);
     addHandlers($this, settings);
+    if (settings.forCurrentUser) {
+      reloadAccounts($this, settings);
+    }
   }
 
-  function reloadAccounts($this) {
-    $this.find('.listAccountsButton').trigger('click');
+  function reloadAccounts($this, settings) {
+    if (settings.forCurrentUser) {
+      $this.find('.listAccountForm').ajaxSubmit(_listAccountSubmitOptions($this, settings));
+    } else {
+      $this.find('.listAccountsButton').trigger('click');
+    }
   }
 
   var methods = {
@@ -196,7 +206,8 @@
 
         if (!data) {
           var settings = $.extend({
-            actionUrl: 'action/managefetchmailaccounts.json'
+            actionUrl: 'action/managefetchmailaccounts.json',
+            forCurrentUser: false
           }, options);
           $(this).data('fetchmail-account-manager', {
             target: $this,

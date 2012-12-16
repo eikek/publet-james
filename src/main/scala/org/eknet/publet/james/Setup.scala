@@ -48,6 +48,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     scripts.addResource(new WebScriptResource("manageserver.json".rn, new ManageServer))
     scripts.addResource(new WebScriptResource("managefetchmailaccounts.json".rn, new ManageFetchmailAccounts))
     scripts.addResource(new WebScriptResource("managefetchmailscheduler.json".rn, new ManageFetchmailScheduler))
+    scripts.addResource(new WebScriptResource("managemailalias.json".rn, new ManageAlias))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
   }
 
@@ -72,6 +73,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
       .add(resource("js/jquery.server-manager.js"))
       .add(resource("js/jquery.fetchmailaccount-manager.js"))
       .add(resource("js/jquery.fetchmailscheduler-manager.js"))
+      .add(resource("js/jquery.mailalias-manager.js"))
       .require(DefaultLayout.Assets.jquery.name, DefaultLayout.Assets.bootstrap.name)
       .require(mustache.name)
 

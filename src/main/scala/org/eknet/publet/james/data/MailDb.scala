@@ -26,20 +26,17 @@ import org.eknet.publet.james.fetchmail.{Account, FetchmailConfig}
 import java.util.concurrent.TimeUnit
 import org.apache.james.fetchmail.{AccountConfiguration, ConfiguredAccount}
 import com.tinkerpop.blueprints.Vertex
-import org.apache.james.user.api.UsersRepository
-import org.apache.james.dnsservice.api.DNSService
-import org.apache.james.domainlist.api.DomainList
-import org.apache.james.queue.api.MailQueue
 import java.util.concurrent.atomic.AtomicInteger
 import javax.mail.Session
 import java.util.Properties
+import org.apache.james.user.api.UsersRepository
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 28.10.12 20:00
  */
 @Singleton
-class MailDb @Inject() (@Named("jamesdb") val db: GraphDb) extends Logging {
+class MailDb @Inject() (@Named("jamesdb") val db: GraphDb, userRepo: UsersRepository) extends Logging {
 
   private implicit val graph = db.graph
   import GraphDsl._
@@ -141,6 +138,26 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb) extends Logging {
   def allMappings = withTx {
     (virtualAddr ->- addressLabel mapEnds {van => (van.get[String](vaddressProp).get ->
       (van ->- mappingLabel mapEnds(_.get[String](mappingProp).get)).toList) }).toMap
+  }
+
+  /**
+   * Returns whether there exists a recipient with the given name. That is,
+   * either there is a local user with this login, or there exists a mapping
+   * for the given user and domain already.
+   *
+   * @param user
+   * @param domain
+   * @return
+   */
+  def aliasExists(user: String, domain: String): Boolean = {
+    if (userRepo.contains(user)) {
+      true
+    } else {
+      allMappings.find(m => {
+        val mapping = m._1.split("@", 2)
+        mapping(0) == user && mapping(1) == domain
+      }).isDefined
+    }
   }
 
   // ~~ fetchmail
