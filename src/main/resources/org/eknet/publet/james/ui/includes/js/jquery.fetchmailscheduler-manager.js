@@ -28,7 +28,7 @@
       '    <span class="label label-{{startedLabel}}">' +
       '      {{schedulerState}}' +
       '    </span><br/> ' +
-      '    interval <span class="badge badge-info">{{interval}}</span>' +
+      '    <span class="intervalEdit" rel="tooltip" title="Click me to edit the interval."><span class="badge badge-info interval">{{interval}}</span> minutes interval</span>' +
       '  </div> ' +
       '  <div class="right">' +
       '    <a class="btn btn-primary btn-small" data-action="{{action}}">' +
@@ -39,11 +39,32 @@
       '</li>' +
       '</ul>';
 
+  var intervalEditTempl =
+      '<form class="form-inline saveIntervalForm" action="{{actionUrl}}" method="post">' +
+      '  <input type="text" name="interval" class="input-mini">' +
+      '  <input type="hidden" name="do" value="set">' +
+      '  <button type="submit" class="btn btn-mini"><i class="icon-ok"></i></button>' +
+      '  <a class="btn btn-mini btn-inverse cancelButton"><i class="icon-remove icon-white"</a>' +
+      '</form>';
+
+  function feedback(el, data, callback) {
+    var level = (data.success)? "success" : "error";
+    el.empty().addClass("alert").addClass("alert-"+level);
+    if (!callback) {
+      callback = function() {
+        el.html("");
+        el.removeClass("alert");
+        el.removeClass("alert-"+level);
+      }
+    }
+    el.html(data.message).animate({delay: 1}, 3500, callback);
+  }
+
   function reload($this, settings) {
     $this.mask();
     $.get(settings.actionUrl, { "do": "get"}, function(data) {
       $this.unmask().html(Mustache.render(boxTemplate, data));
-
+      $this.find('[rel="tooltip"]').tooltip();
       $this.find('.widgetRefresh').on('click', function(ev) {
         reload($this, settings);
       });
@@ -52,6 +73,32 @@
         $.post(settings.actionUrl, {"do": $(event.currentTarget).attr("data-action")}, function(data) {
           reload($this, settings);
         });
+      });
+      $this.find('.intervalEdit').click(function(ev) {
+        var target = $(ev.currentTarget);
+        if (!target.hasClass("intervalEditDisabled")) {
+          target.addClass("intervalEditDisabled");
+          var interval = target.find('.interval').text();
+          target.html(Mustache.render(intervalEditTempl, settings));
+          $this.find('[rel="tooltip"]').tooltip('destroy');
+          target.find('input[name="interval"]').val(interval);
+          target.find('.saveIntervalForm').ajaxForm({
+            beforeSubmit: function (arr, form, options) {
+              $this.mask();
+            },
+            success: function (data, status, xhr, form) {
+              $this.unmask();
+              if (data.success) {
+                reload($this, settings);
+              } else {
+                feedback(form, data, function() { reload($this, settings) });
+              }
+            }
+          });
+          target.find('.cancelButton').click(function(ev) {
+            reload($this, settings);
+          });
+        }
       });
     });
   }

@@ -37,16 +37,16 @@ class ManageFetchmailScheduler extends ScalaScript {
         "interval" -> fm.getInterval,
         "action" -> (if (fm.isScheduled) "stop" else "play")
       ))
-      case Some("play") => {
+      case Some("play") => safeCall {
         fm.start()
         success("Fetchmail started")
       }
-      case Some("stop") => {
+      case Some("stop") => safeCall {
         fm.stop()
         success("Fetchmail stopped")
       }
       case Some("set") => intParam("interval") match {
-        case Some(interval) => {
+        case Some(interval) => safeCall {
           fm.setInterval(interval)
           success("Interval updated to "+ interval +" minutes.")
         }

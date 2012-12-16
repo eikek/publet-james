@@ -21,9 +21,14 @@ package org.eknet.publet.james.fetchmail
  * @since 15.12.12 18:54
  */
 case class Account(login: String, host: String, user: String, password: String, runInterval: Int, active: Boolean) {
-  host.ensuring(h => h != null && !h.isEmpty, "No host given")
-  user.ensuring(h => h != null && !h.isEmpty, "No user given")
-  login.ensuring(h => h != null && !h.isEmpty, "No login given")
-  password.ensuring(h => h != null && !h.isEmpty, "No password given")
-  runInterval.ensuring(_ > 0, "Invalid runInterval.")
+  precondition(host != null && !host.isEmpty, "No host given")
+  precondition(user != null && !user.isEmpty, "No user given")
+  precondition(login != null && !user.isEmpty, "No login given")
+  precondition(password != null && !password.isEmpty, "No password given")
+  precondition(runInterval > 0, "Invalid runInterval.")
+
+  private[this] def precondition(expr: Boolean, msg: => Any) {
+    if (!expr)
+      throw new IllegalArgumentException(msg.toString)
+  }
 }

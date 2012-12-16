@@ -29,7 +29,7 @@ class ManageFetchmailAccounts extends ScalaScript {
 
   def serve() = {
     paramLc(actionParam) match {
-      case Some("get") => {
+      case Some("get") => safeCall {
         val login = param("login").getOrElse(Security.username)
         makeJson(maildb.getAccountsForLogin(login).map(accountToMap).toList)
       }
@@ -43,7 +43,7 @@ class ManageFetchmailAccounts extends ScalaScript {
     val user = param("user")
     val host = paramLc("host")
     (user, host) match {
-      case (Some(u), Some(h)) => {
+      case (Some(u), Some(h)) => safeCall {
         maildb.deleteAccount(u, h)
         success("Account deleted.")
       }
@@ -55,7 +55,7 @@ class ManageFetchmailAccounts extends ScalaScript {
     val user = param("user")
     val host = paramLc("host")
     (user, host) match {
-      case (Some(u), Some(h)) => {
+      case (Some(u), Some(h)) => safeCall {
         val password = param("password").orElse(maildb.findAccount(u, h).map(_.password))
         password match {
           case Some(pw) => {

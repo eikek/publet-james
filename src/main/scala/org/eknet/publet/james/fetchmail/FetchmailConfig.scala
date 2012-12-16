@@ -26,6 +26,10 @@ case class FetchmailConfig(enabled: Boolean, interval: Long, unit: TimeUnit, run
 
   private val minimum = TimeUnit.MINUTES.toMillis(3)
 
-  unit.toMillis(interval).ensuring(_ > minimum, "Interval '"+interval+" "+unit+"' is too short.")
+  precondition(unit.toMillis(interval) > minimum, "Interval '"+interval+" "+unit+"' is too short.")
 
+  private[this] def precondition(expr: Boolean, msg: => Any) {
+    if (!expr)
+      throw new IllegalArgumentException(msg.toString)
+  }
 }
