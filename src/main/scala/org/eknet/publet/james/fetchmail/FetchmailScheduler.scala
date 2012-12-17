@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 @Singleton
 class FetchmailScheduler @Inject() (scheduler: Scheduler, maildb: MailDb) extends FetchmailSchedulerMBean with QuartzDsl {
 
-  private val jobKey: JobKey = "fetchmail0" in "fetchmail"
+  private val jobKey: JobKey = "fetchmailSetup" in "fetchmail"
   private val triggerKey: TriggerKey = "fetchmailTrigger" in "fetchmail"
 
   private val fetchmailJob = newJob[FetchmailJob]

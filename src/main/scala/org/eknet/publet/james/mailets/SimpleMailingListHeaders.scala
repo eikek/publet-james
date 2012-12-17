@@ -31,7 +31,7 @@ import java.util.UUID
  *
  * An address is identified as a mailing list address, if it
  * is mentioned in the settings file using the key
- * `publet.james.mailing-lists`. The value is expected to be
+ * `james.mailing-lists`. The value is expected to be
  * a list of email address separated by comma or semi-colon.
  *
  * The recipients of the lists must be configured using
@@ -68,7 +68,7 @@ class SimpleMailingListHeaders @Inject() (settings: Settings) {
   }
 
   def isMailingList(mail: String): Boolean = {
-    settings("publet.james.mailing-lists").exists(lists => {
+    settings("james.mailing-lists").exists(lists => {
       lists.split("[,;]").contains(mail)
     })
   }

@@ -44,10 +44,33 @@ and `file://var/x.y` are mapped to `$PUBLET_CONFIG/james/var`.
 A fetchmail background job can be used to fetch external mail and deliver it to
 local accounts.
 
-It is possible to define only one job that runs repeatedly in a configured interval. The
-job goes through all configured accounts, fetches the mails and delivers them locally.
-While there is one job, users can decide on which multiple of a run their accounts
-should be processed. Thus the interval is the minimum interval for all users.
+James provides a `FetchScheduler` that can be configured by xml files. You need
+to create a configuration file `etc/fetchmail.conf`. Please see
+[James Documentation](http://james.apache.org/server/3/config-fetchmail.html) for
+how to configure it.
+
+James' fetchmail scheduler can be configured in various ways which makes it very
+powerful. Many options should be carefully set by an admin user. But it would also
+be useful, if regular users could edit their accounts, too. Therefore, this extension
+provides another mechanism around james' fetchmail support that aims to be easy to use
+but lacks some power in exchange. Users can edit fetchmail accounts using the web
+interface and there is one job that is executed repeatedly that will loop through all
+those accounts and starts the fetchmail process. This job can be scheduled and unscheduled
+and the interval can also be set via the web interface. These settings should obviously
+only be accessed by the admin user. Regular users can decide for each of their accounts
+which run it should be processed. Thus they cannot alter the interval directly but specify,
+whether the job should fetch their account every time, every second time and so on.
+
+The job then starts to loop through the accounts and fires off other jobs that
+really do the fetching. You can specify in publet's configuration file how many
+accounts should be processed by one thread.
+
+    james.fetchmail.jobsize=10
+
+The default value is 10. So if there are 100 accounts, there can be up to ten threads
+(depending on your thread-pool configuration) run concurrently fetching mails. This
+feature relys on the [Quartz Scheduler](http://quartz-scheduler.org/) library, meaning
+the publet-quartz extension must be available.
 
 
 ### Custom Mailets
@@ -82,7 +105,7 @@ now can add the appropriate headers to such mails.
 If you have declared such a mailing list mapping in the virtual address table, just add
 the address to your `settings.properties`:
 
-    publet.james.mailing-lists=mylist@mydomain.com
+    james.mailing-lists=mylist@mydomain.com
 
 Any mail to this address is now enhanced with some more headers identifying this mail
 as a mailing list mail.

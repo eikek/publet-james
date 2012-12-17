@@ -49,6 +49,7 @@ import org.eknet.publet.james.data.{PubletFilesystem, MailRepositoryStoreImpl, R
 import org.eknet.publet.web.Config
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.apache.james.pop3server.netty.POP3ServerFactory
+import org.apache.james.fetchmail.FetchScheduler
 
 /**
  * This class looks up configuration files for apache services. It will first
@@ -83,7 +84,8 @@ class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends Conf
     classOf[CamelCompositeProcessor] -> "mailprocessor",
     classOf[JamesMailSpooler] -> "mailspooler",
     classOf[JamesMailetContext] -> "mailetcontext",
-    classOf[MailRepositoryStoreImpl] -> "mailrepositorystore"
+    classOf[MailRepositoryStoreImpl] -> "mailrepositorystore",
+    classOf[FetchScheduler] -> "fetchmail"
   )
 
   configMappings.foreach(mapping => {

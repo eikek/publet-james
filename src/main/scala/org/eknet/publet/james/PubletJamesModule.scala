@@ -62,6 +62,7 @@ import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationP
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.vfs.Resource
 import org.eknet.publet.vfs.util.SimpleContentResource
+import org.apache.james.fetchmail.FetchScheduler
 
 class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
 
@@ -140,6 +141,7 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     bind[MailboxCopier].to[MailboxCopierImpl] in Scopes.SINGLETON
 
     //fetchmail
+    bind[FetchScheduler].asEagerSingleton()
     bind[FetchmailScheduler].asEagerSingleton()
     bind[FetchmailAccountsMBean].to[FetchmailAccounts].asEagerSingleton()
 
