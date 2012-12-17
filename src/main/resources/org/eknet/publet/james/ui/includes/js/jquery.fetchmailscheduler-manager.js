@@ -60,46 +60,58 @@
     el.html(data.message).animate({delay: 1}, 3500, callback);
   }
 
+  function renderError($this, msg) {
+    $this.find('div[class="left"] span').first().addClass("alert alert-error").html(msg);
+  }
+
   function reload($this, settings) {
     $this.mask();
     $.get(settings.actionUrl, { "do": "get"}, function(data) {
       $this.unmask().html(Mustache.render(boxTemplate, data));
-      $this.find('[rel="tooltip"]').tooltip();
-      $this.find('.widgetRefresh').on('click', function(ev) {
-        reload($this, settings);
-      });
-      $this.find('a[data-action]').on('click', function(event) {
-        $this.mask();
-        $.post(settings.actionUrl, {"do": $(event.currentTarget).attr("data-action")}, function(data) {
+      if (data.success === false) {
+        renderError($this, data.message);
+      } else {
+        $this.find('[rel="tooltip"]').tooltip();
+        $this.find('.widgetRefresh').on('click', function(ev) {
           reload($this, settings);
         });
-      });
-      $this.find('.intervalEdit').click(function(ev) {
-        var target = $(ev.currentTarget);
-        if (!target.hasClass("intervalEditDisabled")) {
-          target.addClass("intervalEditDisabled");
-          var interval = target.find('.interval').text();
-          target.html(Mustache.render(intervalEditTempl, settings));
-          $this.find('[rel="tooltip"]').tooltip('destroy');
-          target.find('input[name="interval"]').val(interval);
-          target.find('.saveIntervalForm').ajaxForm({
-            beforeSubmit: function (arr, form, options) {
-              $this.mask();
-            },
-            success: function (data, status, xhr, form) {
-              $this.unmask();
-              if (data.success) {
-                reload($this, settings);
-              } else {
-                feedback(form, data, function() { reload($this, settings) });
-              }
-            }
-          });
-          target.find('.cancelButton').click(function(ev) {
+        $this.find('a[data-action]').on('click', function(event) {
+          $this.mask();
+          $.post(settings.actionUrl, {"do": $(event.currentTarget).attr("data-action")}, function(data) {
             reload($this, settings);
           });
-        }
-      });
+        });
+        addIntervalEditHandler($this, settings);
+      }
+    });
+  }
+
+  function addIntervalEditHandler($this, settings) {
+    $this.find('.intervalEdit').click(function(ev) {
+      var target = $(ev.currentTarget);
+      if (!target.hasClass("intervalEditDisabled")) {
+        target.addClass("intervalEditDisabled");
+        var interval = target.find('.interval').text();
+        target.html(Mustache.render(intervalEditTempl, settings));
+        $this.find('[rel="tooltip"]').tooltip('destroy');
+        target.find('input[name="interval"]').val(interval);
+        target.find('.saveIntervalForm').ajaxForm({
+          beforeSubmit: function (arr, form, options) {
+            $this.mask();
+          },
+          success: function (data, status, xhr, form) {
+            $this.unmask();
+            if (data.success) {
+              reload($this, settings);
+            } else {
+              feedback(form, data, function() { reload($this, settings) });
+            }
+          }
+        });
+        target.find('.cancelButton').click(function(ev) {
+          reload($this, settings);
+        });
+      }
     });
   }
 

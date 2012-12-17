@@ -112,16 +112,20 @@
     }
     $.get(settings.actionUrl, options, function(data) {
       target.unmask();
-      //get map[string, list[string]]. must create something that can work with mustache
-      var view = [];
-      for (var key in data) {
-        if (data.hasOwnProperty(key)) {
-          view.push({ mapping: key, targets: data[key] });
+      if (data.success === false) {
+        feedback($this, data);
+      } else {
+        //get map[string, list[string]]. must create something that can work with mustache
+        var view = [];
+        for (var key in data) {
+          if (data.hasOwnProperty(key)) {
+            view.push({ mapping: key, targets: data[key] });
+          }
         }
+        target.html(Mustache.render(mappingListTemplate, {mappings: view}));
+        addEditHandler($this);
+        addDeleteHandler($this, settings);
       }
-      target.html(Mustache.render(mappingListTemplate, {mappings: view}));
-      addEditHandler($this);
-      addDeleteHandler($this, settings);
     });
   }
   var methods = {

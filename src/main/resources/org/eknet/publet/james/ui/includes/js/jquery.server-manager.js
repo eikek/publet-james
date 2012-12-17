@@ -28,6 +28,9 @@
           '{{/servers}}' +
           '</ul>';
 
+  function renderError($this, msg) {
+    $this.find('div[class="left"] span').first().addClass("alert alert-error").html(msg);
+  }
   function reload($this, settings) {
     $this.mask();
     $.get(settings.actionUrl, { "do": "get", serverType: settings.serverType }, function(data) {
@@ -35,8 +38,12 @@
         servers: data
       };
       $this.unmask().html(Mustache.render(boxTemplate, view));
+      if (data.success === false) {
+        renderError($this, data.message);
+      } else {
+        addActionHandler($this, settings);
+      }
       addRefreshHandler($this, settings);
-      addActionHandler($this, settings);
     });
   }
 
@@ -55,7 +62,11 @@
         "serverType": settings.serverType
       };
       $.post(settings.actionUrl, options, function(data) {
-        reload($this, settings);
+        if (data.success) {
+          reload($this, settings);
+        } else {
+          renderError($this, data.message);
+        }
       });
     });
   }

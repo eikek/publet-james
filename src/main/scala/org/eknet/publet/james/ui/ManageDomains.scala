@@ -35,12 +35,14 @@ class ManageDomains extends ScalaScript {
     }
   }
 
-  def getDomains = RenderUtils.makeJson((domainList.getDefaultDomain :: maildb.getDomainList).distinct)
+  def getDomains = authenticated {
+    RenderUtils.makeJson((domainList.getDefaultDomain :: maildb.getDomainList).distinct)
+  }
 
   def getDefaultDomain = RenderUtils.makeJson(domainList.getDefaultDomain)
 
   def addDomain() = paramLc("domain") match {
-    case Some(d) => safeCall {
+    case Some(d) => withPerm("james:domain:add:"+d) {
       domainList.addDomain(d)
       success("Domain '"+d+"' created")
     }
@@ -48,7 +50,7 @@ class ManageDomains extends ScalaScript {
   }
 
   def removeDomain() = paramLc("domain") match {
-    case Some(d) => safeCall {
+    case Some(d) => withPerm("james:domain:remove:"+d) {
       maildb.removeDomain(d)
       success("Domain '"+d+"' removed.")
     }

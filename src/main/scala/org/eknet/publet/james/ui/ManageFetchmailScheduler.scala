@@ -31,26 +31,30 @@ class ManageFetchmailScheduler extends ScalaScript {
   def serve() = {
     val fm = fetchmail
     paramLc(actionParam) match {
-      case Some("get") => makeJson(Map(
-        "startedLabel" -> ( if (fm.isScheduled) "success" else "important" ),
-        "schedulerState" -> (if (fm.isScheduled) "Running" else "Stopped"),
-        "interval" -> fm.getInterval,
-        "action" -> (if (fm.isScheduled) "stop" else "play")
-      ))
-      case Some("play") => safeCall {
+      case Some("get") => withPerm("james:fetchmail:scheduler:get") {
+        makeJson(Map(
+          "startedLabel" -> ( if (fm.isScheduled) "success" else "important" ),
+          "schedulerState" -> (if (fm.isScheduled) "Running" else "Stopped"),
+          "interval" -> fm.getInterval,
+          "action" -> (if (fm.isScheduled) "stop" else "play")
+        ))
+      }
+      case Some("play") => withPerm("james:fetchmail:scheduler:start") {
         fm.start()
         success("Fetchmail started")
       }
-      case Some("stop") => safeCall {
+      case Some("stop") => withPerm("james:fetchmail:scheduler:stop") {
         fm.stop()
         success("Fetchmail stopped")
       }
-      case Some("set") => intParam("interval") match {
-        case Some(interval) => safeCall {
-          fm.setInterval(interval)
-          success("Interval updated to "+ interval +" minutes.")
+      case Some("set") => withPerm("james:fetchmail:scheduler:set") {
+        intParam("interval") match {
+          case Some(interval) => safeCall {
+            fm.setInterval(interval)
+            success("Interval updated to "+ interval +" minutes.")
+          }
+          case _ => failure("Interval missing.")
         }
-        case _ => failure("Interval missing.")
       }
       case _ => failure("Too less parameters.")
     }

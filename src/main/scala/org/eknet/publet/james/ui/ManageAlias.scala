@@ -27,9 +27,7 @@ import org.eknet.publet.web.util.RenderUtils.makeJson
 class ManageAlias extends ScalaScript {
 
   def serve() = {
-    if (!Security.isAuthenticated) {
-      failure("Not authenticated.")
-    } else {
+    authenticated {
       paramLc(actionParam) match {
         case Some("add") => addAlias()
         case Some("delete") => removeAlias()
@@ -50,10 +48,12 @@ class ManageAlias extends ScalaScript {
     val user = alias.map(_._1)
     val domain = alias.map(_._2)
     (user, domain) match {
-      case (Some(u), Some(d)) => safeCall {
+      case (Some(u), Some(d)) => {
         val login = Security.username
-        maildb.removeMapping(u, d, login)
-        success("Alias removed.")
+        withPerm("james:alias:remove:"+login) {
+          maildb.removeMapping(u, d, login)
+          success("Alias removed.")
+        }
       }
       case _ => failure("Too less paramters.")
     }
@@ -68,8 +68,10 @@ class ManageAlias extends ScalaScript {
           failure("This alias does already exist.")
         } else {
           val login = Security.username
-          maildb.addMapping(u, d, login)
-          success("Alias added.")
+          withPerm("james:alias:add:"+login) {
+            maildb.addMapping(u, d, login)
+            success("Alias added.")
+          }
         }
       }
       case _ => failure("Too less paramters.")
@@ -78,7 +80,9 @@ class ManageAlias extends ScalaScript {
 
   private def getAliases = {
     val login = Security.username
-    val aliases = maildb.allMappings.collect({ case t if (t._2.size == 1 && t._2.head == login) => t._1 })
-    makeJson(aliases.toList)
+    withPerm("james:alias:get:"+login) {
+      val aliases = maildb.allMappings.collect({ case t if (t._2.size == 1 && t._2.head == login) => t._1 })
+      makeJson(aliases.toList)
+    }
   }
 }

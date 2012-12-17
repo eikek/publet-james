@@ -17,7 +17,7 @@
 package org.eknet.publet.james.guice.test
 
 import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.auth.store.{UserProperty, User, UserStoreAdapter}
+import org.eknet.publet.auth.store.{PermissionStore, UserProperty, User, UserStoreAdapter}
 import org.eknet.publet.james.Permissions
 import org.eknet.publet.web.{RunMode, Config}
 
@@ -27,7 +27,7 @@ import org.eknet.publet.web.{RunMode, Config}
  * @since 01.11.12 14:35
  */
 @Singleton
-class TestUserStore @Inject() (config: Config) extends UserStoreAdapter {
+class TestUserStore @Inject() (config: Config) extends UserStoreAdapter with PermissionStore {
 
   private val users = if (config.mode != RunMode.development) Nil
     else List(createUser("eike"), createUser("john"))
@@ -41,4 +41,12 @@ class TestUserStore @Inject() (config: Config) extends UserStoreAdapter {
   override def userOfGroups(groups: String*) = if (groups.toSet.contains(Permissions.mailgroup)) users else Nil
   override def getGroups(login: String) = if (findUser(login).isDefined) allGroups else Set[String]()
   override def allGroups = Set(Permissions.mailgroup)
+
+  def addPermission(group: String, perm: String) {}
+  def dropPermission(group: String, perm: String) {}
+
+  def getPermissions(group: String*) = group.flatMap(g => findUser(g)).flatMap(u => getUserPermissions(u.login)).toSet
+  def getUserPermissions(login: String) = findUser(login)
+    .map(_.login)
+    .map(x => Set("james:alias:*:"+x, "james:fetchmail:account:*:"+x)).getOrElse(Set[String]())
 }

@@ -75,15 +75,19 @@
     $.get(settings.actionUrl, { "do": "get"}, function (data) {
       $.get(settings.actionUrl, { "do": "getdefault"}, function (defaultDomain) {
         target.empty().unmask();
-        var view = { domains: [] };
-        for (var i = 0; i < data.length; i++) {
-          view.domains.push({
-            name: data[i],
-            defaultEntry: data[i] === defaultDomain
-          });
+        if (data.success === false) {
+          feedback($this, data);
+        } else {
+          var view = { domains: [] };
+          for (var i = 0; i < data.length; i++) {
+            view.domains.push({
+              name: data[i],
+              defaultEntry: data[i] === defaultDomain
+            });
+          }
+          target.html(Mustache.render(domainListTemplate, view));
+          addRemoveHandlers($this, settings);
         }
-        target.html(Mustache.render(domainListTemplate, view));
-        addRemoveHandlers($this, settings);
       });
     });
   }

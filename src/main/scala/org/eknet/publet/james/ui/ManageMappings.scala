@@ -26,9 +26,9 @@ import org.eknet.publet.web.util.RenderUtils
 class ManageMappings extends ScalaScript {
 
   def serve() = paramLc(actionParam) match {
-    case Some("get") => safeCall(getMappings)
-    case Some("add") => addMapping()
-    case Some("remove") => removeMapping()
+    case Some("get") => withPerm("james:mappings:get")(getMappings)
+    case Some("add") => withPerm("james:mappings:add")(addMapping())
+    case Some("remove") => withPerm("james:mappings:remove")(removeMapping())
     case cmd @_ => failure("Unknown command: "+ cmd)
   }
 

@@ -31,7 +31,9 @@ class ManageFetchmailAccounts extends ScalaScript {
     paramLc(actionParam) match {
       case Some("get") => safeCall {
         val login = param("login").getOrElse(Security.username)
-        makeJson(maildb.getAccountsForLogin(login).map(accountToMap).toList)
+        withPerm("james:fetchmail:account:get:"+login) {
+          makeJson(maildb.getAccountsForLogin(login).map(accountToMap).toList)
+        }
       }
       case Some("update") => addAccount()
       case Some("delete") => deleteAccount()
@@ -44,8 +46,12 @@ class ManageFetchmailAccounts extends ScalaScript {
     val host = paramLc("host")
     (user, host) match {
       case (Some(u), Some(h)) => safeCall {
-        maildb.deleteAccount(u, h)
-        success("Account deleted.")
+        maildb.findAccount(u, h) flatMap { acc =>
+          withPerm("james:fetchmail:account:delete:"+acc.login) {
+            maildb.deleteAccount(u, h)
+            success("Account deleted.")
+          }
+        }
       }
       case _ => failure("Too less parameters")
     }
@@ -59,14 +65,17 @@ class ManageFetchmailAccounts extends ScalaScript {
         val password = param("password").orElse(maildb.findAccount(u, h).map(_.password))
         password match {
           case Some(pw) => {
-            val acc = Account(
-              param("login").getOrElse(Security.username),
-              h, u, pw,
-              param("runInterval").map(_.toInt).getOrElse(2),
-              boolParam("active").getOrElse(false)
-            )
-            maildb.updateAccount(acc)
-            success("Account added")
+            val login = param("login").getOrElse(Security.username)
+            withPerm("james:fetchmail:account:add:"+login) {
+              val acc = Account(
+                login,
+                h, u, pw,
+                param("runInterval").map(_.toInt).getOrElse(2),
+                boolParam("active").getOrElse(false)
+              )
+              maildb.updateAccount(acc)
+              success("Account added")
+            }
           }
           case _ => failure("Password is missing.")
         }

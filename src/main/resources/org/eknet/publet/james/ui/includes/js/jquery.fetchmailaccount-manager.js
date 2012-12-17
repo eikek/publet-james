@@ -100,10 +100,14 @@
       },
       success: function (data, status, xhr, form) {
         form.unmask();
-        var view = { accounts: data };
-        $this.find('.resultTable').html(Mustache.render(tableTemplate, view));
+        if (data.success === false) {
+          feedback($this.find(".feedback"), data);
+        } else {
+          var view = { accounts: data };
+          $this.find('.resultTable').html(Mustache.render(tableTemplate, view));
 
-        addTableHandlers($this, settings);
+          addTableHandlers($this, settings);
+        }
       }
     };
   }

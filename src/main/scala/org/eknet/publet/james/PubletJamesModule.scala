@@ -57,7 +57,7 @@ import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
 import org.eknet.guice.squire.SquireModule
 import org.eknet.publet.ext.graphdb.{GraphDb, GraphDbProvider}
-import org.eknet.publet.auth.store.UserStore
+import org.eknet.publet.auth.store.{PermissionStore, UserStore}
 import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.vfs.Resource
@@ -149,7 +149,9 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     bind[SimpleMailingListHeaders].asEagerSingleton()
 
     ///test
+    bind[TestUserStore]
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
+    setOf[PermissionStore].add[TestUserStore].in(Scopes.SINGLETON)
   }
 
 

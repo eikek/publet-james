@@ -21,6 +21,10 @@ import org.eknet.publet.web.util.{RenderUtils, PubletWebContext, PubletWeb}
 import org.apache.james.domainlist.api.DomainList
 import org.eknet.publet.vfs.Content
 import org.eknet.publet.james.data.MailDb
+import org.eknet.publet.web.shiro.Security
+import org.apache.shiro.authz.{UnauthorizedException, UnauthenticatedException}
+import org.apache.shiro.ShiroException
+import grizzled.slf4j.Logging
 
 /**
  *
@@ -49,7 +53,15 @@ package object ui {
   def safeCall(f: => Option[Content]) = try {
     f
   } catch {
+    case e: UnauthorizedException => failure("Permission denied.")
     case e: Exception => failure(e.getMessage)
   }
 
+  def authenticated(f: => Option[Content]) = if (Security.isAuthenticated) f else failure("Not authenticated.")
+
+  def withPerm(perm: String)(b: => Option[Content]) = safeCall {
+    if (!Security.isAuthenticated) throw new UnauthenticatedException("Not authenticated.")
+    Security.checkPerm(perm)
+    b
+  }
 }
