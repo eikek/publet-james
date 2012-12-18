@@ -39,8 +39,8 @@
       '      <input type="text" placeholder="remote pop3 host" name="host" required="required"/>\n' +
       '      <label>Password</label>\n' +
       '      <input type="password" placeholder="remote password" name="password" />\n' +
-      '      <label>Update interval (1-10)</label>\n' +
-      '      <input type="text" placeholder="update interval" name="runInterval" />\n' +
+      '      <label>Update interval</label>\n' +
+      '      <select name="runInterval" required="required">{{& options}}</select>' +
       '      <label class="checkbox">\n' +
       '        <input type="checkbox" name="active"> Active</input>\n' +
       '      </label>\n' +
@@ -75,7 +75,7 @@
       '    <td data-name="active"><input type="checkbox" {{#active}}checked="yes"{{/active}} disabled="disabled"> </td>\n' +
       '    <td data-name="user">{{user}}</td>\n' +
       '    <td data-name="host">{{host}}</td>\n' +
-      '    <td data-name="runInterval">{{runInterval}}</td>\n' +
+      '    <td data-name="runInterval" data-value="{{runInterval}}">{{runIntervalMinutes}}</td>\n' +
       '    <td><a class="btn btn-mini editAccountButton"><i class="icon-pencil"></i></a>\n' +
       '        <a class="btn btn-mini deleteAccountButton"><i class="icon-trash"></i></a></td>\n' +
       '  </tr>\n' +
@@ -150,12 +150,16 @@
       tr.children('[data-name]').each(function(index, el) {
         var child = $(el);
         var dataname = child.attr("data-name");
+        var datavalue = child.attr("data-value");
+        if (!datavalue) {
+          datavalue = child.text();
+        }
         if (dataname === "active") {
           if (child.find('input').is(':checked')) {
             form.find('[name="'+dataname+'"]').attr("checked", "yes");
           }
         } else {
-          form.find('[name="'+dataname+'"]').val(child.text())
+          form.find('[name="'+dataname+'"]').val(datavalue);
         }
       });
     });
@@ -181,17 +185,20 @@
   }
 
   function render($this, settings) {
-    $this.html(Mustache.render(addFormTemplate, settings));
-    $this.append(Mustache.render(listFormTemplate, settings));
-    var table = $('<div/>', {
-      class: 'resultTable',
-      html: Mustache.render(tableTemplate, {})
+    $.post(settings.actionUrl, {"do": "interval-options"}, function(data) {
+      var formView = $.extend(data, settings);
+      $this.html(Mustache.render(addFormTemplate, formView));
+      $this.append(Mustache.render(listFormTemplate, settings));
+      var table = $('<div/>', {
+        class: 'resultTable',
+        html: Mustache.render(tableTemplate, {})
+      });
+      $this.append(table);
+      addHandlers($this, settings);
+      if (settings.forCurrentUser) {
+        reloadAccounts($this, settings);
+      }
     });
-    $this.append(table);
-    addHandlers($this, settings);
-    if (settings.forCurrentUser) {
-      reloadAccounts($this, settings);
-    }
   }
 
   function reloadAccounts($this, settings) {

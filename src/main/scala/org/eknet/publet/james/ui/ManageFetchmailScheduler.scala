@@ -29,7 +29,7 @@ class ManageFetchmailScheduler extends ScalaScript {
   import org.eknet.publet.web.util.RenderUtils.makeJson
 
   def serve() = {
-    val fm = fetchmail
+    val fm = PubletWeb.instance[FetchmailScheduler].get
     paramLc(actionParam) match {
       case Some("get") => withPerm("james:fetchmail:scheduler:get") {
         makeJson(Map(
@@ -60,5 +60,4 @@ class ManageFetchmailScheduler extends ScalaScript {
     }
   }
 
-  private[this] def fetchmail = PubletWeb.instance[FetchmailScheduler].get
 }

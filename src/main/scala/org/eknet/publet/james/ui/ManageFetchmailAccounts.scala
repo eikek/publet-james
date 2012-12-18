@@ -17,8 +17,10 @@
 package org.eknet.publet.james.ui
 
 import org.eknet.publet.engine.scala.ScalaScript
-import org.eknet.publet.james.fetchmail.Account
+import org.eknet.publet.james.fetchmail.{FetchmailScheduler, Account}
 import org.eknet.publet.web.shiro.Security
+import org.eknet.publet.web.util.PubletWeb
+import xml.{Text, NodeSeq}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -35,12 +37,23 @@ class ManageFetchmailAccounts extends ScalaScript {
           makeJson(maildb.getAccountsForLogin(login).map(accountToMap).toList)
         }
       }
+      case Some("interval-options") => getIntervalOptions
       case Some("update") => addAccount()
       case Some("delete") => deleteAccount()
       case _ => failure("Unknown command")
     }
   }
 
+  private[this] def getIntervalOptions = {
+    authenticated {
+      val interval = PubletWeb.instance[FetchmailScheduler].get.getInterval
+      val options: NodeSeq = for (i <- 1 to 8) yield {
+        val selected = if (i==2) Some(Text("selected")) else None
+        <option value={i.toString} selected={selected}>{ (interval * i) + " min" }</option>
+      }
+      makeJson(Map("options" ->(options.toString())))
+    }
+  }
   private[this] def deleteAccount() = {
     val user = param("user")
     val host = paramLc("host")
@@ -83,12 +96,16 @@ class ManageFetchmailAccounts extends ScalaScript {
       case _ => failure("Too less paramters.")
     }
   }
-  private[this] def accountToMap(account: Account) = Map(
-    "login" -> account.login,
-    "host" -> account.host,
-    "user" -> account.user,
-    "password" -> account.password,
-    "runInterval" -> account.runInterval,
-    "active" -> account.active
-  )
+  private[this] def accountToMap(account: Account) = {
+    val interval = PubletWeb.instance[FetchmailScheduler].get.getInterval
+    Map(
+      "login" -> account.login,
+      "host" -> account.host,
+      "user" -> account.user,
+      "password" -> account.password,
+      "runInterval" -> account.runInterval,
+      "runIntervalMinutes" -> ((account.runInterval * interval)+" min"),
+      "active" -> account.active
+    )
+  }
 }
