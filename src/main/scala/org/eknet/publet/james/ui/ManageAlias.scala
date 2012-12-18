@@ -19,6 +19,7 @@ package org.eknet.publet.james.ui
 import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.shiro.Security
 import org.eknet.publet.web.util.RenderUtils.makeJson
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -50,7 +51,7 @@ class ManageAlias extends ScalaScript {
     (user, domain) match {
       case (Some(u), Some(d)) => {
         val login = Security.username
-        withPerm("james:alias:remove:"+login) {
+        withPerm(Permissions.removeAlias(login)) {
           maildb.removeMapping(u, d, login)
           success("Alias removed.")
         }
@@ -68,7 +69,7 @@ class ManageAlias extends ScalaScript {
           failure("This alias does already exist.")
         } else {
           val login = Security.username
-          withPerm("james:alias:add:"+login) {
+          withPerm(Permissions.addAlias(login)) {
             maildb.addMapping(u, d, login)
             success("Alias added.")
           }
@@ -80,7 +81,7 @@ class ManageAlias extends ScalaScript {
 
   private def getAliases = {
     val login = Security.username
-    withPerm("james:alias:get:"+login) {
+    withPerm(Permissions.getAlias(login)) {
       val aliases = maildb.allMappings.collect({ case t if (t._2.size == 1 && t._2.head == login) => t._1 })
       makeJson(aliases.toList)
     }

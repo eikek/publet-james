@@ -78,6 +78,10 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
   def configure() {
     bindDocumentation(List(
       doc("doc/james.md"),
+      doc("doc/james-sn2.png"),
+      doc("doc/james-sn3.png"),
+      doc("doc/james-sn4.png"),
+      doc("doc/james-sn5.png"),
       doc("config/domainlist.conf"),
       doc("config/imapserver.conf"),
       doc("config/pop3server.conf"),

@@ -22,6 +22,7 @@ import org.eknet.publet.vfs.Content
 import org.eknet.publet.james.data.MailDb
 import org.eknet.publet.web.shiro.Security
 import org.apache.shiro.authz.{UnauthorizedException, UnauthenticatedException}
+import org.apache.shiro.authz
 
 /**
  *
@@ -54,10 +55,13 @@ package object ui {
     case e: Exception => failure(e.getMessage)
   }
 
-  def authenticated(f: => Option[Content]) = if (Security.isAuthenticated) f else failure("Not authenticated.")
+  def authenticated(f: => Option[Content]) = {
+    if (Security.hasGroup(Permissions.mailgroup)) f else failure("Not authenticated.")
+  }
 
   def withPerm(perm: String)(b: => Option[Content]) = safeCall {
     if (!Security.isAuthenticated) throw new UnauthenticatedException("Not authenticated.")
+    if (!Security.hasGroup(Permissions.mailgroup)) throw new authz.UnauthenticatedException()
     Security.checkPerm(perm)
     b
   }

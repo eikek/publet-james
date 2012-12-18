@@ -18,6 +18,7 @@ package org.eknet.publet.james.ui
 
 import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.util.RenderUtils
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -26,9 +27,9 @@ import org.eknet.publet.web.util.RenderUtils
 class ManageMappings extends ScalaScript {
 
   def serve() = paramLc(actionParam) match {
-    case Some("get") => withPerm("james:mappings:get")(getMappings)
-    case Some("add") => withPerm("james:mappings:add")(addMapping())
-    case Some("remove") => withPerm("james:mappings:remove")(removeMapping())
+    case Some("get") => withPerm(Permissions.getMappings)(getMappings)
+    case Some("add") => withPerm(Permissions.addMappings)(addMapping())
+    case Some("remove") => withPerm(Permissions.removeMappings)(removeMapping())
     case cmd @_ => failure("Unknown command: "+ cmd)
   }
 

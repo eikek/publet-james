@@ -18,6 +18,7 @@ package org.eknet.publet.james.ui
 
 import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.util.RenderUtils
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -42,7 +43,7 @@ class ManageDomains extends ScalaScript {
   def getDefaultDomain = RenderUtils.makeJson(domainList.getDefaultDomain)
 
   def addDomain() = paramLc("domain") match {
-    case Some(d) => withPerm("james:domain:add:"+d) {
+    case Some(d) => withPerm(Permissions.addDomain(d)) {
       domainList.addDomain(d)
       success("Domain '"+d+"' created")
     }
@@ -50,7 +51,7 @@ class ManageDomains extends ScalaScript {
   }
 
   def removeDomain() = paramLc("domain") match {
-    case Some(d) => withPerm("james:domain:remove:"+d) {
+    case Some(d) => withPerm(Permissions.removeDomain(d)) {
       maildb.removeDomain(d)
       success("Domain '"+d+"' removed.")
     }

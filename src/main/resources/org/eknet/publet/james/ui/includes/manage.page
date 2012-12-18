@@ -16,6 +16,10 @@ title: Manage JAMES
 
 
 --- name:content pipeline:jade
+- Security.checkPerm("james:server")
+- Security.checkPerm("james:mappings")
+- Security.checkPerm("james:domain")
+- Security.checkPerm("james:fetchmail:scheduler")
 
 .page-header
   h1 Manage JAMES

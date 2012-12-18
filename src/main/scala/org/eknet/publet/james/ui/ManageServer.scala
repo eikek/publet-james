@@ -4,6 +4,7 @@ import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.util.{RenderUtils, PubletWeb}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.apache.james.protocols.lib.netty.{AbstractServerFactory, AbstractConfigurableAsyncServer}
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -14,7 +15,7 @@ class ManageServer extends ScalaScript {
 
   def serve() = {
     (paramLc(actionParam), paramLc("serverType")) match {
-      case (Some("get"), Some(stype)) => withPerm("james:server:get:"+stype) {
+      case (Some("get"), Some(stype)) => withPerm(Permissions.getServer(stype)) {
         val servers = getServer(stype)
         val maps = servers.zip(0 to servers.size).map(s => Map(
           "serverType" -> stype,
@@ -28,7 +29,7 @@ class ManageServer extends ScalaScript {
         ))
         RenderUtils.makeJson(maps)
       }
-      case (Some("stop"), Some(stype)) => withPerm("james:server:stop:"+stype) {
+      case (Some("stop"), Some(stype)) => withPerm(Permissions.stopServer(stype)) {
         param("index") match {
           case Some(num) => safeCall {
             val server = getServer(stype)(num.toInt)
@@ -38,7 +39,7 @@ class ManageServer extends ScalaScript {
           case _ => failure("Unkown server to operate on.")
         }
       }
-      case (Some("play"), Some(stype)) => withPerm("james:server:start:"+stype) {
+      case (Some("play"), Some(stype)) => withPerm(Permissions.startServer(stype)) {
         param("index") match {
           case Some(num) => safeCall {
             val server = getServer(stype)(num.toInt)

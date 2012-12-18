@@ -19,6 +19,7 @@ package org.eknet.publet.james.ui
 import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.util.PubletWeb
 import org.eknet.publet.james.fetchmail.FetchmailScheduler
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -31,7 +32,7 @@ class ManageFetchmailScheduler extends ScalaScript {
   def serve() = {
     val fm = PubletWeb.instance[FetchmailScheduler].get
     paramLc(actionParam) match {
-      case Some("get") => withPerm("james:fetchmail:scheduler:get") {
+      case Some("get") => withPerm(Permissions.getFetchmailScheduler) {
         makeJson(Map(
           "startedLabel" -> ( if (fm.isScheduled) "success" else "important" ),
           "schedulerState" -> (if (fm.isScheduled) "Running" else "Stopped"),
@@ -39,15 +40,15 @@ class ManageFetchmailScheduler extends ScalaScript {
           "action" -> (if (fm.isScheduled) "stop" else "play")
         ))
       }
-      case Some("play") => withPerm("james:fetchmail:scheduler:start") {
+      case Some("play") => withPerm(Permissions.startFetchmailScheduler) {
         fm.start()
         success("Fetchmail started")
       }
-      case Some("stop") => withPerm("james:fetchmail:scheduler:stop") {
+      case Some("stop") => withPerm(Permissions.stopFetchmailScheduler) {
         fm.stop()
         success("Fetchmail stopped")
       }
-      case Some("set") => withPerm("james:fetchmail:scheduler:set") {
+      case Some("set") => withPerm(Permissions.setFetchmailScheduler) {
         intParam("interval") match {
           case Some(interval) => safeCall {
             fm.setInterval(interval)

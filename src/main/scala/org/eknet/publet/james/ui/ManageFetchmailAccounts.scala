@@ -21,6 +21,7 @@ import org.eknet.publet.james.fetchmail.{FetchmailScheduler, Account}
 import org.eknet.publet.web.shiro.Security
 import org.eknet.publet.web.util.PubletWeb
 import xml.{Text, NodeSeq}
+import org.eknet.publet.james.Permissions
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -33,7 +34,7 @@ class ManageFetchmailAccounts extends ScalaScript {
     paramLc(actionParam) match {
       case Some("get") => safeCall {
         val login = param("login").getOrElse(Security.username)
-        withPerm("james:fetchmail:account:get:"+login) {
+        withPerm(Permissions.getFetchmailAccount(login)) {
           makeJson(maildb.getAccountsForLogin(login).map(accountToMap).toList)
         }
       }
@@ -60,7 +61,7 @@ class ManageFetchmailAccounts extends ScalaScript {
     (user, host) match {
       case (Some(u), Some(h)) => safeCall {
         maildb.findAccount(u, h) flatMap { acc =>
-          withPerm("james:fetchmail:account:delete:"+acc.login) {
+          withPerm(Permissions.removeFetchmailAccount(acc.login)) {
             maildb.deleteAccount(u, h)
             success("Account deleted.")
           }
@@ -79,7 +80,7 @@ class ManageFetchmailAccounts extends ScalaScript {
         password match {
           case Some(pw) => {
             val login = param("login").getOrElse(Security.username)
-            withPerm("james:fetchmail:account:add:"+login) {
+            withPerm(Permissions.addFetchmailAccount(login)) {
               val acc = Account(
                 login,
                 h, u, pw,

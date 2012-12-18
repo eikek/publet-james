@@ -1,8 +1,9 @@
 ## James Extension
 
 This extension adds [Apache James](http://james.apache.org) to publet,
-turning it into a email server. A simple web interface is provided to
-manage the server.
+turning it into a feature-rich email server. A web interface is provided to
+manage the server and you can easily hook into the mail processing chain.
+
 
 ### Configuration
 
@@ -11,6 +12,7 @@ There are 3 server threads started by default providing the following services
 1. SMTP, bound to `0.0.0.0`, port `9025` (StartTLS)
 2. IMAPv4, bound to `0.0.0.0`, port `9993` (SSL)
 3. POP3, bound to `0.0.0.0`, port `9995` (SSL)
+4. Fetchmail. See the documentation below.
 
 By default, all services are configured to run over SSL (imap and pop3) or
 use StartTLS (smtp). The certificate is looked up from the keystore `etc/keystore.ks`
@@ -18,6 +20,16 @@ and if that does not exist, a default self-signed certificate is created. The
 ports are the standard ports with an offset of `9000`, because on linux systems
 users other than root are not allowed to bind ports below `1024`. The tool `iptables`
 or something similiar can be used to forward traffic from the standard ports to those.
+
+
+#### Users
+
+The james extension uses the user service provided by publet. Every user that
+is added to the group `mailgroup` is allowed to connect to the mail servers
+using his password. The james server(s) do only see users belonging to this
+group, all others are not visible to James. Thus, to be able to send/receive
+mails or browse the mailboxes, add your users to the `mailgroup`.
+
 
 #### Default Configuration Files
 
@@ -39,38 +51,46 @@ file system structure. Resources `file://conf/x.y` are mapped to `etc/x.y`
 and `file://var/x.y` are mapped to `$PUBLET_CONFIG/james/var`.
 
 
+
 ### Fetchmail
 
 A fetchmail background job can be used to fetch external mail and deliver it to
 local accounts.
+
+#### James Fetchmail Scheduler
 
 James provides a `FetchScheduler` that can be configured by xml files. You need
 to create a configuration file `etc/fetchmail.conf`. Please see
 [James Documentation](http://james.apache.org/server/3/config-fetchmail.html) for
 how to configure it.
 
-James' fetchmail scheduler can be configured in various ways which makes it very
-powerful. Many options should be carefully set by an admin user. But it would also
-be useful, if regular users could edit their accounts, too. Therefore, this extension
-provides another mechanism around james' fetchmail support that aims to be easy to use
-but lacks some power in exchange. Users can edit fetchmail accounts using the web
-interface and there is one job that is executed repeatedly that will loop through all
-those accounts and starts the fetchmail process. This job can be scheduled and unscheduled
-and the interval can also be set via the web interface. These settings should obviously
-only be accessed by the admin user. Regular users can decide for each of their accounts
-which run it should be processed. Thus they cannot alter the interval directly but specify,
-whether the job should fetch their account every time, every second time and so on.
+James' fetchmail scheduler can be configured in various ways and is very powerful. Many
+options should be carefully set by an admin user.
 
-The job then starts to loop through the accounts and fires off other jobs that
-really do the fetching. You can specify in publet's configuration file how many
-accounts should be processed by one thread.
+#### Integrated Scheduler
+
+This extension provides another fetchmail scheduler that can be configured via the
+web interface. It aims to be more easy to use, but lacks some of the features compared
+to James' "native" scheduler.
+
+The configuration is divided into two parts: First, regular user can manage their accounts
+via the web. All those account are processed by one job that is executed repeatedly. The
+admin user can edit the interval of this job, as well as starting or stopping it. The user
+can configure for each of his accounts, at which multiple of the run it should be processed.
+For example, on every run or on every second run etc.
+
+Secondly, instead of configuring the maximum number of threads to use, you can configure
+how many accounts should be processed sequentially by one thread. The fetchmail job is
+collecting this number of accounts and schedules a fetch-job for each group. You can configure
+this number in publets' configuration file:
 
     james.fetchmail.jobsize=10
 
 The default value is 10. So if there are 100 accounts, there can be up to ten threads
-(depending on your thread-pool configuration) run concurrently fetching mails. This
+(depending on your thread-pool configuration) running concurrently fetching mails. This
 feature relys on the [Quartz Scheduler](http://quartz-scheduler.org/) library, meaning
-the publet-quartz extension must be available.
+the publet-quartz extension must be available. So you can still configure the thread pool
+using `quartz.properties` configuration file.
 
 
 ### Custom Mailets
@@ -95,6 +115,10 @@ want to enable this feature via:
 Mailets declared in the `mailetcontainer.conf` file are instantiated using Guice. That
 means the dependencies of each mailet (and matcher) are automatically injected.
 
+For example, you can now add scala classes to the `startup` folder and subscribe to
+`IncomeMailEvent`s to react on any incoming mails without touching any code. All
+that is needed is an appropriate scala class in `/main/.allIncludes/startup/` folder.
+
 #### SimpleMailingListHeaders
 
 Using the recipient rewrite table feature of James, you can easily forward mails to one
@@ -109,3 +133,175 @@ the address to your `settings.properties`:
 
 Any mail to this address is now enhanced with some more headers identifying this mail
 as a mailing list mail.
+
+## Manage
+
+The mail servers can be managed via a provided web interface. There are two templates
+
+* `/publet/james/manage.html` and
+* `/publet/james/mailsettings.html`
+
+The first one is intended for the admin users as it exposes all available settings. The
+second one includes a widget for managing aliases for the current user and his fetchmail
+accounts.
+
+If you look at the source of the templates (just use the extension `page`), you'll see that
+all widgets are provided by JQuery plugins. That makes it very easy to create your own
+page and rearrange or drop widgets as you desire.
+
+If you put the widgets in other pages, you might have to adjust the url to the json
+servlets. You also need to include the asset group `publet.james` in your page.
+
+
+### Permissions
+
+The action of every widget is protected by permissions. The following lists all
+permissions.
+
+#### Alias
+
+The permissions are per login. That means getting all aliases of a login, adding
+or removing aliasses for a specific login:
+
+    def removeAlias(login:String) = "james:alias:remove:"+login
+    def addAlias(login:String) = "james:alias:add:"+login
+    def getAlias(login:String) = "james:alias:get:"+login
+
+Aliases are just mappings that are restricted to the account of a local user. This
+does only work for the currently logged in user. By editing the mappings directly,
+you can specify any mapping you want.
+
+#### Domains
+
+The following shows the permissions used when adding/removing domains. Getting
+the list of domains is possible for any james user (every user belonging to the
+`mailgroup`).
+
+    def addDomain(domain:String) = "james:domain:add:"+domain
+    def removeDomain(domain:String) = "james:domain:remove:"+domain
+
+#### Fetchmail
+
+Getting information of a fetchmail account is permitted per login. You need
+to give every user explicit permission if you want him to edit his accounts
+himself.
+
+    def getFetchmailAccount(login: String) = "james:fetchmail:account:get:"+login
+    def removeFetchmailAccount(login: String) = "james:fetchmail:account:delete:"+login
+    def addFetchmailAccount(login: String) = "james:fetchmail:account:add:"+login
+
+
+The fetchmail scheduler can be started and stopped. Also the interval can be set
+and the information about the scheduler can be retrieved.
+
+    val getFetchmailScheduler = "james:fetchmail:scheduler:get"
+    val startFetchmailScheduler = "james:fetchmail:scheduler:start"
+    val stopFetchmailScheduler = "james:fetchmail:scheduler:stop"
+    val setFetchmailScheduler = "james:fetchmail:scheduler:set"
+
+#### Mappings
+
+The powerful concept of recipient rewriting is restricted to users with the following
+permissions:
+
+    val getMappings = "james:mappings:get"
+    val addMappings = "james:mappings:add"
+    val removeMappings = "james:mappings:remove"
+
+
+#### Servers
+
+The mail server threads can be started and stopped. Additionally information about
+the current state can be retrieved.
+
+    def getServer(stype: String) = "james:server:get:"+stype
+    def stopServer(stype: String) = "james:server:stop:"+stype
+    def startServer(stype: String) = "james:server:start:"+stype
+
+### Web Interface
+
+The following give a quick view of the two management sites available. In general, every
+submission is immediately applying to the services. For example, as soon as you remove a
+domain, the mail server does not accept mails with this domain anymore.
+
+#### Domains
+
+Managing domains is not much. You can add and remove domains.
+
+#### Mappings
+
+Managing mappings is quite similiar. You define the mapping using the first two text fields
+that are split up in the username and domain part. Both can be left empty in which case the
+wildcard `*` is applied. The target can be a local username or an email address. If you click
+on a target, the form is filled with that information and you can edit the entry.
+
+<ul class="thumbnails">
+<li class="span4"><a href="james-sn2.png"><img class="img-polaroid" src="james-sn2.png"></a></li>
+</ul>
+
+#### Fetchmail Accounts
+
+The widget that allows to manage fetchmail accounts can be configured for the current user
+or for an admin user. The following screenshot shows the interface for the admin user:
+
+<ul class="thumbnails">
+<li class="span4"><a href="james-sn3.png"><img class="img-polaroid" src="james-sn3.png"></a></li>
+<li class="span4"><a href="james-sn4.png"><img class="img-polaroid" src="james-sn4.png"></a></li>
+</ul>
+
+The admin can edit all fetchmail accounts. The search form can be used to type in a specific
+login name to list all acounts for a given user.
+
+When editing accounts, the passwords are never shown and the password field can be left empty. In
+that case it is not touched. If adding a new account, a password is required, of course.
+
+The widget for the current user just hides the search form (it would not function anyways, as
+only the accounts for the current user are listed). In the update and add form, the "Local user"
+field is hidden, since the user is already known.
+
+#### Servers
+
+The next screenshot shows four widgets (the last one is included twice) showing the state for
+each server. The widget allows to start/stop the service and shows some information, like the
+number of current connections and whether it is running in secured mode or not. If not running
+by either using ssl sockets or starttls, the lock is not shown. The address and port, the
+service is bound to are show in the middle (not for the fetchmail thread of course).
+
+<ul class="thumbnails">
+<li class="span8"><a href="james-sn5.png"><img class="img-polaroid" src="james-sn5.png"></a></li>
+</ul>
+
+The fetchmail widget has another feature: A click on the interval label will turn it into
+a small input field, that allows you to change fetchmail interval.
+
+The screenshot above was created by a this `page` template:
+
+    ---
+    title: James Widgets
+    assetGroups: publet.james
+
+    --- name:head pipeline:jade
+    :javascript
+      $(function() {
+        $('.smtpWidget').serverManager({actionUrl: "/publet/james/action/manageserver.json"});
+        $('.imapWidget').serverManager({serverType: "imap", actionUrl: "/publet/james/action/manageserver.json"});
+        $('.pop3Widget').serverManager({serverType: "pop3", actionUrl: "/publet/james/action/manageserver.json"});
+        $('.fetchmailWidget').fetchmailSchedulerManager({actionUrl: "/publet/james/action/managefetchmailscheduler.json"});
+      });
+
+
+    --- name:content pipeline:jade
+
+    br/
+    .row
+      .span4
+        .smtpWidget
+      .span4
+        .imapWidget
+      .span4
+        .pop3Widget
+    .row
+      .span4
+        .fetchmailWidget
+      .span4
+        .fetchmailWidget

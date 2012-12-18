@@ -30,7 +30,7 @@ import org.eknet.publet.web.{RunMode, Config}
 class TestUserStore @Inject() (config: Config) extends UserStoreAdapter with PermissionStore {
 
   private val users = if (config.mode != RunMode.development) Nil
-    else List(createUser("eike"), createUser("john"))
+    else List(createUser("eike"), createUser("john"), createUser("admin"))
 
   private[this] def createUser(login: String) = {
     new User(login, Map(UserProperty.password -> "test"))
@@ -48,5 +48,8 @@ class TestUserStore @Inject() (config: Config) extends UserStoreAdapter with Per
   def getPermissions(group: String*) = group.flatMap(g => findUser(g)).flatMap(u => getUserPermissions(u.login)).toSet
   def getUserPermissions(login: String) = findUser(login)
     .map(_.login)
-    .map(x => Set("james:alias:*:"+x, "james:fetchmail:account:*:"+x)).getOrElse(Set[String]())
+    .map(x => x match  {
+    case "admin" => Set("*")
+    case _ => Set("james:alias:*:"+x, "james:fetchmail:account:*:"+x)
+  }).getOrElse(Set[String]())
 }

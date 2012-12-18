@@ -23,4 +23,28 @@ package org.eknet.publet.james
 object Permissions {
 
   val mailgroup = "mailgroup"
+
+  def removeAlias(login:String) = "james:alias:remove:"+login
+  def addAlias(login:String) = "james:alias:add:"+login
+  def getAlias(login:String) = "james:alias:get:"+login
+
+  def addDomain(domain:String) = "james:domain:add:"+domain
+  def removeDomain(domain:String) = "james:domain:remove:"+domain
+
+  def getFetchmailAccount(login: String) = "james:fetchmail:account:get:"+login
+  def removeFetchmailAccount(login: String) = "james:fetchmail:account:delete:"+login
+  def addFetchmailAccount(login: String) = "james:fetchmail:account:add:"+login
+
+  val getFetchmailScheduler = "james:fetchmail:scheduler:get"
+  val startFetchmailScheduler = "james:fetchmail:scheduler:start"
+  val stopFetchmailScheduler = "james:fetchmail:scheduler:stop"
+  val setFetchmailScheduler = "james:fetchmail:scheduler:set"
+
+  val getMappings = "james:mappings:get"
+  val addMappings = "james:mappings:add"
+  val removeMappings = "james:mappings:remove"
+
+  def getServer(stype: String) = "james:server:get:"+stype
+  def stopServer(stype: String) = "james:server:stop:"+stype
+  def startServer(stype: String) = "james:server:start:"+stype
 }
