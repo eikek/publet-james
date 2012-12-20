@@ -46,10 +46,8 @@ import org.apache.james.imap.decode.{ImapDecoder, ImapDecoderFactory}
 import org.apache.james.imap.main.DefaultImapDecoderFactory
 import org.apache.james.imap.encode.{ImapEncoder, ImapEncoderFactory}
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory
-import org.apache.james.imapserver.netty.IMAPServerFactory
 import org.apache.james.imap.api.process.ImapProcessor
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory
-import org.apache.james.mailbox.copier.{MailboxCopierImpl, MailboxCopier}
 import org.apache.james.mailrepository.api.MailRepositoryStore
 import org.apache.james.adapter.mailbox.MailboxManagerManagement
 import org.apache.james.rrt.lib.RecipientRewriteTableManagement
@@ -142,8 +140,6 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
 
     //pop3
     bind[PubletPop3ServerFactory].asEagerSingleton()
-
-    bind[MailboxCopier].to[MailboxCopierImpl] in Scopes.SINGLETON
 
     //fetchmail
     bind[FetchScheduler].asEagerSingleton()

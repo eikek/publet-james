@@ -34,9 +34,8 @@ object Version {
   val scala = "2.9.2"
   val servlet = "3.0.1"
   val publet = "1.0.0-SNAPSHOT"
-  val scue = "0.1.0-SNAPSHOT"
+  val scue = "0.1.0"
   val james = "3.0-beta4"
-  val jamesMailbox = "0.4" //used in james-server
   val standardMailets = "1.1"
   val neoswing = "2.0.0-m1"
 }
@@ -75,17 +74,12 @@ object Dependencies {
   val jamesServerQueueFile = jamesServer("queue-file")
   val jamesServerMailets = jamesServer("mailets")
 
-  val jamesDeps = Seq(
-    //"commons-daemon" % "commons-daemon" % "1.0.10",
-    "org.apache.james" % "apache-james-mailbox-tool" % Version.jamesMailbox
-  )
-
   // for tests
   val jamesServerDataLibTest = jamesServerDataLib % "test" classifier("tests") withSources()
   val jamesServerDataApiTest = jamesServerDataApi % "test" classifier("tests") withSources()
   val jamesServerDnsApiTest = jamesServerDnsApi % "test" classifier("tests") withSources()
 
-  val jamesServerAll = jamesDeps ++ Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
+  val jamesServerAll = Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
     jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
     jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
