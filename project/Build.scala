@@ -148,8 +148,10 @@ object RootBuild extends Build {
   )
   def isExcluded(n: String) = exludedFiles contains (n)
 
-  val buildSettings = Project.defaultSettings ++ assemblySettings ++ Seq(
+  val buildSettings = Project.defaultSettings ++ assemblySettings ++ ReflectPlugin.allSettings ++ Seq(
     name := "publet-james",
+    ReflectPlugin.reflectPackage := "org.eknet.publet.james",
+    sourceGenerators in Compile <+= ReflectPlugin.reflect,
     libraryDependencies ++= deps,
     assembleArtifact in packageScala := false,
     excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>

@@ -63,6 +63,7 @@ import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerF
 import org.eknet.publet.vfs.Resource
 import org.eknet.publet.vfs.util.SimpleContentResource
 import org.apache.james.fetchmail.FetchScheduler
+import org.eknet.publet.reflect.Reflect
 
 class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
 
@@ -173,7 +174,8 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
     DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
   }
 
-  override def toString = "James Mailserver"
+  val name = "James Mailserver"
+  val version = Reflect.version
 }
 
 class DbProvider @Inject() (dbfac: GraphDbProvider) extends Provider[GraphDb] {
