@@ -22,7 +22,7 @@ import mailets.SimpleMailingListHeaders
 import name.Names
 import org.eknet.publet.james.data._
 import guice._
-import org.eknet.publet.web.guice.{PubletModule, PubletBinding}
+import org.eknet.publet.web.guice.{AbstractPubletModule, PubletModule, PubletBinding}
 import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader
@@ -53,7 +53,6 @@ import org.apache.james.adapter.mailbox.MailboxManagerManagement
 import org.apache.james.rrt.lib.RecipientRewriteTableManagement
 import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
-import org.eknet.guice.squire.SquireModule
 import org.eknet.publet.ext.graphdb.{GraphDb, GraphDbProvider}
 import org.eknet.publet.auth.store.{PermissionStore, UserStore}
 import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
@@ -61,9 +60,8 @@ import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerF
 import org.eknet.publet.vfs.Resource
 import org.eknet.publet.vfs.util.SimpleContentResource
 import org.apache.james.fetchmail.FetchScheduler
-import org.eknet.publet.reflect.Reflect
 
-class PubletJamesModule extends SquireModule with PubletBinding with PubletModule {
+class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
   private[this] def doc(name: String) = {
     val r = Resource.classpath("org/eknet/publet/james/"+ name)
@@ -171,7 +169,8 @@ class PubletJamesModule extends SquireModule with PubletBinding with PubletModul
   }
 
   val name = "James Mailserver"
-  val version = Reflect.version
+  override val version = Reflect.version
+  override val license = Reflect.licenses.headOption
 }
 
 class DbProvider @Inject() (dbfac: GraphDbProvider) extends Provider[GraphDb] {

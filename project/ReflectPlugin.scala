@@ -1,22 +1,6 @@
-/*
- * Copyright 2012 Eike Kettner
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import sbt._
 // from here: https://github.com/ritschwumm/xsbt-reflect
-// mods:
+// mods: 
 //  - add timestamp to Reflect object
 
 /**
@@ -36,8 +20,8 @@ object ReflectPlugin extends Plugin {
   lazy val allSettings	= Seq(
     reflectPackage	:= "",
     reflectClass	:= "Reflect",
-    reflect			<<= (Keys.sourceManaged, Keys.name, Keys.version, reflectPackage, reflectClass) map {
-      (sourceManaged:File, name:String, version:String, reflectPackage:String, reflectClass:String)	=>
+    reflect			<<= (Keys.sourceManaged, Keys.name, Keys.version, reflectPackage, Keys.licenses, reflectClass) map {
+      (sourceManaged:File, name:String, version:String, reflectPackage:String, licenses: Seq[(String, URL)], reflectClass:String)	=>
         val	file	= sourceManaged / "reflect" / "Reflect.scala"
         val code	=
           (
@@ -47,6 +31,7 @@ object ReflectPlugin extends Plugin {
             "object " + reflectClass + " {\n" +
             "\tval name\t= \"" + name + "\"\n" +
             "\tval version\t= \"" + version + "\"\n" +
+            "\tval licenses = List("+ licenses.map(l => "(\""+ l._1+ "\", new java.net.URL(\""+ l._2.toString +"\"))").mkString(", ") +")\n" +
             "\tval timestamp = " + System.currentTimeMillis +"L\n"+
             "}\n"
         IO write (file, code)
