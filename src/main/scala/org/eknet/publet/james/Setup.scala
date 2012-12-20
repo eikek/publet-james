@@ -55,16 +55,13 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
   @Subscribe
   def setupAssets(event: PubletStartedEvent) {
 
-    assetMgr setup (Groups.jamesGroup, Groups.jamesManager, Groups.mustache)
+    assetMgr setup (Groups.jamesGroup, Groups.jamesManager)
     assetMgr setup (Group("default").use(Groups.jamesManager.name))
   }
 
   object Groups extends AssetCollection {
 
     override def classPathBase = "/org/eknet/publet/james/ui/includes"
-
-    val mustache = Group("publet.james.mustache")
-      .add(resource("js/mustache.js"))
 
     val jamesGroup = Group("publet.james")
       .add(resource("css/james.css"))
@@ -75,7 +72,7 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
       .add(resource("js/jquery.fetchmailscheduler-manager.js"))
       .add(resource("js/jquery.mailalias-manager.js"))
       .require(DefaultLayout.Assets.jquery.name, DefaultLayout.Assets.bootstrap.name)
-      .require(mustache.name)
+      .require(DefaultLayout.Assets.mustache.name)
 
     val jamesManager = Group("publet.james.manager")
       .forPath("/publet/james/**")
