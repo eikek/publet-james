@@ -33,7 +33,7 @@ object Version {
   val grizzled = "0.6.9"
   val scala = "2.9.2"
   val servlet = "3.0.1"
-  val publet = "1.0.0-SNAPSHOT"
+  val publet = "1.0.0"
   val scue = "0.1.0"
   val james = "3.0-beta4"
   val standardMailets = "1.1"
@@ -42,7 +42,7 @@ object Version {
 
 object Dependencies {
 
-  val publetQuartz = "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0-SNAPSHOT"
+  val publetQuartz = "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0"
   val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet
   val publetAppPlugin = publetAppDev % "publet"
   val publetQuartzPlugin = publetQuartz % "publet"
