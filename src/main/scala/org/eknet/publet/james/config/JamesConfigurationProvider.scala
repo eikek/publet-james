@@ -50,6 +50,8 @@ import org.eknet.publet.web.Config
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.apache.james.pop3server.netty.POP3ServerFactory
 import org.apache.james.fetchmail.FetchScheduler
+import com.google.common.base.{Suppliers, Supplier}
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * This class looks up configuration files for apache services. It will first
@@ -60,10 +62,10 @@ import org.apache.james.fetchmail.FetchScheduler
  * @since 20.10.12 18:53
  */
 @Singleton
-class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends ConfigurationProvider with Logging {
+class JamesConfigurationProvider @Inject() (filesystem: FileSystem, conf: Config) extends ConfigurationProvider with Logging {
 
   private val configFileSuffix = ".conf"
-  private val _configs = collection.mutable.Map[String, HierarchicalConfiguration]()
+  private val _configs = new ConcurrentHashMap[String, Supplier[HierarchicalConfiguration]]()
 
   val configMappings = Map(
     "mailprocessor" -> "mailetcontainer.processors",
@@ -95,17 +97,22 @@ class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends Conf
   private def fs = filesystem.asInstanceOf[PubletFilesystem]
 
   def registerConfiguration(beanName: String, conf: HierarchicalConfiguration) {
-    this._configs.put(beanName, conf)
+    postProcessConfig(conf)
+    val supp = Suppliers.ofInstance(conf)
+    this._configs.put(beanName, supp)
   }
 
   def getConfigByName(name: String) = synchronized {
-    this._configs.get(name) getOrElse {
-      val confName = ConfigName(name)
-      val config = confName.part.map(part =>
-        getConfig(confName.load).configurationAt(part)).getOrElse(getConfig(confName.load))
-      this._configs.put(name, config)
-      config
+    val factory = new Supplier[HierarchicalConfiguration] {
+      def get() = {
+        val confName = ConfigName(name)
+        val config = confName.part.map(part =>
+          getConfig(confName.load).configurationAt(part)).getOrElse(getConfig(confName.load))
+        config
+      }
     }
+    val supplier = _configs.putIfAbsent(name, Suppliers.memoize(factory))
+    if (supplier != null) supplier.get() else factory.get()
   }
 
   def getConfiguration(c: Class[_]) = synchronized {
@@ -119,7 +126,23 @@ class JamesConfigurationProvider @Inject() (filesystem: FileSystem) extends Conf
     xmlconfig.setAttributeSplittingDisabled(true)
     xmlconfig.load(in)
     in.close()
+    postProcessConfig(xmlconfig)
     xmlconfig
+  }
+
+  private def postProcessConfig(xmlconfig: HierarchicalConfiguration) {
+    //override with values from publet's config file
+    val prefix = "publet.james.conf."
+    conf.keySet.map(key => {
+      if (key.startsWith(prefix)) {
+        val name = key.substring(prefix.length)
+        if (xmlconfig.getProperty(name) != null) {
+          val value = conf(key).get
+          info("Overriding property '"+name+"' from publet.properties")
+          xmlconfig.setProperty(name, value)
+        }
+      }
+    })
   }
 
   case class ConfigName(name: String, part:Option[String]) {

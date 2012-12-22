@@ -50,7 +50,21 @@ James resources specified in the configuration files are mapped to publet's
 file system structure. Resources `file://conf/x.y` are mapped to `etc/x.y`
 and `file://var/x.y` are mapped to `$PUBLET_CONFIG/james/var`.
 
+If you just want to change certain default properties (like for example the
+keystore password) then you can add those to publet's configuration file
+`publet.properties` instead of creating complete new xml files. The keys
+must be prefixed with `publet.james.conf.`. Each james default config value
+is replaced with an existing value in `publet.properties`.
 
+So to change the keystore password for the provided servers, add it
+as follows:
+
+    publet.james.conf.smtpserver.tls.secret=mysuperword123
+    publet.james.conf.imapserver.tls.secret=mysuperword123
+    publet.james.conf.pop3server.tls.secret=mysuperword123
+
+This way any default value can be replaced, though it's not possible to
+remove or add values.
 
 ### Fetchmail
 
@@ -81,7 +95,7 @@ For example, on every run or on every second run etc.
 
 Secondly, instead of configuring the maximum number of threads to use, you can configure
 how many accounts should be processed sequentially by one thread. The fetchmail job is
-collecting this number of accounts and schedules a fetch-job for each group. You can configure
+collecting this number of accounts and schedules a fetch-job for each pile. You can configure
 this number in publets' configuration file:
 
     james.fetchmail.jobsize=10
@@ -89,8 +103,9 @@ this number in publets' configuration file:
 The default value is 10. So if there are 100 accounts, there can be up to ten threads
 (depending on your thread-pool configuration) running concurrently fetching mails. This
 feature relys on the [Quartz Scheduler](http://quartz-scheduler.org/) library, meaning
-the publet-quartz extension must be available. So you can still configure the thread pool
-using `quartz.properties` configuration file.
+the [publet-quartz extension](../publetquartzmodule/) must be available. So you can still
+configure the thread pool using `quartz.properties` configuration file. Please see the
+[publet-quartz extension](../publetquartzmodule/) for how to do that.
 
 
 ### Custom Mailets
@@ -231,7 +246,7 @@ Managing domains is not much. You can add and remove domains.
 #### Mappings
 
 Managing mappings is quite similiar. You define the mapping using the first two text fields
-that are split up in the username and domain part. Both can be left empty in which case the
+that receive the username and domain part separately. Both can be left empty in which case the
 wildcard `*` is applied. The target can be a local username or an email address. If you click
 on a target, the form is filled with that information and you can edit the entry.
 
@@ -239,10 +254,13 @@ on a target, the form is filled with that information and you can edit the entry
 <li class="span4"><a href="james-sn2.html"><img class="img-polaroid" src="james-sn2.png"></a></li>
 </ul>
 
+In the screenshot above, all mails to `me@localhost` are forwarded to the local account `john`,
+while all mails to `mail@localhost` is forwarded to the local account `eike`.
+
 #### Fetchmail Accounts
 
-The widget that allows to manage fetchmail accounts can be configured for the current user
-or for an admin user. The following screenshot shows the interface for the admin user:
+The widget allows to manage fetchmail accounts, which can be configured for the current user
+only, or for an admin user. The following screenshot shows the interface for the admin user:
 
 <ul class="thumbnails">
 <li class="span4"><a href="james-sn3.html"><img class="img-polaroid" src="james-sn3.png"></a></li>
@@ -255,16 +273,16 @@ login name to list all acounts for a given user.
 When editing accounts, the passwords are never shown and the password field can be left empty. In
 that case it is not touched. If adding a new account, a password is required, of course.
 
-The widget for the current user just hides the search form (it would not function anyways, as
-only the accounts for the current user are listed). In the update and add form, the "Local user"
-field is hidden, since the user is already known.
+In "current user mode", the widget just hides the search form (it would work, but only results
+for the current user are listed). In the update and add form, the "Local user" field is hidden, since
+the user is already known.
 
 #### Mail Queues
 
 The mail queues are holding incoming and outgoing messages that are not yet processed by james.
 The _spooler manager_ widget can be used to view the queues and do some basic maintenance tasks,
-like clearing the queue or individual items or flushing the queue, such that all mails are tried
-to get processed immediately.
+like clearing the queue or individual items or flushing the queue. When a queue is "flushed", all
+items are made available to james for immediate processing.
 
 The two queues can be selected on the right, use `spool` for incoming and `outgoing` for outgoing
 (non local) messages.
@@ -276,11 +294,11 @@ The two queues can be selected on the right, use `spool` for incoming and `outgo
 
 #### Servers
 
-The next screenshot shows four widgets (the last one is included twice) showing the state for
-each server. The widget allows to start/stop the service and shows some information, like the
-number of current connections and whether it is running in secured mode or not. If not running
-by either using ssl sockets or starttls, the lock is not shown. The address and port, the
-service is bound to are show in the middle (not for the fetchmail thread of course).
+The next screenshot shows four widgets already seen on the other screenshots in isolation (the last
+one is included twice) showing the state for each server. The widget allows to start/stop the service
+and shows some information, like the number of current connections and whether it is running in secured
+mode or not. If not running by either using ssl sockets or starttls, the lock is not shown. The address
+and port, the service is bound to are show in the middle (not for the fetchmail thread of course).
 
 <ul class="thumbnails">
 <li class="span8"><a href="james-sn5.html"><img class="img-polaroid" src="james-sn5.png"></a></li>
