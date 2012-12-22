@@ -79,6 +79,8 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
       doc("doc/james-sn3.png"),
       doc("doc/james-sn4.png"),
       doc("doc/james-sn5.png"),
+      doc("doc/james-sn6.png"),
+      doc("doc/james-sn7.png"),
       doc("config/domainlist.conf"),
       doc("config/imapserver.conf"),
       doc("config/pop3server.conf"),
@@ -102,7 +104,7 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     bind[RecipientRewriteTable].to[RecipientTable] in Scopes.SINGLETON
     bind[DomainList].to[PubletDomainList] in Scopes.SINGLETON
 
-    bind[MailQueueFactory].to[FileMailQueueFactory] in Scopes.SINGLETON
+    bind[MailQueueFactory].to[FileMailQFactory] in Scopes.SINGLETON
 
     bind[PubletSmtpServerFactory].asEagerSingleton()
 

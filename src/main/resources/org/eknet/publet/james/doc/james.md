@@ -259,6 +259,21 @@ The widget for the current user just hides the search form (it would not functio
 only the accounts for the current user are listed). In the update and add form, the "Local user"
 field is hidden, since the user is already known.
 
+#### Mail Queues
+
+The mail queues are holding incoming and outgoing messages that are not yet processed by james.
+The _spooler manager_ widget can be used to view the queues and do some basic maintenance tasks,
+like clearing the queue or individual items or flushing the queue, such that all mails are tried
+to get processed immediately.
+
+The two queues can be selected on the right, use `spool` for incoming and `outgoing` for outgoing
+(non local) messages.
+
+<ul class="thumbnails">
+<li class="span4"><a href="james-sn6.png"><img class="img-polaroid" src="james-sn6.png"></a></li>
+<li class="span4"><a href="james-sn7.png"><img class="img-polaroid" src="james-sn7.png"></a></li>
+</ul>
+
 #### Servers
 
 The next screenshot shows four widgets (the last one is included twice) showing the state for
