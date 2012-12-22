@@ -236,7 +236,7 @@ wildcard `*` is applied. The target can be a local username or an email address.
 on a target, the form is filled with that information and you can edit the entry.
 
 <ul class="thumbnails">
-<li class="span4"><a href="james-sn2.png"><img class="img-polaroid" src="james-sn2.png"></a></li>
+<li class="span4"><a href="james-sn2.html"><img class="img-polaroid" src="james-sn2.png"></a></li>
 </ul>
 
 #### Fetchmail Accounts
@@ -245,8 +245,8 @@ The widget that allows to manage fetchmail accounts can be configured for the cu
 or for an admin user. The following screenshot shows the interface for the admin user:
 
 <ul class="thumbnails">
-<li class="span4"><a href="james-sn3.png"><img class="img-polaroid" src="james-sn3.png"></a></li>
-<li class="span4"><a href="james-sn4.png"><img class="img-polaroid" src="james-sn4.png"></a></li>
+<li class="span4"><a href="james-sn3.html"><img class="img-polaroid" src="james-sn3.png"></a></li>
+<li class="span4"><a href="james-sn4.html"><img class="img-polaroid" src="james-sn4.png"></a></li>
 </ul>
 
 The admin can edit all fetchmail accounts. The search form can be used to type in a specific
@@ -270,8 +270,8 @@ The two queues can be selected on the right, use `spool` for incoming and `outgo
 (non local) messages.
 
 <ul class="thumbnails">
-<li class="span4"><a href="james-sn6.png"><img class="img-polaroid" src="james-sn6.png"></a></li>
-<li class="span4"><a href="james-sn7.png"><img class="img-polaroid" src="james-sn7.png"></a></li>
+<li class="span4"><a href="james-sn6.html"><img class="img-polaroid" src="james-sn6.png"></a></li>
+<li class="span4"><a href="james-sn7.html"><img class="img-polaroid" src="james-sn7.png"></a></li>
 </ul>
 
 #### Servers
@@ -283,7 +283,7 @@ by either using ssl sockets or starttls, the lock is not shown. The address and 
 service is bound to are show in the middle (not for the fetchmail thread of course).
 
 <ul class="thumbnails">
-<li class="span8"><a href="james-sn5.png"><img class="img-polaroid" src="james-sn5.png"></a></li>
+<li class="span8"><a href="james-sn5.html"><img class="img-polaroid" src="james-sn5.png"></a></li>
 </ul>
 
 The fetchmail widget has another feature: A click on the interval label will turn it into
