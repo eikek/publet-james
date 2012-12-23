@@ -17,24 +17,27 @@
 package org.eknet.publet.james
 
 import com.google.inject.{Inject, Singleton}
-import org.eknet.publet.web.guice.PubletStartedEvent
-import com.google.common.eventbus.Subscribe
+import data.PubletFilesystem
+import com.google.common.eventbus.{EventBus, Subscribe}
 import org.eknet.publet.Publet
 import org.eknet.publet.vfs.util.{MapContainer, ClasspathContainer}
 import org.eknet.publet.vfs.Path
 import org.eknet.publet.web.scripts.WebScriptResource
 import org.eknet.publet.james.ui._
-import org.eknet.publet.web.asset.{Group, AssetCollection, AssetManager}
+import org.eknet.publet.web.asset.{AssetCollection, AssetManager}
 import org.eknet.publet.web.template.DefaultLayout
 import org.eknet.publet.web.asset.Group
 import org.eknet.publet.web.guice.PubletStartedEvent
+import org.eknet.publet.vfs.fs.FilesystemPartition
+import org.apache.james.filesystem.api.FileSystem
+import org.eknet.publet.gitr.partition.GitPartMan
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 01.11.12 12:10
  */
 @Singleton
-class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
+class Setup @Inject() (publet: Publet, assetMgr: AssetManager, fs: PubletFilesystem, bus: EventBus) {
 
   @Subscribe
   def mountResources(event: PubletStartedEvent) {
@@ -51,6 +54,12 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager) {
     scripts.addResource(new WebScriptResource("managemailalias.json".rn, new ManageAlias))
     scripts.addResource(new WebScriptResource("managespool.json".rn, new ManageSpool))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
+
+    //mount partition for sieve scripts
+    //James has everything setup already. The sieve scripts are expected in a specific
+    //location. See [[org.apache.james.transport.mailets.ResourceLocatorImpl]]
+    val sievePart = new FilesystemPartition(fs.resolveFile(FileSystem.FILE_PROTOCOL + "sieve/", f => true).get, bus)
+    publet.mountManager.mount(Path("/publet/james/sieve"), sievePart)
   }
 
   @Subscribe
