@@ -13,7 +13,7 @@ title: Mail Settings
 - import org.eknet.publet.james.Permissions
 - import org.apache.shiro.authz.UnauthenticatedException
 - Security.checkAuthenticated
-- if (!Security.hasGroup(Permissions.mailgroup)) throw new authz.UnauthenticatedException()
+- if (!Security.hasGroup(Permissions.mailgroup)) throw new UnauthenticatedException()
 .page-header
   h1 Mail Settings
 
