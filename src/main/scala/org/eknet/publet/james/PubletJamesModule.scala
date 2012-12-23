@@ -55,7 +55,6 @@ import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
 import org.eknet.publet.ext.graphdb.{GraphDb, GraphDbProvider}
 import org.eknet.publet.auth.store.{PermissionStore, UserStore}
-import org.eknet.publet.james.config.{ConfigurationProvider, JamesConfigurationProvider}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.vfs.Resource
 import org.eknet.publet.vfs.util.SimpleContentResource
@@ -95,7 +94,9 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
 
     bind[DNSService].to[DNSJavaService] in Scopes.SINGLETON
     bind[ProtocolHandlerLoader].to[GuiceProtocolHandlerLoader] in Scopes.SINGLETON
+    bind[PubletFilesystemImpl]
     bind[FileSystem].to[PubletFilesystemImpl] in Scopes.SINGLETON
+    bind[PubletFilesystem].to[PubletFilesystemImpl] in Scopes.SINGLETON
 
     bind[GraphDb].annotatedWith(Names.named("jamesdb")).toProvider(classOf[DbProvider])
     bind[MailDb].in(Scopes.SINGLETON)

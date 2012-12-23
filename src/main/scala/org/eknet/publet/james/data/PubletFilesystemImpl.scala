@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.guice
+package org.eknet.publet.james.data
 
 import org.apache.james.filesystem.api.FileSystem
 import com.google.inject.{Inject, Singleton}
 import org.eknet.publet.web.Config
 import java.io.{InputStream, FileInputStream, FileNotFoundException, File}
 import org.eknet.publet.vfs.Path
-import java.net.URL
-import org.eknet.publet.james.data.PubletFilesystem
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -61,7 +59,7 @@ class PubletFilesystemImpl @Inject() (config: Config) extends PubletFilesystem {
       }
     }
 
-  def getFile(fileURL: String) = resolveFile(fileURL, f => true)
+  def getFile(fileURL: String) = resolveFile(fileURL, f => f.exists())
     .getOrElse(throw new FileNotFoundException("File not found: "+ fileURL))
 
   def resolveFile(fileUrl: String, filter: File => Boolean): Option[File] = {

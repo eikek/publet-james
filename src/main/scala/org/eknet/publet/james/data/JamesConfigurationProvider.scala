@@ -32,12 +32,11 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.config
+package org.eknet.publet.james.data
 
 import com.google.inject.{Inject, Singleton}
 import grizzled.slf4j.Logging
 import java.io.{FileNotFoundException, InputStream}
-import java.net.URL
 import org.apache.commons.configuration.{XMLConfiguration, HierarchicalConfiguration}
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
 import org.apache.james.filesystem.api.FileSystem
@@ -45,7 +44,6 @@ import org.apache.james.imapserver.netty.IMAPServerFactory
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor
 import org.apache.james.mailetcontainer.impl.{JamesMailetContext, JamesMailSpooler}
 import org.apache.james.smtpserver.netty.SMTPServerFactory
-import org.eknet.publet.james.data.{PubletFilesystem, MailRepositoryStoreImpl, RecipientTable, PubletDomainList}
 import org.eknet.publet.web.Config
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.apache.james.pop3server.netty.POP3ServerFactory

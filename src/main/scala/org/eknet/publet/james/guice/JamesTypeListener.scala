@@ -23,9 +23,8 @@ import org.slf4j.LoggerFactory
 import javax.annotation.{PostConstruct, Resource}
 import org.apache.camel.{CamelContext, CamelContextAware}
 import org.apache.james.mailrepository.api.MailRepository
-import java.util.concurrent.ConcurrentHashMap
 import grizzled.slf4j.Logging
-import org.eknet.publet.james.config.ConfigurationProvider
+import org.eknet.publet.james.data.ConfigurationProvider
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

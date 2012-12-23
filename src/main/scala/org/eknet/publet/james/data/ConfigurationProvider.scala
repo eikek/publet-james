@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.config
+package org.eknet.publet.james.data
 
 import org.apache.commons.configuration.HierarchicalConfiguration
 
