@@ -89,6 +89,7 @@ object Dependencies {
 
   val providedDeps = Seq(
     "org.eknet.publet" %% "publet-web" % Version.publet,
+    "org.eknet.scue" %% "scue" % Version.scue,
     "org.eknet.publet" %% "publet-ext" % Version.publet,
     "org.slf4j" % "jcl-over-slf4j" % Version.slf4j,
     "org.scalatest" %% "scalatest" % Version.scalaTest,
@@ -103,8 +104,7 @@ object Dependencies {
     "org.slf4j" % "slf4j-simple" % Version.slf4j,
     "org.eknet.neoswing" % "neoswing" % Version.neoswing,
     "junit" % "junit" % "4.10",
-    "org.eknet.scue" %% "scue" % Version.scue classifier("test"),
-    "org.eknet.scue" %% "scue" % Version.scue
+    "org.eknet.scue" %% "scue" % Version.scue classifier("test")
   ) map (_ % "test")
 
 }
