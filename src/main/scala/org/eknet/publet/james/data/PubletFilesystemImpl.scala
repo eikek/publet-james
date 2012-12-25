@@ -59,7 +59,7 @@ class PubletFilesystemImpl @Inject() (config: Config) extends PubletFilesystem {
       }
     }
 
-  def getFile(fileURL: String) = resolveFile(fileURL, f => f.exists())
+  def getFile(fileURL: String) = resolveFile(fileURL, f => true)
     .getOrElse(throw new FileNotFoundException("File not found: "+ fileURL))
 
   def resolveFile(fileUrl: String, filter: File => Boolean): Option[File] = {
