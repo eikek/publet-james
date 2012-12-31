@@ -17,7 +17,6 @@
 package org.eknet.publet.james
 
 import com.google.inject.{Inject, Singleton}
-import data.PubletFilesystem
 import com.google.common.eventbus.{EventBus, Subscribe}
 import org.eknet.publet.Publet
 import org.eknet.publet.vfs.util.{MapContainer, ClasspathContainer}
@@ -28,16 +27,16 @@ import org.eknet.publet.web.asset.{AssetCollection, AssetManager}
 import org.eknet.publet.web.template.DefaultLayout
 import org.eknet.publet.web.asset.Group
 import org.eknet.publet.web.guice.PubletStartedEvent
-import org.eknet.publet.vfs.fs.FilesystemPartition
-import org.apache.james.filesystem.api.FileSystem
-import org.eknet.publet.gitr.partition.GitPartMan
+import org.eknet.publet.gitr.partition.GitPartition
+import com.google.inject.name.Named
+import org.eknet.publet.webeditor.Assets
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 01.11.12 12:10
  */
 @Singleton
-class Setup @Inject() (publet: Publet, assetMgr: AssetManager, fs: PubletFilesystem, bus: EventBus) {
+class Setup @Inject() (publet: Publet, assetMgr: AssetManager, @Named("james-sieve-scripts") gp: GitPartition) {
 
   @Subscribe
   def mountResources(event: PubletStartedEvent) {
@@ -53,13 +52,11 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager, fs: PubletFilesys
     scripts.addResource(new WebScriptResource("managefetchmailscheduler.json".rn, new ManageFetchmailScheduler))
     scripts.addResource(new WebScriptResource("managemailalias.json".rn, new ManageAlias))
     scripts.addResource(new WebScriptResource("managespool.json".rn, new ManageSpool))
+    scripts.addResource(new WebScriptResource("managesieve.json".rn, new ManageSieve))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
 
     //mount partition for sieve scripts
-    //James has everything setup already. The sieve scripts are expected in a specific
-    //location. See [[org.apache.james.transport.mailets.ResourceLocatorImpl]]
-    val sievePart = new FilesystemPartition(fs.resolveFile(FileSystem.FILE_PROTOCOL + "sieve/", f => true).get, bus)
-    publet.mountManager.mount(Path("/publet/james/sieve"), sievePart)
+    publet.mountManager.mount(Path("/publet/james/sieve"), gp)
   }
 
   @Subscribe
@@ -82,8 +79,11 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager, fs: PubletFilesys
       .add(resource("js/jquery.fetchmailscheduler-manager.js"))
       .add(resource("js/jquery.mailalias-manager.js"))
       .add(resource("js/jquery.spool-manager.js"))
+      .add(resource("js/codemirror/sieve.js"))
+      .add(resource("js/jquery.sieve-manager.js"))
       .require(DefaultLayout.Assets.jquery.name, DefaultLayout.Assets.bootstrap.name)
       .require(DefaultLayout.Assets.mustache.name)
+      .require(Assets.codemirrorJquery.name)
 
     val jamesManager = Group("publet.james.manager")
       .forPath("/publet/james/**")

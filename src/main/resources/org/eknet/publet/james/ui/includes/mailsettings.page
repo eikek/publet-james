@@ -6,6 +6,7 @@ title: Mail Settings
   $(function() {
     $('#mailAlias').mailAliasManager();
     $('#fetchmailAccounts').fetchmailAccountManager({ forCurrentUser: true });
+    $('#sieveScript').sieveManager({ currentUser: true });
   });
 
 
@@ -17,8 +18,14 @@ title: Mail Settings
 .page-header
   h1 Mail Settings
 
-#mailAlias
-
-h3 Fetchmail Accounts
-
-#fetchmailAccounts
+ul.nav.nav-tabs
+  li.active
+    a(href="#mailAlias" data-toggle="tab") Domains
+  li
+    a(href="#fetchmailAccounts" data-toggle="tab") Fetchmail Accounts
+  li
+    a(href="#sieveScript" data-toggle="tab") Filter
+.tab-content
+  #mailAlias.tab-pane.active
+  #fetchmailAccounts.tab-pane
+  #sieveScript.tab-pane

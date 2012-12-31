@@ -18,8 +18,8 @@ package org.eknet.publet.james
 
 import com.google.inject._
 import fetchmail.{FetchmailAccountsMBean, FetchmailAccounts, FetchmailScheduler}
-import mailets.SimpleMailingListHeaders
-import name.Names
+import mailets.{SieveScriptLocator, SimpleMailingListHeaders}
+import name.{Named, Names}
 import org.eknet.publet.james.data._
 import guice._
 import org.eknet.publet.web.guice.{AbstractPubletModule, PubletModule, PubletBinding}
@@ -31,7 +31,6 @@ import org.apache.james.user.api.UsersRepository
 import org.apache.james.rrt.api.RecipientRewriteTable
 import org.apache.james.domainlist.api.DomainList
 import org.apache.james.queue.api.MailQueueFactory
-import org.apache.james.queue.file.FileMailQueueFactory
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor
 import org.apache.mailet.MailetContext
 import org.apache.james.mailetcontainer.impl.{JamesMailSpooler, JamesMailetContext}
@@ -53,12 +52,14 @@ import org.apache.james.adapter.mailbox.MailboxManagerManagement
 import org.apache.james.rrt.lib.RecipientRewriteTableManagement
 import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
-import org.eknet.publet.ext.graphdb.{GraphDb, GraphDbProvider}
+import org.eknet.publet.ext.graphdb.GraphDb
 import org.eknet.publet.auth.store.{PermissionStore, UserStore}
 import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
-import org.eknet.publet.vfs.Resource
+import org.eknet.publet.vfs.{Path, Resource}
 import org.eknet.publet.vfs.util.SimpleContentResource
 import org.apache.james.fetchmail.FetchScheduler
+import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitConfig}
+import org.apache.jsieve.mailet.ResourceLocator
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -117,6 +118,10 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     bind[MatcherLoader].to[MailetMatcherLoader] in Scopes.SINGLETON
     bind[CamelContext].to[GuiceCamelContext].asEagerSingleton()
 
+    //sieve/local delivery
+    bind[SieveScriptLocator]
+    bind[ResourceLocator].to[SieveScriptLocator]
+
     //maildir
     bind[MailboxPathLocker].to[JVMMailboxPathLocker] in Scopes.SINGLETON
     bind[Authenticator].to[UserRepositoryAuthenticator] in Scopes.SINGLETON
@@ -156,6 +161,11 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     setOf[PermissionStore].add[TestUserStore].in(Scopes.SINGLETON)
   }
 
+  // sieve partition
+
+  @Provides@Singleton@Named("james-sieve-scripts")
+  def createSievePartition(gpman: GitPartMan): GitPartition =
+    gpman.getOrCreate(Path("james-sieve-scripts"), GitConfig())
 
   //imap
 
@@ -176,9 +186,3 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
   override val license = Reflect.licenses.headOption
 }
 
-class DbProvider @Inject() (dbfac: GraphDbProvider) extends Provider[GraphDb] {
-
-  private val name = "jamesdb"
-
-  def get() = dbfac.getDatabase(name)
-}

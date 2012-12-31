@@ -13,6 +13,7 @@ title: Manage JAMES
     $('#fetchmailAccounts').fetchmailAccountManager();
     $('.fetchmailWidget').fetchmailSchedulerManager();
     $('#manageQueues').spoolManager();
+    $('#manageSieve').sieveManager({ currentUser: false });
   });
 
 
@@ -53,8 +54,11 @@ title: Manage JAMES
         a(href="#fetchmailAccounts" data-toggle="tab") Fetchmail Accounts
       li
         a(href="#manageQueues" data-toggle="tab") Queues
+      li
+        a(href="#manageSieve" data-toggle="tab") Sieve
     .tab-content
       #manageDomains.tab-pane.active
       #manageMappings.tab-pane
       #fetchmailAccounts.tab-pane
       #manageQueues.tab-pane
+      #manageSieve.tab-pane

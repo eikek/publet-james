@@ -274,4 +274,18 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb, userRepo: UsersReposi
       loginv.map(v => v ->- "fetchmailAccount" mapEnds(vertexToAccount)).getOrElse(Nil)
     }
   }
+
+  // sieve scripts
+
+  def sieveEnabled(login: String): Boolean = withTx {
+    val v = vertex("login" := login)
+    v.get[Boolean]("sieveEnabled").getOrElse(false)
+  }
+
+  def setSieveEnabled(login: String, enabled: Boolean) {
+    withTx {
+      val v = vertex("login" := login)
+      v("sieveEnabled") = enabled
+    }
+  }
 }

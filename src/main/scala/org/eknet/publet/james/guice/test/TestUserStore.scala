@@ -50,6 +50,6 @@ class TestUserStore @Inject() (config: Config) extends UserStoreAdapter with Per
     .map(_.login)
     .map(x => x match  {
     case "admin" => Set("*")
-    case _ => Set("james:alias:*:"+x, "james:fetchmail:account:*:"+x)
+    case _ => Set("james:alias:*:"+x, "james:fetchmail:account:*:"+x, "james:sieve:*:"+x)
   }).getOrElse(Set[String]())
 }

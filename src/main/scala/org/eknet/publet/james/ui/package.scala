@@ -18,18 +18,23 @@ package org.eknet.publet.james
 
 import org.eknet.publet.web.util.{RenderUtils, PubletWebContext, PubletWeb}
 import org.apache.james.domainlist.api.DomainList
-import org.eknet.publet.vfs.Content
+import org.eknet.publet.vfs.{ChangeInfo, ContentType, Content}
 import org.eknet.publet.james.data.MailDb
 import org.eknet.publet.web.shiro.Security
 import org.apache.shiro.authz.{UnauthorizedException, UnauthenticatedException}
 import org.apache.shiro.authz
+import org.eknet.publet.auth.store.UserProperty
+import org.eknet.publet.web.{RunMode, Config}
+import grizzled.slf4j.Logging
 
 /**
  *
  * @author <a href="mailto:eike.kettner@gmail.com">Eike Kettner</a>
  * @since 01.11.12 12:00
  */
-package object ui {
+package object ui extends Logging {
+
+  val sieve = ContentType('sieve, Set("sieve", "siv"), ("application", "sieve"))
 
   val actionParam = "do"
 
@@ -44,6 +49,7 @@ package object ui {
   })
   def domainList = PubletWeb.instance[DomainList].get
   def maildb = PubletWeb.instance[MailDb].get
+  def config = PubletWeb.instance[Config].get
 
   def success(msg: String) = RenderUtils.makeJson(Map("success"->true, "message"->msg))
   def failure(msg: String) = RenderUtils.makeJson(Map("success"->false, "message"->msg))
@@ -52,7 +58,10 @@ package object ui {
     f
   } catch {
     case e: UnauthorizedException => failure("Permission denied.")
-    case e: Exception => failure(e.getMessage)
+    case e: Exception => {
+      debug("Error executing script.", e)
+      failure(e.getMessage)
+    }
   }
 
   def authenticated(f: => Option[Content]) = {
@@ -65,4 +74,10 @@ package object ui {
     Security.checkPerm(perm)
     b
   }
+
+  def changeInfo(message: String) = ChangeInfo(
+    Some(Security.username),
+    Security.user.flatMap(_.get(UserProperty.email)),
+    message
+  )
 }

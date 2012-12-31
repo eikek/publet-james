@@ -23,6 +23,7 @@ import AssemblyKeys._
 
 object Resolvers {
   val eknet = "eknet.org" at "https://eknet.org/maven2"
+  val milton = "milton.io" at "http://milton.io/maven"
   val apacheSnapshots = "apache-snapshots" at "https://repository.apache.org/content/repositories/snapshots/"
 }
 object Version {
@@ -34,7 +35,7 @@ object Version {
   val scala = "2.9.2"
   val servlet = "3.0.1"
   val publet = "1.0.0"
-  val scue = "0.1.0"
+  val scue = "0.2.0"
   val james = "3.0-beta4"
   val standardMailets = "1.1"
   val neoswing = "2.0.0-m1"
@@ -42,11 +43,12 @@ object Version {
 
 object Dependencies {
 
-  val publetQuartz = "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0"
-  val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet
-  val publetAppPlugin = publetAppDev % "publet"
-  val publetQuartzPlugin = publetQuartz % "publet"
+  val publetQuartz = "org.eknet.publet.quartz" %% "publet-quartz" % "0.1.0"  exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
+  val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet  exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
+  val publetAppPlugin = publetAppDev % "publet"  exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
+  val publetQuartzPlugin = publetQuartz % "publet" exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
 
+  val mail = "javax.mail" % "mail" % "1.4"
 
   def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) %
     Version.james exclude("commons-logging", "commons-logging") exclude("commons-logging", "commons-logging-api")
@@ -75,9 +77,9 @@ object Dependencies {
   val jamesServerMailets = jamesServer("mailets")
 
   // for tests
-  val jamesServerDataLibTest = jamesServerDataLib % "test" classifier("tests") withSources()
-  val jamesServerDataApiTest = jamesServerDataApi % "test" classifier("tests") withSources()
-  val jamesServerDnsApiTest = jamesServerDnsApi % "test" classifier("tests") withSources()
+  val jamesServerDataLibTest = jamesServerDataLib % "test" classifier("tests")
+  val jamesServerDataApiTest = jamesServerDataApi % "test" classifier("tests")
+  val jamesServerDnsApiTest = jamesServerDnsApi % "test" classifier("tests")
 
   val jamesServerAll = Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
@@ -88,9 +90,10 @@ object Dependencies {
   )
 
   val providedDeps = Seq(
-    "org.eknet.publet" %% "publet-web" % Version.publet,
+    "org.eknet.publet" %% "publet-web" % Version.publet exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet"),
+    "org.eknet.publet" %% "publet-webeditor" % Version.publet exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet"),
     "org.eknet.scue" %% "scue" % Version.scue,
-    "org.eknet.publet" %% "publet-ext" % Version.publet,
+    "org.eknet.publet" %% "publet-ext" % Version.publet exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet"),
     "org.slf4j" % "jcl-over-slf4j" % Version.slf4j,
     "org.scalatest" %% "scalatest" % Version.scalaTest,
     "org.clapper" %% "grizzled-slf4j" % Version.grizzled exclude("org.slf4j", "slf4j-api"),
@@ -163,12 +166,12 @@ object RootBuild extends Build {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     pomIncludeRepository := (_ => false),
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
-    resolvers ++= Seq(Resolvers.eknet, Resolvers.apacheSnapshots),
+    resolvers ++= Seq(Resolvers.eknet, Resolvers.milton),
     licenses := Seq(("ASL2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
     scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git"))
   )
 
-  val deps = Seq(publetAppPlugin, publetQuartzPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
+  val deps = Seq(mail, publetAppPlugin, publetQuartzPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
 }
 
 

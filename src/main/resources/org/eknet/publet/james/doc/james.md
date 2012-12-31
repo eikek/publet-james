@@ -4,6 +4,11 @@ This extension adds [Apache James](http://james.apache.org) to publet,
 turning it into a feature-rich email server. A web interface is provided to
 manage the server and you can easily hook into the mail processing chain.
 
+Required Extensions
+
+* Webeditor
+* Extra
+* Publet Quartz
 
 ### Configuration
 
