@@ -20,9 +20,9 @@ title: Mail Settings
 
 ul.nav.nav-tabs
   li.active
-    a(href="#mailAlias" data-toggle="tab") Domains
+    a(href="#mailAlias" data-toggle="tab") Alias
   li
-    a(href="#fetchmailAccounts" data-toggle="tab") Fetchmail Accounts
+    a(href="#fetchmailAccounts" data-toggle="tab") Fetchmail Account
   li
     a(href="#sieveScript" data-toggle="tab") Filter
 .tab-content
