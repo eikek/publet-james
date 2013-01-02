@@ -34,7 +34,7 @@ object Version {
   val grizzled = "0.6.9"
   val scala = "2.9.2"
   val servlet = "3.0.1"
-  val publet = "1.0.0"
+  val publet = "1.0.1-SNAPSHOT"
   val scue = "0.2.0"
   val james = "3.0-beta4"
   val standardMailets = "1.1"
