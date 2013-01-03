@@ -112,6 +112,22 @@ the [publet-quartz extension](../publetquartzmodule/) must be available. So you 
 configure the thread pool using `quartz.properties` configuration file. Please see the
 [publet-quartz extension](../publetquartzmodule/) for how to do that.
 
+### Sieve
+
+[Apache James](http://james.apache.org) supports filtering incoming mails using
+[Sieve](http://en.wikipedia.org/wiki/Sieve_(mail_filtering_language) scripts. The sieve
+scripts are hold inside a git repository `publet-james-sieve` that is mounted to
+`publet/james/sieve/`. You can restrict access to the repository by adding a repository
+model entry to the `repositories.xml` file as explained in the
+[Security Section](../../security.html#Repositories_file_explained) of publet's documentation.
+
+There is a JQuery widget (see [below](#Sieve_Script)) that allows editing the scripts online
+if the corresponding permissions are set. Besides this, you can clone the `publet-james-sieve`
+repository and push changes back to the server. They are immediately available to james
+after a `git push`.
+
+The sieve scripts are named `<loginname>.sieve` and are put at the root of the `publet-james-sieve`
+content.
 
 ### Custom Mailets
 
@@ -162,8 +178,8 @@ The mail servers can be managed via a provided web interface. There are two temp
 * `/publet/james/mailsettings.html`
 
 The first one is intended for the admin users as it exposes all available settings. The
-second one includes a widget for managing aliases for the current user and his fetchmail
-accounts.
+second one includes a widget for managing aliases for the current user, his fetchmail
+accounts and his sieve filter script.
 
 If you look at the source of the templates (just use the extension `page`), you'll see that
 all widgets are provided by JQuery plugins. That makes it very easy to create your own
@@ -221,7 +237,7 @@ and the information about the scheduler can be retrieved.
 
 #### Mappings
 
-The powerful concept of recipient rewriting is restricted to users with the following
+The concept of recipient rewriting is restricted to users with the following
 permissions:
 
     val getMappings = "james:mappings:get"
@@ -237,6 +253,21 @@ the current state can be retrieved.
     def getServer(stype: String) = "james:server:get:"+stype
     def stopServer(stype: String) = "james:server:stop:"+stype
     def startServer(stype: String) = "james:server:start:"+stype
+
+
+#### Sieve Script
+
+The sieve scripts on the server are inside a git partition that can be used as usual. The
+JQuery widget actions are protected by the following permissions:
+
+    def sieveUpdate(login: String) = "james:sieve:update:"+ login
+    def sieveGet(login: String) = "james:sieve:get:"+ login
+    val sieveManage = "james:sieve:manage"
+
+The `sieveUpdate` permission is checked for any update of a sieve script for a particular user. The
+`sieveGet` permission is checked, if such a script is requested. The `sieveManage` permission is checked
+for other actions needed by the widget (like getting a list of all logins).
+
 
 ### Web Interface
 

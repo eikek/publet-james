@@ -47,4 +47,8 @@ object Permissions {
   def getServer(stype: String) = "james:server:get:"+stype
   def stopServer(stype: String) = "james:server:stop:"+stype
   def startServer(stype: String) = "james:server:start:"+stype
+
+  def sieveUpdate(login: String) = "james:sieve:update:"+ login
+  def sieveGet(login: String) = "james:sieve:get:"+ login
+  val sieveManage = "james:sieve:manage"
 }

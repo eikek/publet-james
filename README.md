@@ -1,7 +1,7 @@
 # Apache James Extension for Publet
 
 This is an extension for [publet](https://eknet.org/main/projects/publet/index.html) that
-adds the Apache James server to the play.
+adds the [Apache James](http://james.apache.org) server to the play.
 
 With this extension publet advances to an email platform.
 
@@ -111,6 +111,22 @@ the [publet-quartz extension](../publetquartzmodule/) must be available. So you 
 configure the thread pool using `quartz.properties` configuration file. Please see the
 [publet-quartz extension](../publetquartzmodule/) for how to do that.
 
+### Sieve
+
+[Apache James](http://james.apache.org) supports filtering incoming mails using
+[Sieve](http://en.wikipedia.org/wiki/Sieve_(mail_filtering_language) scripts. The sieve
+scripts are hold inside a git repository `publet-james-sieve` that is mounted to
+`publet/james/sieve/`. You can restrict access to the repository by adding a repository
+model entry to the `repositories.xml` file as explained in the
+[Security Section](https://eknet.org/publet/doc/security.html#Repositories_file_explained) of publet's documentation.
+
+There is a JQuery widget that allows editing the scripts online
+if the corresponding permissions are set. Besides this, you can clone the `publet-james-sieve`
+repository and push changes back to the server. They are immediately available to james
+after a `git push`.
+
+The sieve scripts are named `<loginname>.sieve` and are put at the root of the `publet-james-sieve`
+content.
 
 ### Custom Mailets
 

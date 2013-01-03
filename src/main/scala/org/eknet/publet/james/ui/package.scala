@@ -34,7 +34,7 @@ import grizzled.slf4j.Logging
  */
 package object ui extends Logging {
 
-  val sieve = ContentType('sieve, Set("sieve", "siv"), ("application", "sieve"))
+  val sieve = ContentType.sieve
 
   val actionParam = "do"
 

@@ -19,11 +19,10 @@ package org.eknet.publet.james.ui
 import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.shiro.Security
 import org.eknet.publet.web.util.{PubletWebContext, PubletWeb}
-import org.apache.jsieve.mailet.ResourceLocator
-import org.eknet.publet.vfs.{ChangeInfo, Content, ContentType}
+import org.eknet.publet.vfs.Content
 import org.eknet.publet.james.mailets.SieveScriptLocator
-import org.eknet.publet.auth.store.UserProperty
 import org.apache.james.user.api.UsersRepository
+import org.eknet.publet.james.Permissions
 
 /**
  *
@@ -44,7 +43,7 @@ class ManageSieve extends ScalaScript {
 
   private def updateScript() = safeCall {
     val login = getLogin
-    withPerm("james:sieve:update:"+login) {
+    withPerm(Permissions.sieveUpdate(login)) {
       val scriptModified = getSieveScript(login).flatMap(_.lastModification).getOrElse(-1L)
       val lastMod = param("lastHead").map(_.toLong).getOrElse(-1L)
       param("script") match {
@@ -69,7 +68,7 @@ class ManageSieve extends ScalaScript {
 
   private def getScript = safeCall {
     val login = getLogin
-    withPerm("james:sieve:get:"+login) {
+    withPerm(Permissions.sieveGet(login)) {
       val resource = getSieveScript(login)
       val script = resource.map(_.contentAsString()).getOrElse("")
       val lastMod = resource.flatMap(_.lastModification).map(_.toString).getOrElse(0L)
@@ -77,7 +76,7 @@ class ManageSieve extends ScalaScript {
     }
   }
 
-  private def getLogins = withPerm("james:sieve:manage") {
+  private def getLogins = withPerm(Permissions.sieveManage) {
     import collection.JavaConversions._
     val repo = PubletWeb.instance[UsersRepository].get
     makeJson(Map("users" -> repo.list().toList))
