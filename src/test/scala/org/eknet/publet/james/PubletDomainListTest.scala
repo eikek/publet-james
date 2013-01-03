@@ -22,6 +22,7 @@ import org.eknet.publet.james.data.{MailDb, PubletDomainList}
 import org.eknet.publet.ext.graphdb.GraphDb
 import org.eknet.scue.{OrientDbFactory, NamedGraph}
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import org.junit.{Before, After}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -34,14 +35,15 @@ class PubletDomainListTest extends AbstractDomainListTest {
   var db: NamedGraph[OrientGraph] = _
   var maildb: MailDb = _
 
+  @Before
   override def setUp() {
     db = factory.newRandomDb
     maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)), new NullUsersRepository)
     super.setUp()
   }
 
-  override def tearDown() {
-    super.tearDown()
+  @After
+  def tearDown() {
     factory.destroy(db)
     db = null
     maildb = null

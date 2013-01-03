@@ -36,8 +36,7 @@ object Version {
   val servlet = "3.0.1"
   val publet = "1.0.1-SNAPSHOT"
   val scue = "0.2.0"
-  val james = "3.0-beta4"
-  val standardMailets = "1.1"
+  val james = "3.0-beta5-SNAPSHOT"
   val neoswing = "2.0.0-m1"
 }
 
@@ -77,16 +76,15 @@ object Dependencies {
   val jamesServerMailets = jamesServer("mailets")
 
   // for tests
-  val jamesServerDataLibTest = jamesServerDataLib % "test" classifier("tests")
-  val jamesServerDataApiTest = jamesServerDataApi % "test" classifier("tests")
-  val jamesServerDnsApiTest = jamesServerDnsApi % "test" classifier("tests")
+  val jamesServerDataLibTest = jamesServerDataLib classifier("tests")
+  val jamesServerDataApiTest = jamesServerDataApi classifier("tests")
+  val jamesServerDnsApiTest = jamesServerDnsApi classifier("tests")
 
   val jamesServerAll = Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
     jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
     jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
-    jamesServerMailets, jamesServerFetchmail,
-    jamesServerDataLibTest, jamesServerDataApiTest, jamesServerDnsApiTest
+    jamesServerMailets, jamesServerFetchmail
   )
 
   val providedDeps = Seq(
@@ -107,7 +105,10 @@ object Dependencies {
     "org.slf4j" % "slf4j-simple" % Version.slf4j,
     "org.eknet.neoswing" % "neoswing" % Version.neoswing,
     "junit" % "junit" % "4.10",
-    "org.eknet.scue" %% "scue" % Version.scue classifier("test")
+    "org.eknet.scue" %% "scue" % Version.scue classifier("test"),
+    jamesServerDataLibTest,
+    jamesServerDataApiTest,
+    jamesServerDnsApiTest
   ) map (_ % "test")
 
 }

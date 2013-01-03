@@ -24,6 +24,7 @@ import org.apache.james.domainlist.api.DomainList
 import org.eknet.publet.ext.graphdb.GraphDb
 import org.eknet.scue.{OrientDbFactory, NamedGraph, TitanDbFactory}
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import org.junit.{After, Before}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -36,12 +37,14 @@ class RecipientRewriteTableTest extends AbstractRecipientRewriteTableTest with A
   var db: NamedGraph[OrientGraph] = _
   var maildb: MailDb = _
 
+  @Before
   override def setUp() {
     db = factory.newRandomDb
     maildb = new MailDb(new GraphDb(new OrientGraphWrapper(db)), new NullUsersRepository)
     super.setUp()
   }
 
+  @After
   override def tearDown() {
     super.tearDown()
     factory.destroy(db)

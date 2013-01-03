@@ -29,34 +29,54 @@ import com.google.inject.{Inject, Injector, Singleton}
 @Singleton
 class MailetMatcherLoader @Inject() (injector: Injector) extends MailetLoader with MatcherLoader {
 
+  def standardMailetPackages = List("org.apache.james.transport.mailets", "org.apache.james.mailet.standard.mailets")
+  def standardMatcherPackages = List("org.apache.james.transport.matchers", "org.apache.james.mailet.standard.matchers")
+
   def getMailet(config: MailetConfig): Mailet = synchronized {
     val name = resolveName(config)
-    loadMailetOrMatcher(name, config)
+    wrapException(name, loadMailetOrMatcher[Mailet](name, config))
   }
-
-  def standardMailetPackage = "org.apache.james.transport.mailets"
 
   def getMatcher(config: MatcherConfig):Matcher = synchronized {
     val name = resolveName(config)
-    loadMailetOrMatcher(name, config)
+    wrapException(name, loadMailetOrMatcher[Matcher](name, config))
   }
 
-  def standardMatcherPackage = "org.apache.james.transport.matchers"
-
-  private def loadMailetOrMatcher[A: Manifest](name: String, config: AnyRef): A = {
-    try {
-      val clazz = getClass.getClassLoader.loadClass(name)
-      val inst = injector.getInstance(clazz)
-      if (config.isInstanceOf[MailetConfig]) {
-        inst.asInstanceOf[Mailet].init(config.asInstanceOf[MailetConfig])
-      } else {
-        inst.asInstanceOf[Matcher].init(config.asInstanceOf[MatcherConfig])
-      }
-      inst.asInstanceOf[A]
-    }
+  private def wrapException[A](name: AnyRef, body: => A): A = {
+    try { body }
     catch {
       case e: MessagingException => throw e
       case e: Exception => throw new mail.MessagingException("Unable to load: "+ name, e)
+    }
+  }
+
+  private def loadMailetOrMatcher[A: Manifest](name: String, config: AnyRef): A = {
+    val clazz = getClass.getClassLoader.loadClass(name)
+    val inst = injector.getInstance(clazz)
+    if (config.isInstanceOf[MailetConfig]) {
+      inst.asInstanceOf[Mailet].init(config.asInstanceOf[MailetConfig])
+    } else {
+      inst.asInstanceOf[Matcher].init(config.asInstanceOf[MatcherConfig])
+    }
+    inst.asInstanceOf[A]
+  }
+
+  /**
+   * Loads and returns the first successful mailet or matcher.
+   *
+   * @param names
+   * @param config
+   * @tparam A
+   * @return
+   */
+  private def loadMailetOrMatcher[A: Manifest](names: List[String], config: AnyRef): A = {
+    names match {
+      case m::ms => try {
+        loadMailetOrMatcher(m, config)
+      } catch {
+        case e: ClassNotFoundException => loadMailetOrMatcher(ms, config)
+      }
+      case Nil => throw new MessagingException("Unable to load mailet/matcher: "+ names)
     }
   }
 
@@ -69,10 +89,10 @@ class MailetMatcherLoader @Inject() (injector: Injector) extends MailetLoader wi
 
     name match {
       case x if (x.indexOf('.') < 1) => {
-        (if (config.isInstanceOf[MatcherConfig]) standardMatcherPackage
-        else standardMailetPackage) + "."+ x
+        (if (config.isInstanceOf[MatcherConfig]) standardMatcherPackages
+        else standardMailetPackages).map(_ + "."+ x)
       }
-      case x => x
+      case x => List(x)
     }
   }
 
