@@ -18,7 +18,7 @@ package org.eknet.publet.james
 
 import com.google.inject._
 import fetchmail.{FetchmailAccountsMBean, FetchmailAccounts, FetchmailScheduler}
-import mailets.{SieveScriptLocator, SimpleMailingListHeaders}
+import mailets.{PubletSieveMailet, MailPoster, SieveScriptLocator, SimpleMailingListHeaders}
 import name.{Named, Names}
 import org.eknet.publet.james.data._
 import guice._
@@ -59,7 +59,7 @@ import org.eknet.publet.vfs.{Path, Resource}
 import org.eknet.publet.vfs.util.SimpleContentResource
 import org.apache.james.fetchmail.FetchScheduler
 import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitConfig}
-import org.apache.jsieve.mailet.ResourceLocator
+import org.apache.jsieve.mailet.{Poster, ResourceLocator}
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -121,6 +121,8 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     //sieve/local delivery
     bind[SieveScriptLocator]
     bind[ResourceLocator].to[SieveScriptLocator]
+    bind[Poster].to[MailPoster]
+    bind[PubletSieveMailet]
 
     //maildir
     bind[MailboxPathLocker].to[JVMMailboxPathLocker] in Scopes.SINGLETON

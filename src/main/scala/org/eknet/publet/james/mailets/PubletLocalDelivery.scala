@@ -30,14 +30,7 @@ import org.apache.james.mailbox.MailboxManager
  * @since 25.12.12 17:48
  */
 @Singleton
-class PubletLocalDelivery @Inject() (locator: ResourceLocator, userRepo: UsersRepository, mboxman: MailboxManager) extends GenericMailet {
-
-  private val sieveMailet = {
-    val sm = new SieveMailet
-    sm.setUsersRepository(userRepo)
-    sm.setMailboxManager(mboxman)
-    sm
-  }
+class PubletLocalDelivery @Inject() (sieveMailet: PubletSieveMailet) extends GenericMailet {
 
   def service(mail: Mail) {
     if (mail.getState != Mail.GHOST) {
@@ -48,10 +41,7 @@ class PubletLocalDelivery @Inject() (locator: ResourceLocator, userRepo: UsersRe
   override def init() {
     super.init()
     sieveMailet.init(extend(Map("addDeliveryHeader" -> "Delivered-To", "resetReturnPath" -> "true")))
-    sieveMailet.setFolder("INBOX")
     sieveMailet.setQuiet(getInitParameter("quiet", true))
-    //override resourcelocator
-    sieveMailet.setLocator(locator)
   }
 
   override def getMailetInfo = "Publet's Local Delivery Mailet"
