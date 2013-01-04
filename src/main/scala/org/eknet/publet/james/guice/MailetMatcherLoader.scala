@@ -34,12 +34,12 @@ class MailetMatcherLoader @Inject() (injector: Injector) extends MailetLoader wi
 
   def getMailet(config: MailetConfig): Mailet = synchronized {
     val name = resolveName(config)
-    wrapException(name, loadMailetOrMatcher[Mailet](name, config))
+    wrapException(name, load[Mailet](name, config))
   }
 
   def getMatcher(config: MatcherConfig):Matcher = synchronized {
     val name = resolveName(config)
-    wrapException(name, loadMailetOrMatcher[Matcher](name, config))
+    wrapException(name, load[Matcher](name, config))
   }
 
   private def wrapException[A](name: AnyRef, body: => A): A = {
@@ -69,12 +69,12 @@ class MailetMatcherLoader @Inject() (injector: Injector) extends MailetLoader wi
    * @tparam A
    * @return
    */
-  private def loadMailetOrMatcher[A: Manifest](names: List[String], config: AnyRef): A = {
+  private def load[A: Manifest](names: List[String], config: AnyRef): A = {
     names match {
       case m::ms => try {
         loadMailetOrMatcher(m, config)
       } catch {
-        case e: ClassNotFoundException => loadMailetOrMatcher(ms, config)
+        case e: ClassNotFoundException => load(ms, config)
       }
       case Nil => throw new MessagingException("Unable to load mailet/matcher: "+ names)
     }
