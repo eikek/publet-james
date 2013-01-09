@@ -167,9 +167,15 @@ object RootBuild extends Build {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     pomIncludeRepository := (_ => false),
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
-    resolvers ++= Seq(Resolvers.eknet, Resolvers.milton),
+    resolvers ++= Seq(Resolvers.eknet, Resolvers.milton, Resolvers.apacheSnapshots),
     licenses := Seq(("ASL2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
-    scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git"))
+    scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git")),
+   
+    // see https://jira.codehaus.org/browse/JETTY-1493
+    ivyXML := <dependency org="org.eclipse.jetty.orbit" name="javax.servlet" rev="3.0.0.v201112011016">
+        <artifact name="javax.servlet" type="orbit" ext="jar"/>
+      </dependency>
+
   )
 
   val deps = Seq(mail, publetAppPlugin, publetQuartzPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
