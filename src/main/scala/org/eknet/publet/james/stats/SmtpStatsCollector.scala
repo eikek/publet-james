@@ -58,7 +58,13 @@ class SmtpStatsCollector extends SmtpStatsService {
   @Subscribe
   def onMail(ev: IncomeMailEvent) {
     import collection.JavaConversions._
-    System.err.println("TO: "+ ev.mail.getRecipients.map(_.toString).mkString("; "))
+    for (addr <- ev.mail.getRecipients) {
+      if (ev.config.getMailetContext.isLocalEmail(addr)) {
+        stats.count(localDelivery)
+      } else {
+        stats.count(remoteDelivery)
+      }
+    }
   }
 
   def clearValues() {
@@ -73,5 +79,6 @@ class SmtpStatsCollector extends SmtpStatsService {
   def getAcceptedMails = stats.getCount(acceptedMails)
   def getUnknownLocalUser = stats.getCount(unknownUser)
   def getRelayDenies = stats.getCount(relayDenied)
-
+  def getLocalDeliveries = stats.getCount(localDelivery)
+  def getRemoteDeliveries = stats.getCount(remoteDelivery)
 }

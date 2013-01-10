@@ -16,6 +16,8 @@ trait SmtpStatsService {
   def getConnectionAttempts: Long
 
   def getAcceptedMails: Long
+  def getLocalDeliveries: Long
+  def getRemoteDeliveries: Long
 
   def getUnknownLocalUser: Long
   def getRelayDenies: Long

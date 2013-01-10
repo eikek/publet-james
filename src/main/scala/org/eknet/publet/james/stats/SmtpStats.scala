@@ -43,6 +43,6 @@ object SmtpStats {
   object Keys extends Enumeration {
     type Key = Value
 
-    val acceptedMails, connections, unknownUser, relayDenied = Value
+    val acceptedMails, connections, unknownUser, relayDenied, localDelivery, remoteDelivery = Value
   }
 }

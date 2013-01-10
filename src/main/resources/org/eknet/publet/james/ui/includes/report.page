@@ -40,13 +40,23 @@ table.table
   tr
     td Failed Logins
     td
-      span.badge.badge-success
+      span.badge.badge-important
         =smtpStats.getFailedLogins
   tr
-    td Accepted
+    td Mails accepted
     td
       span.badge.badge-success
         =smtpStats.getAcceptedMails
+  tr
+    td Remote Deliveries
+    td
+      span.badge.badge-info
+        =smtpStats.getRemoteDeliveries
+  tr
+    td Local Delivieries
+    td
+      span.badge.badge-info
+        =smtpStats.getLocalDeliveries
   tr
     td Unknown Local User
     td
