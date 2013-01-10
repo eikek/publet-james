@@ -100,7 +100,7 @@ class MailPoster @Inject() (userRepo: UsersRepository, mboxman: MailboxManager) 
       if (userRepo.supportVirtualHosting()) uri.getUserInfo+"@"+uri.getHost else uri.getUserInfo
 
     def getDestination(uri: URI, session: MailboxSession) = {
-      if (uri.getPath == null || uri.getPath.isEmpty) {
+      if (uri.getPath == null || uri.getPath == "/" || uri.getPath.isEmpty) {
         "INBOX"
       } else {
         uri.getPath.dropWhile(c => c == '/').replace("/", session.getPathDelimiter.toString)
