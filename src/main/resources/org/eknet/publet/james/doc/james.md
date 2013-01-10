@@ -269,6 +269,19 @@ The `sieveUpdate` permission is checked for any update of a sieve script for a p
 for other actions needed by the widget (like getting a list of all logins).
 
 
+### Statistics
+
+There are basic statistics gathered while james is running. It involves the number of connections
+and the number of failed and successful logins. The data is hold in memory an written to disk periodically.
+
+The data is used to generate a report that can be viewed via a browser. The current report is located at
+
+    /publet/james/report.html
+
+This also lets you configure the time interval on which the statistic are cleared and a report is written.
+Additionally you can specify the number of reports to keep (default is 10). The old reports can be viewed
+with a similiar url: `/publet/james/report1.html` where `1` is the first report (the oldest).
+
 ### Web Interface
 
 The following give a quick view of the two management sites available. In general, every

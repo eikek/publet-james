@@ -54,12 +54,15 @@ import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
 import org.eknet.publet.ext.graphdb.GraphDb
 import org.eknet.publet.auth.store.{PermissionStore, UserStore}
-import org.eknet.publet.james.server.{PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
+import server.{NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.vfs.{Path, Resource}
 import org.eknet.publet.vfs.util.SimpleContentResource
 import org.apache.james.fetchmail.FetchScheduler
 import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitConfig}
 import org.apache.jsieve.mailet.{Poster, ResourceLocator}
+import com.google.common.eventbus.EventBus
+import stats.{LoginStatsService, SmtpStatsService, SmtpStatsCollector, ImapStatsCollector}
+import org.eknet.publet.web.util.PubletWeb
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -109,6 +112,7 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     bind[MailQueueFactory].to[FileMailQFactory] in Scopes.SINGLETON
 
     bind[PubletSmtpServerFactory].asEagerSingleton()
+    bind[SmtpStatsService].to[SmtpStatsCollector].asEagerSingleton()
 
     //mailet container
     bind[MailProcessor].to[CamelCompositeProcessor] in Scopes.SINGLETON
@@ -145,6 +149,7 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     bind[ImapDecoderFactory].to[DefaultImapDecoderFactory] in Scopes.SINGLETON
     bind[ImapEncoderFactory].to[DefaultImapEncoderFactory] in Scopes.SINGLETON
     bind[PubletImapServerFactory].asEagerSingleton()
+    bind[LoginStatsService].annotatedWith(Names.named("imap")).to[ImapStatsCollector].asEagerSingleton()
 
     //pop3
     bind[PubletPop3ServerFactory].asEagerSingleton()
@@ -178,9 +183,10 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
   def createEncode(encfac: ImapEncoderFactory): ImapEncoder = encfac.buildImapEncoder()
 
   @Provides@Singleton
-  def createImapProcessor(boxman: MailboxManager, subman: SubscriptionManager): ImapProcessor = {
+  def createImapProcessor(boxman: MailboxManager, subman: SubscriptionManager, bus: EventBus): ImapProcessor = {
     import collection.JavaConversions._
-    DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
+    val imapproc = DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
+    new NotifyingImapProcessor(bus, imapproc)
   }
 
   val name = "James Mailserver"

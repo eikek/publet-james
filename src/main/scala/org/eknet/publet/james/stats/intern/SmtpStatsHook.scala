@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Eike Kettner
+ * Copyright 2013 Eike Kettner
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.mailets
+package org.eknet.publet.james.stats.intern
 
-import org.apache.mailet.{MailetConfig, Mail}
-import org.eknet.publet.james.JamesEvent
+import org.apache.james.protocols.smtp.hook._
+import org.apache.james.protocols.smtp.SMTPSession
+import com.google.inject.{Inject, Singleton}
+import com.google.common.eventbus.EventBus
 
 /**
- * Event that is sent for incoming mails. These events
- * are triggered by the [[org.eknet.publet.james.mailets.EventBusMailet]].
- *
- * Subscribers can directly hook into the mail system by modifying the
- * the mail.
- *
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 16.12.12 17:06
+ * @since 09.01.13 22:26
  */
-case class IncomeMailEvent(mail: Mail, config: MailetConfig) extends JamesEvent
+@Singleton
+class SmtpStatsHook @Inject() (bus: EventBus) extends HookResultHook {
+
+  def onHookResult(session: SMTPSession, result: HookResult, execTime: Long, hook: Hook) = {
+    bus.post(new SmtpHookEvent(session, result, execTime, hook))
+    result
+  }
+
+}
+

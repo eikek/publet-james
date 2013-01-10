@@ -51,4 +51,7 @@ object Permissions {
   def sieveUpdate(login: String) = "james:sieve:update:"+ login
   def sieveGet(login: String) = "james:sieve:get:"+ login
   val sieveManage = "james:sieve:manage"
+
+  val reportView = "james:report:view"
+
 }

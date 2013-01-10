@@ -15,7 +15,7 @@ class PubletImapServerFactory @Inject() (fs: FileSystem) extends IMAPServerFacto
   import collection.JavaConversions._
 
   override def createServers(log: Logger, config: HierarchicalConfiguration) = {
-    val configs = config.configurationsAt("imapserver").toSeq.asInstanceOf[Seq[HierarchicalConfiguration]]
+    val configs = config.configurationsAt("imapserver").toSeq
     createCertificate(configs, fs)
     super.createServers(log, config)
   }
