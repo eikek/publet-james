@@ -76,7 +76,11 @@ class FileSpool(dir: File, sync:Boolean) extends Logging {
     //takes the last two characters of the uuid to create directory for distributing files
     //this is actually coded against the mail.name impl, needs review if new version of james
     //is used. It must always be two random characters that can be obtained from the mail name.
-    private val num = name.reverse.take(2)
+    private val num = MailFile.findUUID(name).map(_.take(2)).getOrElse {
+      warn("No UUID found in mail name: "+ name)
+      name.take(2)
+    }
+
     val mailFile = MailFile(new File(new File(dir, num), name))
   }
 
@@ -144,7 +148,14 @@ class FileSpool(dir: File, sync:Boolean) extends Logging {
     def toHandle = MailHandle(key, read)
   }
   object MailFile {
+    private val UuidRegex = ".*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}).*".r
+    def findUUID(name: String) = name match {
+      case UuidRegex(uuid) => Some(uuid)
+      case _ => None
+    }
+
     def filter(file: File) = file.getName.endsWith(".obj")
+
     val fileFilter = new FileFilter {
       def accept(pathname: File) = filter(pathname)
     }
