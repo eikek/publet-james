@@ -156,14 +156,16 @@ that is needed is an appropriate scala class in `/main/.allIncludes/startup/` fo
 
 ## Manage
 
-The mail servers can be managed via a provided web interface. There are two templates
+The mail servers can be managed via a provided web interface. There are three templates
 
-* `/publet/james/manage.html` and
-* `/publet/james/mailsettings.html`
+* `/publet/james/manage.html`
+* `/publet/james/mailsettings.html` and
+* `/publet/james/report.html`
 
 The first one is intended for the admin users as it exposes all available settings. The
-second one includes a widget for managing aliases for the current user and his fetchmail
-accounts.
+second one includes a widget for managing aliases for the current user his fetchmail
+accounts and other user specific things. The third one shows a report of james with some
+numbers (like number of failed vs successful logins etc).
 
 If you look at the source of the templates (just use the extension `page`), you'll see that
 all widgets are provided by JQuery plugins. That makes it very easy to create your own
