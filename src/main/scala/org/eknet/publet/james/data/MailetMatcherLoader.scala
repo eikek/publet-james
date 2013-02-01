@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.guice
+package org.eknet.publet.james.data
 
 import org.apache.james.mailetcontainer.api.{MatcherLoader, MailetLoader}
 import org.apache.mailet.{Matcher, Mailet, MailetConfig, MatcherConfig}

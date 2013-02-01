@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.guice
+package org.eknet.publet.james.data
 
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader
 import org.apache.commons.configuration.Configuration
