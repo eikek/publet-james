@@ -61,8 +61,7 @@ import org.apache.james.fetchmail.FetchScheduler
 import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitConfig}
 import org.apache.jsieve.mailet.{Poster, ResourceLocator}
 import com.google.common.eventbus.EventBus
-import stats.{LoginStatsService, SmtpStatsService, SmtpStatsCollector, ImapStatsCollector}
-import org.eknet.publet.web.util.PubletWeb
+import stats._
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -153,6 +152,7 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
 
     //pop3
     bind[PubletPop3ServerFactory].asEagerSingleton()
+    bind[LoginStatsService].annotatedWith(Names.named("pop3")).to[Pop3StatsCollector].asEagerSingleton()
 
     //fetchmail
     bind[FetchScheduler].asEagerSingleton()

@@ -12,6 +12,7 @@ title: James Report
 - Security.checkPerm(Permissions.reportView)
 - val smtpStats = PubletWeb.instance[SmtpStatsService].get
 - val imapStats = PubletWeb.instance[LoginStatsService].named("imap")
+- val pop3Stats = PubletWeb.instance[LoginStatsService].named("pop3")
 - def formatDate(d: Date) = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, PubletWebContext.getLocale).format(d)
 
 .page-header
@@ -109,3 +110,44 @@ table.table
       td
         span.badge.badge-important
           =imapStats.getFailedLogins(user)
+
+h3 POP3
+
+h4 Overall
+
+table.table
+  tr
+    th Since
+    th = formatDate(pop3Stats.getSince)
+  tr
+    td Connections
+    td
+      span.badge.badge-info
+        =pop3Stats.getSuccessfulLogins + pop3Stats.getFailedLogins
+  tr
+    td Successful Logins
+    td
+      span.badge.badge-success
+        =pop3Stats.getSuccessfulLogins
+  tr
+    td Failed Logins
+    td
+      span.badge.badge-success
+        =pop3Stats.getFailedLogins
+
+h4 By User
+
+table.table
+  tr
+    th Username
+    th Success
+    th Failed
+  - for (user <- pop3Stats.getUsernames)
+    tr
+      td =user
+      td
+        span.badge.badge-success
+          =pop3Stats.getSuccessfulLogins(user)
+      td
+        span.badge.badge-important
+          =pop3Stats.getFailedLogins(user)
