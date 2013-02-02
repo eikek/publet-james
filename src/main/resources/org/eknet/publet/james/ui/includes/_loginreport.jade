@@ -44,9 +44,9 @@ table.table
   - for (user <- stats.getUsernames)
     tr
       td =user
-    td
-      span.badge.badge-success
-        =stats.getSuccessfulLogins(user)
-    td
-      span.badge.badge-important
-        =stats.getFailedLogins(user)
+      td
+        span.badge.badge-success
+          =stats.getSuccessfulLogins(user)
+      td
+        span.badge.badge-important
+          =stats.getFailedLogins(user)
