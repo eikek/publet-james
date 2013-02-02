@@ -21,11 +21,16 @@ There are 3 server threads started by default providing the following services
 
 By default, all services are configured to run over SSL (imap and pop3) or
 use StartTLS (smtp). The certificate is looked up from the keystore `etc/keystore.ks`
-and if that does not exist, a default self-signed certificate is created. The
-ports are the standard ports with an offset of `9000`, because on linux systems
-users other than root are not allowed to bind ports below `1024`. The tool `iptables`
-or something similiar can be used to forward traffic from the standard ports to those.
+and if that does not exist, a default self-signed certificate is created.
 
+The ports are the standard ports with an offset of `9000`, because on linux systems
+users other than root are not allowed to bind ports below `1024`. The tool `iptables`
+or something similiar can be used to forward traffic from the standard ports to those:
+
+    iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 25 -j REDIRECT --to-port 9025
+
+I found it easier while testing, because when removing this rule I can safely test on
+the local port without outside access.
 
 #### Users
 
@@ -93,7 +98,7 @@ web interface. It aims to be more easy to use, but lacks some of the features co
 to James' "native" scheduler.
 
 The configuration is divided into two parts: First, regular user can manage their accounts
-via the web. All those account are processed by one job that is executed repeatedly. The
+via the web. All those account are processed by one job that is executed periodically. The
 admin user can edit the interval of this job, as well as starting or stopping it. The user
 can configure for each of his accounts, at which multiple of the run it should be processed.
 For example, on every run or on every second run etc.
@@ -280,9 +285,19 @@ The data is used to generate a report that can be viewed via a browser. The curr
 
     /publet/james/report.html
 
-This also lets you configure the time interval on which the statistic are cleared and a report is written.
-Additionally you can specify the number of reports to keep (default is 10). The old reports can be viewed
-with a similiar url: `/publet/james/report1.html` where `1` is the first report (the oldest).
+How many reports are kept and how often it is written can be specified in [settings.properties](../../configuration.html#Settings) file:
+
+    james.report.keep=10
+    james.report.cronTrigger=0 0 4 * * ?
+    james.report.enabled=true
+
+The first value specifies how many reports to keep in the file system. The second value is a
+[cron expression](http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-06)
+specifying the time the report is generated. If a report is written to disk, the statistics are reset.
+The default value would generate a report every day at 4:00 am. The third option can be used to completely
+disable report writing. Statistics are then gathered but never reset (this is still possible via the
+registered mbean).
+
 
 ### Web Interface
 

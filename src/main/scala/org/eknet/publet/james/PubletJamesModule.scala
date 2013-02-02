@@ -62,6 +62,8 @@ import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitC
 import org.apache.jsieve.mailet.{Poster, ResourceLocator}
 import com.google.common.eventbus.EventBus
 import stats._
+import org.eknet.publet.web.Config
+import org.eknet.publet.vfs.fs.FilesystemPartition
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -162,6 +164,8 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     //simple mailing list headers
     bind[SimpleMailingListHeaders].asEagerSingleton()
 
+    bind[ReportJobMBean].to[ReportJobScheduler].asEagerSingleton()
+
     ///test
     bind[TestUserStore]
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
@@ -173,6 +177,13 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
   @Provides@Singleton@Named("james-sieve-scripts")
   def createSievePartition(gpman: GitPartMan): GitPartition =
     gpman.getOrCreate(Path("james-sieve-scripts"), GitConfig())
+
+  // report partition
+  @Provides@Singleton@Named("james-reports")
+  def createReportPartition(config: Config, bus: EventBus): FilesystemPartition  = {
+    val reportDir = config.workDir("james-reports")
+    new FilesystemPartition(reportDir, bus, createDir = true)
+  }
 
   //imap
 

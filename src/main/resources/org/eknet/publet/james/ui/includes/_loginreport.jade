@@ -3,7 +3,12 @@
 - import java.util.Date
 -@ val stats: LoginStatsService
 -@ val header: String
-- def formatDate(d: Date) = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, PubletWebContext.getLocale).format(d)
+-@ val locale : java.util.Locale
+-
+  def formatDate(d: Date) = {
+    DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, locale).format(d)
+  }
+
 
 h3 #{header}
 

@@ -1,0 +1,71 @@
+- import org.eknet.publet.james.stats.SmtpStatsService
+- import org.eknet.publet.james.stats.LoginStatsService
+- import java.text.DateFormat
+- import java.util.Date
+
+-@ val smtpStats: SmtpStatsService
+-@ val imapStats: LoginStatsService
+-@ val pop3Stats: LoginStatsService
+-@ val locale : java.util.Locale
+-@ val showHeader: Boolean = true
+- val now = new Date()
+- def formatDate(d: Date) = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, locale).format(d)
+
+- if (showHeader)
+  .page-header
+    h1
+      | James Report
+      small =formatDate(now)
+h3 SMTP
+table.table
+  tr
+    th Since
+    th = formatDate(smtpStats.getSince)
+  tr
+    td Connections
+    td
+      span.badge.badge-info
+        =smtpStats.getConnectionAttempts
+  tr
+    td Successful Logins
+    td
+      span.badge.badge-success
+        =smtpStats.getSuccessfulLogins
+  tr
+    td Failed Logins
+    td
+      span.badge.badge-important
+        =smtpStats.getFailedLogins
+  tr
+    td Mails accepted
+    td
+      span.badge.badge-success
+        =smtpStats.getAcceptedMails
+  tr
+    td Remote Deliveries
+    td
+      span.badge.badge-info
+        =smtpStats.getRemoteDeliveries
+  tr
+    td Local Delivieries
+    td
+      span.badge.badge-info
+        =smtpStats.getLocalDeliveries
+  tr
+    td Unknown Local User
+    td
+      span.badge.badge-important
+        =smtpStats.getUnknownLocalUser
+  tr
+    td Relay Denies
+    td
+      span.badge.badge-important
+        =smtpStats.getRelayDenies
+
+- setAttribute("header", Some("IMAP"))
+- setAttribute("stats", Some(imapStats))
+- include("_loginreport.jade")
+
+- setAttribute("header", Some("POP3"))
+- setAttribute("stats", Some(pop3Stats))
+- include("_loginreport.jade")

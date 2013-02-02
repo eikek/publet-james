@@ -19,4 +19,6 @@ trait LoginStatsService {
   def getFailedLogins: Long
 
   def getSince: Date
+
+  def reset()
 }

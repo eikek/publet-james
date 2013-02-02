@@ -35,7 +35,6 @@ class Pop3StatsCollector extends LoginStatsService with Logging {
 
   @Subscribe
   def onPop3Response(ev: Pop3HandlerEvent) {
-    info(">>>>>> event: "+ ev)
     ev.handler match {
       case ph: PassCmdHandler => {
         val success = ev.response.getRetCode == POP3Response.OK_RESPONSE
@@ -51,4 +50,7 @@ class Pop3StatsCollector extends LoginStatsService with Logging {
   def getUsernames = stats.getAllUsers.toArray
   def getSuccessfulLogins = stats.getSuccessfulLogins
   def getFailedLogins = stats.getFailedLoginAttempts
+  def reset() {
+    stats.reset()
+  }
 }
