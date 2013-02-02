@@ -1,0 +1,47 @@
+- import org.eknet.publet.james.stats.LoginStatsService
+- import java.text.DateFormat
+- import java.util.Date
+-@ val stats: LoginStatsService
+-@ val header: String
+- def formatDate(d: Date) = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, PubletWebContext.getLocale).format(d)
+
+h3 #{header}
+
+h4 Overall
+
+table.table
+  tr
+    th Since
+    th = formatDate(stats.getSince)
+  tr
+    td Connections
+    td
+      span.badge.badge-info
+        =stats.getSuccessfulLogins + stats.getFailedLogins
+  tr
+    td Successful Logins
+    td
+      span.badge.badge-success
+        =stats.getSuccessfulLogins
+  tr
+    td Failed Logins
+    td
+      span.badge.badge-success
+        =stats.getFailedLogins
+
+h4 By User
+
+table.table
+  tr
+    th Username
+    th Success
+    th Failed
+  - for (user <- stats.getUsernames)
+    tr
+      td =user
+    td
+      span.badge.badge-success
+        =stats.getSuccessfulLogins(user)
+    td
+      span.badge.badge-important
+        =stats.getFailedLogins(user)

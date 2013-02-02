@@ -70,84 +70,10 @@ table.table
         =smtpStats.getRelayDenies
 
 
-h3 IMAP
+- setAttribute("header", Some("IMAP"))
+- setAttribute("stats", Some(imapStats))
+- include("_loginreport.jade")
 
-h4 Overall
-
-table.table
-  tr
-    th Since
-    th = formatDate(imapStats.getSince)
-  tr
-    td Connections
-    td
-      span.badge.badge-info
-        =imapStats.getSuccessfulLogins + imapStats.getFailedLogins
-  tr
-    td Successful Logins
-    td
-      span.badge.badge-success
-        =imapStats.getSuccessfulLogins
-  tr
-    td Failed Logins
-    td
-      span.badge.badge-success
-        =imapStats.getFailedLogins
-
-h4 By User
-
-table.table
-  tr
-    th Username
-    th Success
-    th Failed
-  - for (user <- imapStats.getUsernames)
-    tr
-      td =user
-      td
-        span.badge.badge-success
-          =imapStats.getSuccessfulLogins(user)
-      td
-        span.badge.badge-important
-          =imapStats.getFailedLogins(user)
-
-h3 POP3
-
-h4 Overall
-
-table.table
-  tr
-    th Since
-    th = formatDate(pop3Stats.getSince)
-  tr
-    td Connections
-    td
-      span.badge.badge-info
-        =pop3Stats.getSuccessfulLogins + pop3Stats.getFailedLogins
-  tr
-    td Successful Logins
-    td
-      span.badge.badge-success
-        =pop3Stats.getSuccessfulLogins
-  tr
-    td Failed Logins
-    td
-      span.badge.badge-success
-        =pop3Stats.getFailedLogins
-
-h4 By User
-
-table.table
-  tr
-    th Username
-    th Success
-    th Failed
-  - for (user <- pop3Stats.getUsernames)
-    tr
-      td =user
-      td
-        span.badge.badge-success
-          =pop3Stats.getSuccessfulLogins(user)
-      td
-        span.badge.badge-important
-          =pop3Stats.getFailedLogins(user)
+- setAttribute("header", Some("POP3"))
+- setAttribute("stats", Some(pop3Stats))
+- include("_loginreport.jade")
