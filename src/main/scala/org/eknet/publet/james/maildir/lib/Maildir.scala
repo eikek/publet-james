@@ -165,7 +165,8 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     tmpmsgFile.moveTo(target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.COPY_ATTRIBUTES)
 
     //update uid list
-    uidlist.addMessage(msgName)
+    val uid = uidlist.addMessage(msgName)
+    MessageFile(uid, msgName, target)
   }
 
   private def findMessageFile(name: MessageName) = {
@@ -183,7 +184,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
           case Some(f) => {
             f.delete()
             uidlist.removeMessage(uid)
-            f
+            MessageFile(uid, mn, f)
           }
           case None => ioError("Unable to find file for message '"+mn+"' with uid: "+ uid)
         }
@@ -191,33 +192,29 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     }
   }
 
-  def getMessage(uid: Long) = {
+  def getMessage(uid: Long): MessageFile = {
     uidlist.findMessageName(uid) match {
       case None => ioError("Cannot find message for uid "+ uid)
       case Some(mn) => {
         findMessageFile(mn) match {
           case None => ioError("Unable to find file for message '"+mn+"' with uid: "+ uid)
-          case Some(f) => f
+          case Some(f) => MessageFile(uid, mn, f)
         }
       }
     }
   }
 
-  def getMessages(range: UidRange) = {
+  def getMessages(range: UidRange): Map[Long, MessageFile] = {
     val set = range match {
       case UidRange.Interval(a, b) => (a, b)
       case UidRange.From(a) => (a, Long.MaxValue)
       case UidRange.Until(b) => (Long.MinValue, b)
     }
     uidlist.getMessageNames(set._1, set._2)
-      .map(t => (t._1, (t._2, findMessageFile(t._2).get)))
+      .map(t => t._1 -> MessageFile(t._1, t._2, findMessageFile(t._2).get))
   }
 
   def lastModified = scala.math.max(curDir.lastModifiedTime.toMillis, newDir.lastModifiedTime.toMillis)
 }
 
 case class Options(mailboxDelimiter: Char = '.', uiddbProvider: UidDbProvider = TextFileUidDb)
-
-object Maildir {
-
-}

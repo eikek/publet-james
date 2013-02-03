@@ -30,7 +30,7 @@ import java.nio.file.Path
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 10.01.13 20:40
  */
-case class MessageName(time: Long, unique: String, host: String, attributes: Map[String, String] = Map(), flags: Set[String] = Set()) {
+final case class MessageName(time: Long, unique: String, host: String, attributes: Map[String, String] = Map(), flags: Set[String] = Set()) {
 
   lazy val baseName = {
     val buf = new StringBuilder
