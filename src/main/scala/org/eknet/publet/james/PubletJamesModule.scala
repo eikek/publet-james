@@ -85,11 +85,11 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
       doc("doc/james-sn5.png"),
       doc("doc/james-sn6.png"),
       doc("doc/james-sn7.png"),
-      doc("config/domainlist.conf"),
-      doc("config/imapserver.conf"),
-      doc("config/pop3server.conf"),
-      doc("config/smtpserver.conf"),
-      doc("config/mailetcontainer.conf"))
+      doc("config/domainlist.xml"),
+      doc("config/imapserver.xml"),
+      doc("config/pop3server.xml"),
+      doc("config/smtpserver.xml"),
+      doc("config/mailetcontainer.xml"))
     )
 
     bind[Setup].asEagerSingleton()

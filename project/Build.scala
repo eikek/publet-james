@@ -133,6 +133,19 @@ object RootBuild extends Build {
   ) dependsOn (root)
 
   val exludedFiles = Set(
+    "guava-13.0.jar",
+    "junit-4.11.jar",
+    "geronimo-activation_1.1_spec-1.1.jar",
+    "geronimo-annotation_1.1_spec-1.0.1.jar",
+//    "commons-codec-1.7.jar",
+    "httpclient-cache-4.2.2.jar",
+    "httpclient-osgi-4.2.2.jar",
+    "httpclient-4.2.2.jar",
+    "httpcore-4.2.2.jar",
+    "fluent-hc-4.2.2.jar",
+    "httpmime-4.2.2.jar",
+    "javax.servlet-3.0.0.v201112011016.jar",
+    "hamcrest-core-1.3.jar",
     "commons-codec-1.5.jar",
     "commons-collections-3.2.1.jar",
     "commons-httpclient-3.0.1.jar",

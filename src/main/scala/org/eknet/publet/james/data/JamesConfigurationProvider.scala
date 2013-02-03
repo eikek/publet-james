@@ -62,7 +62,7 @@ import java.util.concurrent.ConcurrentHashMap
 @Singleton
 class JamesConfigurationProvider @Inject() (filesystem: FileSystem, conf: Config) extends ConfigurationProvider with Logging {
 
-  private val configFileSuffix = ".conf"
+  private val configFileSuffix = ".xml"
   private val _configs = new ConcurrentHashMap[String, Supplier[HierarchicalConfiguration]]()
 
   val configMappings = Map(
