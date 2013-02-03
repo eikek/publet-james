@@ -33,7 +33,7 @@ class SmtpStats {
 
   def clear() {
     counters.clear()
-    loginStats.clear()
+    loginStats.reset()
     created.set(System.currentTimeMillis())
   }
 }

@@ -1,6 +1,5 @@
 package org.eknet.publet.james.server
 
-import com.google.inject.{Inject, Singleton}
 import com.google.common.eventbus.EventBus
 import org.apache.james.imap.api.process.{ImapSession, ImapProcessor}
 import org.apache.james.imap.api.ImapMessage

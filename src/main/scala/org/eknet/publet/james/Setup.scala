@@ -30,13 +30,15 @@ import org.eknet.publet.web.guice.PubletStartedEvent
 import org.eknet.publet.gitr.partition.GitPartition
 import com.google.inject.name.Named
 import org.eknet.publet.webeditor.Assets
+import org.eknet.publet.web.Config
+import org.eknet.publet.vfs.fs.FilesystemPartition
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 01.11.12 12:10
  */
 @Singleton
-class Setup @Inject() (publet: Publet, assetMgr: AssetManager, @Named("james-sieve-scripts") gp: GitPartition) {
+class Setup @Inject() (@Named("james-reports") reportPart: FilesystemPartition, publet: Publet, assetMgr: AssetManager, @Named("james-sieve-scripts") gp: GitPartition) {
 
   @Subscribe
   def mountResources(event: PubletStartedEvent) {
@@ -57,6 +59,9 @@ class Setup @Inject() (publet: Publet, assetMgr: AssetManager, @Named("james-sie
 
     //mount partition for sieve scripts
     publet.mountManager.mount(Path("/publet/james/sieve"), gp)
+
+    //partition for reports
+    publet.mountManager.mount(Path("/publet/james/reports"), reportPart)
   }
 
   @Subscribe

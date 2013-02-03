@@ -50,7 +50,7 @@ class LoginStats {
     succesCounter.keySet().toSet ++ failedCounter.keys().toSet
   }
 
-  def clear() {
+  def reset() {
     succesCounter.clear()
     failedCounter.clear()
     created.set(System.currentTimeMillis())

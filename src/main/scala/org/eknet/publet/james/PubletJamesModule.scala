@@ -61,8 +61,9 @@ import org.apache.james.fetchmail.FetchScheduler
 import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitConfig}
 import org.apache.jsieve.mailet.{Poster, ResourceLocator}
 import com.google.common.eventbus.EventBus
-import stats.{LoginStatsService, SmtpStatsService, SmtpStatsCollector, ImapStatsCollector}
-import org.eknet.publet.web.util.PubletWeb
+import stats._
+import org.eknet.publet.web.Config
+import org.eknet.publet.vfs.fs.FilesystemPartition
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -84,11 +85,11 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
       doc("doc/james-sn5.png"),
       doc("doc/james-sn6.png"),
       doc("doc/james-sn7.png"),
-      doc("config/domainlist.conf"),
-      doc("config/imapserver.conf"),
-      doc("config/pop3server.conf"),
-      doc("config/smtpserver.conf"),
-      doc("config/mailetcontainer.conf"))
+      doc("config/domainlist.xml"),
+      doc("config/imapserver.xml"),
+      doc("config/pop3server.xml"),
+      doc("config/smtpserver.xml"),
+      doc("config/mailetcontainer.xml"))
     )
 
     bind[Setup].asEagerSingleton()
@@ -153,6 +154,7 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
 
     //pop3
     bind[PubletPop3ServerFactory].asEagerSingleton()
+    bind[LoginStatsService].annotatedWith(Names.named("pop3")).to[Pop3StatsCollector].asEagerSingleton()
 
     //fetchmail
     bind[FetchScheduler].asEagerSingleton()
@@ -161,6 +163,8 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
 
     //simple mailing list headers
     bind[SimpleMailingListHeaders].asEagerSingleton()
+
+    bind[ReportJobMBean].to[ReportJobScheduler].asEagerSingleton()
 
     ///test
     bind[TestUserStore]
@@ -173,6 +177,13 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
   @Provides@Singleton@Named("james-sieve-scripts")
   def createSievePartition(gpman: GitPartMan): GitPartition =
     gpman.getOrCreate(Path("james-sieve-scripts"), GitConfig())
+
+  // report partition
+  @Provides@Singleton@Named("james-reports")
+  def createReportPartition(config: Config, bus: EventBus): FilesystemPartition  = {
+    val reportDir = config.workDir("james-reports")
+    new FilesystemPartition(reportDir, bus, createDir = true)
+  }
 
   //imap
 

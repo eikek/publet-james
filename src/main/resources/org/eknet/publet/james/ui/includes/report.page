@@ -3,109 +3,36 @@ title: James Report
 
 --- name:content pipeline:jade
 
-- import org.eknet.publet.james.Permissions
 - import org.eknet.publet.james.stats.SmtpStatsService
 - import org.eknet.publet.james.stats.LoginStatsService
-- import java.text.DateFormat
+- import org.eknet.publet.james.stats.ReportWriter
+- import org.eknet.publet.james.Permissions
 - import java.util.Date
-
+- import java.text.DateFormat
 - Security.checkPerm(Permissions.reportView)
 - val smtpStats = PubletWeb.instance[SmtpStatsService].get
 - val imapStats = PubletWeb.instance[LoginStatsService].named("imap")
-- def formatDate(d: Date) = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, PubletWebContext.getLocale).format(d)
+- val pop3Stats = PubletWeb.instance[LoginStatsService].named("pop3")
+- val writer = PubletWeb.instance[ReportWriter].get
+- val now = new Date()
+- def formatDate(d: Date) = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, locale).format(d)
 
 .page-header
-  h1 James Report
+  h1
+    | James Report
+    small =formatDate(now)
+  .btn-group.pull-right
+    a.btn.dropdown-toggle(data-toggle="dropdown" href="#")
+      | Report List
+      span.caret
+    ul.dropdown-menu
+      - for (r <- writer.listReports.reverse)
+        li
+          a(href={"reports/" + r.name.withExtension("html").fullName}) #{r.name.name}
 
-p.alert.alert-info
-  | Report Date:
-  =formatDate(new Date())
-
-h3 SMTP
-
-table.table
-  tr
-    th Since
-    th = formatDate(smtpStats.getSince)
-  tr
-    td Connections
-    td
-      span.badge.badge-info
-        =smtpStats.getConnectionAttempts
-  tr
-    td Successful Logins
-    td
-      span.badge.badge-success
-        =smtpStats.getSuccessfulLogins
-  tr
-    td Failed Logins
-    td
-      span.badge.badge-important
-        =smtpStats.getFailedLogins
-  tr
-    td Mails accepted
-    td
-      span.badge.badge-success
-        =smtpStats.getAcceptedMails
-  tr
-    td Remote Deliveries
-    td
-      span.badge.badge-info
-        =smtpStats.getRemoteDeliveries
-  tr
-    td Local Delivieries
-    td
-      span.badge.badge-info
-        =smtpStats.getLocalDeliveries
-  tr
-    td Unknown Local User
-    td
-      span.badge.badge-important
-        =smtpStats.getUnknownLocalUser
-  tr
-    td Relay Denies
-    td
-      span.badge.badge-important
-        =smtpStats.getRelayDenies
-
-
-h3 IMAP
-
-h4 Overall
-
-table.table
-  tr
-    th Since
-    th = formatDate(imapStats.getSince)
-  tr
-    td Connections
-    td
-      span.badge.badge-info
-        =imapStats.getSuccessfulLogins + imapStats.getFailedLogins
-  tr
-    td Successful Logins
-    td
-      span.badge.badge-success
-        =imapStats.getSuccessfulLogins
-  tr
-    td Failed Logins
-    td
-      span.badge.badge-success
-        =imapStats.getFailedLogins
-
-h4 By User
-
-table.table
-  tr
-    th Username
-    th Success
-    th Failed
-  - for (user <- imapStats.getUsernames)
-    tr
-      td =user
-      td
-        span.badge.badge-success
-          =imapStats.getSuccessfulLogins(user)
-      td
-        span.badge.badge-important
-          =imapStats.getFailedLogins(user)
+- setAttribute("locale", Some(PubletWebContext.getLocale))
+- setAttribute("smtpStats", Some(smtpStats))
+- setAttribute("imapStats", Some(imapStats))
+- setAttribute("pop3Stats", Some(pop3Stats))
+- setAttribute("showHeader", Some(false))
+=include("_report.jade")

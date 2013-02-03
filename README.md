@@ -20,11 +20,16 @@ There are 3 server threads started by default providing the following services
 
 By default, all services are configured to run over SSL (imap and pop3) or
 use StartTLS (smtp). The certificate is looked up from the keystore `etc/keystore.ks`
-and if that does not exist, a default self-signed certificate is created. The
-ports are the standard ports with an offset of `9000`, because on linux systems
-users other than root are not allowed to bind ports below `1024`. The tool `iptables`
-or something similiar can be used to forward traffic from the standard ports to those.
+and if that does not exist, a default self-signed certificate is created.
 
+The ports are the standard ports with an offset of `9000`, because on linux systems
+users other than root are not allowed to bind ports below `1024`. The tool `iptables`
+or something similiar can be used to forward traffic from the standard ports to those:
+
+    iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 25 -j REDIRECT --to-port 9025
+
+I found it easier while testing, because when removing this rule I can safely test on
+the local port without outside access.
 
 #### Users
 
@@ -92,7 +97,7 @@ web interface. It aims to be more easy to use, but lacks some of the features co
 to James' "native" scheduler.
 
 The configuration is divided into two parts: First, regular user can manage their accounts
-via the web. All those account are processed by one job that is executed repeatedly. The
+via the web. All those account are processed by one job that is executed periodically. The
 admin user can edit the interval of this job, as well as starting or stopping it. The user
 can configure for each of his accounts, at which multiple of the run it should be processed.
 For example, on every run or on every second run etc.
@@ -153,6 +158,21 @@ means the dependencies of each mailet (and matcher) are automatically injected.
 For example, you can now add scala classes to the `startup` folder and subscribe to
 `IncomeMailEvent`s to react on any incoming mails without touching any code. All
 that is needed is an appropriate scala class in `/main/.allIncludes/startup/` folder.
+
+#### SimpleMailingListHeaders
+
+Using the recipient rewrite table feature of James, you can easily forward mails to one
+address to many recipients. This can be used to create simple small mailing lists,
+since mails are delivered to remote and local recipients. The mailet `SimpleMailingListHeaders`
+now can add the appropriate headers to such mails.
+
+If you have declared such a mailing list mapping in the virtual address table, just add
+the address to your `settings.properties`:
+
+    james.mailing-lists=mylist@mydomain.com
+
+Any mail to this address is now enhanced with some more headers identifying this mail
+as a mailing list mail.
 
 ## Manage
 

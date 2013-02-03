@@ -61,4 +61,7 @@ class ImapStatsCollector extends LoginStatsService {
   def getUsernames = stats.getAllUsers.toArray
   def getSuccessfulLogins = stats.getSuccessfulLogins
   def getFailedLogins = stats.getFailedLoginAttempts
+  def reset() {
+    stats.reset()
+  }
 }

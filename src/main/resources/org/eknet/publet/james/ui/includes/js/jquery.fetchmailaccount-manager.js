@@ -190,8 +190,8 @@
       $this.html(Mustache.render(addFormTemplate, formView));
       $this.append(Mustache.render(listFormTemplate, settings));
       var table = $('<div/>', {
-        class: 'resultTable',
-        html: Mustache.render(tableTemplate, {})
+        "class": 'resultTable',
+        "html": Mustache.render(tableTemplate, {})
       });
       $this.append(table);
       addHandlers($this, settings);
