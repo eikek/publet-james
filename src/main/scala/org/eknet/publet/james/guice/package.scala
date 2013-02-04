@@ -17,12 +17,13 @@
 package org.eknet.publet.james
 
 import com.google.inject.{Inject, Singleton}
-import com.google.inject.name.Named
-import org.apache.james.mailbox.{MailboxSessionIdGenerator, MailboxPathLocker}
-import org.apache.james.mailbox.maildir.{MaildirMailboxSessionMapperFactory, MaildirStore}
-import org.apache.james.mailbox.store.{StoreSubscriptionManager, StoreMailboxManager, Authenticator}
-import org.apache.james.mailbox.acl.{GroupMembershipResolver, MailboxACLResolver}
+import maildir.lib.PathLock
+import maildir.{MaildirStore, MaildirSessionMapperFactory}
 import org.eknet.publet.web.Config
+import java.nio.file.Path
+import org.apache.james.mailbox.store.{StoreSubscriptionManager, StoreMailboxManager, Authenticator, MailboxSessionMapperFactory}
+import org.apache.james.mailbox.acl.{MailboxACLResolver, GroupMembershipResolver}
+import org.apache.james.mailbox.{MailboxSessionIdGenerator, MailboxPathLocker}
 
 /**
  *
@@ -33,19 +34,15 @@ package object guice {
 
   @Singleton
   class GMaildirStore @Inject()
-    (config: Config, locker: MailboxPathLocker) extends MaildirStore(config.workDir("james/inboxes/%user").getAbsolutePath, locker)
+    (config: Config, locker: PathLock[Path]) extends MaildirStore(config.workDir("james/inboxes/%user").getAbsolutePath, locker)
 
   @Singleton
-  class GMaildirMailboxSessionMapperFactory @Inject()
-    (maildirStore: GMaildirStore) extends MaildirMailboxSessionMapperFactory(maildirStore)
-
-  @Singleton
-  class GStoreMailboxManager @Inject() (fac: MaildirMailboxSessionMapperFactory,
+  class GStoreMailboxManager @Inject() (fac: MaildirSessionMapperFactory,
           auth: Authenticator,
           locker:MailboxPathLocker,
           acl:MailboxACLResolver,
           group:GroupMembershipResolver,
-          idgen: MailboxSessionIdGenerator) extends StoreMailboxManager(fac, auth, locker, acl, group) {
+          idgen: MailboxSessionIdGenerator) extends StoreMailboxManager[Int](fac, auth, locker, acl, group) {
 
     setMailboxSessionIdGenerator(idgen)
     //misses @PostConstruct annotation
@@ -53,5 +50,5 @@ package object guice {
   }
 
   @Singleton
-  class GStoreSubscriptionManager @Inject() (fac: MaildirMailboxSessionMapperFactory) extends StoreSubscriptionManager(fac)
+  class GStoreSubscriptionManager @Inject() (fac: MaildirSessionMapperFactory) extends StoreSubscriptionManager(fac)
 }

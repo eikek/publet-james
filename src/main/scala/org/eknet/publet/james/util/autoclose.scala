@@ -14,22 +14,31 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.maildir
+package org.eknet.publet.james.util
 
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory
-import org.apache.james.mailbox.MailboxSession
-import com.google.inject.{Inject, Singleton}
+import java.io.IOException
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
- * @since 13.01.13 00:35
+ * @since 04.02.13 20:11
  */
-@Singleton
-class MaildirSessionMapperFactory @Inject() (store: MaildirStore) extends MailboxSessionMapperFactory[Int] {
+object autoclose {
 
-  def createMessageMapper(session: MailboxSession) = new MaildirMessageMapper(store, session)
+  class RicherClosable(val ac: AutoCloseable) {
 
-  def createMailboxMapper(session: MailboxSession) = new MaildirMailboxMapper(session, store)
+    def exec[A](body: => A): A = {
+      try {
+        body
+      } finally {
+        try {
+          ac.close()
+        } catch {
+          case e: IOException =>
+        }
+      }
+    }
+  }
 
-  def createSubscriptionMapper(session: MailboxSession) = new MaildirSubscriptionMapper(store)
+  implicit def enrichtClosable(ac: AutoCloseable) = new RicherClosable(ac)
+  implicit def unrichClosable(rc: RicherClosable) = rc.ac
 }

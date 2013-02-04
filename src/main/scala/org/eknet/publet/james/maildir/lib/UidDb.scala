@@ -211,7 +211,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
 
   private object Header {
 
-    private val HeaderRegex = "(\\d+)\\s+(\\d+)\\s+(\\d+)".r
+    private val HeaderRegex = "^(\\d+)\\s+(\\d+)\\s+(\\d+)$".r
 
     def readFrom(file: Path) = {
       val firstLine = {
@@ -224,7 +224,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
       parseLine(firstLine)
     }
 
-    def parseLine(line: String) = line match {
+    def parseLine(line: String) = line.trim match {
       case HeaderRegex(version, nextUid, validity) => Header(version.toLong, nextUid.toLong, validity.toLong)
       case h@_ => ioError("Uidfile corrupted. Unknown header string: "+ h)
     }

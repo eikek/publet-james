@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.maildir
+package org.eknet.publet.james.maildir.lib
 
-import lib.{PathLock, JvmLocker, MessageName}
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 import java.util.concurrent.TimeUnit

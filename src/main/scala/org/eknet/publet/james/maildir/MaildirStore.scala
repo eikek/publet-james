@@ -24,6 +24,8 @@ import java.util.Locale
 import org.apache.james.mailbox.store.mail.model.Mailbox
 import org.apache.james.mailbox.store.mail.{ModSeqProvider, UidProvider}
 import org.apache.james.mailbox.MailboxSession
+import com.google.inject.Singleton
+import javax.inject.Inject
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -48,7 +50,10 @@ class MaildirStore(maildirLocation: String, lock: PathLock[Path]) {
   }
 
   def getInbox(user: String) = {
-    val path = inboxPath(user)
+    val path = inboxPath(user) match {
+      case p if (p.indexOf(':')> 0) => p
+      case p => "file:"+ p
+    }
     new Maildir(Paths.get(new URI(path)), maildirOptions)
   }
 

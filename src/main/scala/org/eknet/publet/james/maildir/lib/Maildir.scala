@@ -162,7 +162,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     //move to correct folder
     val msgName = tmpName.withFlags(msg.getFlags)
     val target = (if (msg.isRecent) newDir else curDir) / msgName.fullName
-    tmpmsgFile.moveTo(target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.COPY_ATTRIBUTES)
+    tmpmsgFile.moveTo(target, StandardCopyOption.ATOMIC_MOVE)
 
     //update uid list
     val uid = uidlist.addMessage(msgName)
@@ -209,6 +209,8 @@ class Maildir(val folder: Path, val options: Options = Options()) {
       case UidRange.Interval(a, b) => (a, b)
       case UidRange.From(a) => (a, Long.MaxValue)
       case UidRange.Until(b) => (Long.MinValue, b)
+      case UidRange.Single(a) => (a, a)
+      case UidRange.All => (Long.MinValue, Long.MaxValue)
     }
     uidlist.getMessageNames(set._1, set._2)
       .map(t => t._1 -> MessageFile(t._1, t._2, findMessageFile(t._2).get))

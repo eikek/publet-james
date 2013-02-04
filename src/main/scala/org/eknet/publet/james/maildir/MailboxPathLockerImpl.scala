@@ -20,17 +20,22 @@ import lib.PathLock
 import org.apache.james.mailbox.{MailboxSession, MailboxPathLocker}
 import org.apache.james.mailbox.model.MailboxPath
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution
+import com.google.inject.{Inject, Singleton}
+import java.nio.file.Path
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 13.01.13 00:39
  */
-class MailboxPathLockerImpl(lock: PathLock[MailboxPath]) extends MailboxPathLocker {
+@Singleton
+class MailboxPathLockerImpl @Inject() (store: MaildirStore, lock: PathLock[Path]) extends MailboxPathLocker {
 
   def executeWithLock[T](session: MailboxSession, path: MailboxPath, callback: LockAwareExecution[T]) =
     executeWithLock(session, path, callback, writeLock = true)
 
-  def executeWithLock[T](session: MailboxSession, path: MailboxPath, callback: LockAwareExecution[T], writeLock: Boolean) = {
+  def executeWithLock[T](session: MailboxSession, mboxPath: MailboxPath, callback: LockAwareExecution[T], writeLock: Boolean) = {
+    val inbox = store.getInbox(session.getUser.getUserName)
+    val path = inbox.folder.resolve(mboxPath.getName)
     lock.withLock(path, exclusive = writeLock) {
       callback.execute()
     }

@@ -20,7 +20,7 @@ import lib.{UidRange, MyMessage}
 import org.apache.james.mailbox.store.mail.{AbstractMessageMapper, ModSeqProvider, UidProvider, MessageMapper}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.store.mail.model.{Message, Mailbox}
-import org.apache.james.mailbox.model.MessageRange
+import org.apache.james.mailbox.model.{MessageMetaData, MessageRange}
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType
 import java.io.{BufferedInputStream, InputStream, OutputStream}
 import com.google.common.io.{ByteStreams, InputSupplier, Files}
@@ -46,26 +46,57 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
   def findInMailbox(mailbox: Mailbox[Int], range: MessageRange, fetchType: FetchType, max: Int) = {
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
-    null
+    maildir.getMessages(range).values
+      .map(m => MaildirMessage.from(mailbox.getMailboxId, m))
+      .toList
+      .sortWith((m1, m2) => m1.uid.compareTo(m2.uid) < 0)
+      .iterator
   }
 
-  def countMessagesInMailbox(p1: Mailbox[Int]) = 0L
+  def countMessagesInMailbox(mailbox: Mailbox[Int]) = {
+    val maildir = store.getMaildir(mailbox)
+    maildir.getMessages(UidRange.All).size
+  }
 
-  def countUnseenMessagesInMailbox(p1: Mailbox[Int]) = 0L
+  def countUnseenMessagesInMailbox(mailbox: Mailbox[Int]) = {
+    val maildir = store.getMaildir(mailbox)
+    maildir.getMessages(UidRange.All)
+      .filter(t => !t._2.name.flags.contains("S"))
+      .size
+  }
 
   def delete(mailbox: Mailbox[Int], message: Message[Int]) {
     val maildir = store.getMaildir(mailbox)
     maildir.deleteMessage(message.getUid)
   }
 
-  def findFirstUnseenMessageUid(p1: Mailbox[Int]) = null
+  def findFirstUnseenMessageUid(mailbox: Mailbox[Int]) = {
+    val maildir = store.getMaildir(mailbox)
+    maildir.getMessages(UidRange.All).find(t => !t._2.name.flags.contains("S"))
+      .map(t => Long.box(t._1))
+      .orNull
+  }
 
-  def findRecentMessageUidsInMailbox(p1: Mailbox[Int]) = null
+  def findRecentMessageUidsInMailbox(mailbox: Mailbox[Int]) = {
+    import collection.JavaConversions._
+    val maildir = store.getMaildir(mailbox)
+    maildir.getMessages(UidRange.All).values
+      .withFilter(m => m.name.flags.contains("R"))
+      .map(m => Long.box(m.uid))
+      .toList
+      .sorted
+  }
 
   def expungeMarkedForDeletionInMailbox(mailbox: Mailbox[Int], range: MessageRange) = {
+    import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
-    maildir.getMessages(range).withFilter(_._2._1.flags.contains("D"))
-    null
+    val marked = maildir.getMessages(range).values
+      .withFilter(mf => mf.name.flags.contains("D"))
+      .map { mf => MaildirMessage.from(mailbox.getMailboxId, mf) }
+
+    val meta = marked.map(m => Long.box(m.uid) -> new SimpleMessageMetaData(m)).toMap
+    marked.foreach(m => maildir.deleteMessage(m.uid))
+    meta
   }
 
   def move(p1: Mailbox[Int], p2: Message[Int]) = {
@@ -74,8 +105,8 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
 
   def save(mailbox: Mailbox[Int], message: Message[Int]) = {
     val maildir = store.getMaildir(mailbox)
-    val uid = maildir.putMessage(new MyMessageMessage(message))
-    message.setUid(uid)
+    val mfile = maildir.putMessage(new MyMessageMessage(message))
+    message.setUid(mfile.uid)
     message.setModSeq(maildir.lastModified)
     new SimpleMessageMetaData(message)
   }

@@ -18,6 +18,8 @@ package org.eknet.publet.james
 
 import com.google.inject._
 import fetchmail.{FetchmailAccountsMBean, FetchmailAccounts, FetchmailScheduler}
+import maildir.lib.{JvmLocker, PathLock}
+import maildir.{MaildirSessionMapperFactory, MaildirStore, MailboxPathLockerImpl}
 import mailets.{PubletSieveMailet, MailPoster, SieveScriptLocator, SimpleMailingListHeaders}
 import name.{Named, Names}
 import org.eknet.publet.james.data._
@@ -39,7 +41,6 @@ import org.apache.camel.CamelContext
 import org.apache.james.mailbox._
 import org.apache.james.mailbox.store._
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator
-import org.apache.james.mailbox.maildir.{MaildirMailboxSessionMapperFactory, MaildirStore}
 import org.apache.james.mailbox.acl.{SimpleGroupMembershipResolver, GroupMembershipResolver, UnionMailboxACLResolver, MailboxACLResolver}
 import org.apache.james.imap.decode.{ImapDecoder, ImapDecoderFactory}
 import org.apache.james.imap.main.DefaultImapDecoderFactory
@@ -64,6 +65,7 @@ import com.google.common.eventbus.EventBus
 import stats._
 import org.eknet.publet.web.Config
 import org.eknet.publet.vfs.fs.FilesystemPartition
+import java.nio.file
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -130,13 +132,15 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     bind[PubletSieveMailet]
 
     //maildir
-    bind[MailboxPathLocker].to[JVMMailboxPathLocker] in Scopes.SINGLETON
+    bind[PathLock[file.Path]].to[JvmLocker[file.Path]] in Scopes.SINGLETON
+    bind[MailboxPathLocker].to[MailboxPathLockerImpl] in Scopes.SINGLETON
+
     bind[Authenticator].to[UserRepositoryAuthenticator] in Scopes.SINGLETON
     bind[MailboxACLResolver].to[UnionMailboxACLResolver] in Scopes.SINGLETON
     bind[GroupMembershipResolver].to[SimpleGroupMembershipResolver] in Scopes.SINGLETON
     bind[MaildirStore].to[GMaildirStore] asEagerSingleton()
     bind[MailboxSessionIdGenerator].to[RandomMailboxSessionIdGenerator] in Scopes.SINGLETON
-    bind[MaildirMailboxSessionMapperFactory].to[GMaildirMailboxSessionMapperFactory] in Scopes.SINGLETON
+    bind[MaildirSessionMapperFactory] in Scopes.SINGLETON
     // bean "maildir-mailboxmanager" aliased to "mailboxmanager" by config file
     bind[MailboxManager].to[GStoreMailboxManager] asEagerSingleton()
     // bean "maildir-subscriptionmanager" aliased to "subscriptionmanager" by config file

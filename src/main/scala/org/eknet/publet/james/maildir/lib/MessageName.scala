@@ -23,6 +23,8 @@ import management.ManagementFactory
 import java.net.InetAddress
 import javax.mail.Flags
 import java.nio.file.Path
+import javax.mail
+import com.google.common.collect.{HashBiMap, Maps}
 
 /**
  * A maildir message name as specified in [[http://cr.yp.to/proto/maildir.html]]
@@ -62,10 +64,19 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
   def withFlagFlagged = copy(flags = this.flags + "F")
 
   def withFlags(flags: Flags) = {
-    val set = (for (t <- MessageName.flagMap) yield {
+    import collection.JavaConversions._
+    val set = (for (t <- MessageName.flagBiMap) yield {
       if (flags.contains(t._1)) Some(t._2) else None
     }).toList.flatten.toSet
     copy(flags = set)
+  }
+
+  def getFlags: Flags = {
+    val flags = new mail.Flags()
+    for (sf <- this.flags) {
+      flags.add(MessageName.flagBiMap.inverse().get(sf))
+    }
+    flags
   }
 
   def withSize(size: Int) = copy(attributes = this.attributes + ("S" -> String.valueOf(size)))
@@ -76,16 +87,17 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
 }
 
 object MessageName {
-
   private lazy val vmpid = ManagementFactory.getRuntimeMXBean.getName.takeWhile(_ != '@')
 
-  private val flagMap = Map(
-    Flags.Flag.ANSWERED -> "R",
-    Flags.Flag.DELETED -> "T",
-    Flags.Flag.DRAFT -> "D",
-    Flags.Flag.FLAGGED -> "F",
-    Flags.Flag.SEEN -> "S"
-  )
+  private val flagBiMap = {
+    val map: HashBiMap[Flags.Flag, String] = HashBiMap.create()
+    map.put(Flags.Flag.ANSWERED, "R")
+    map.put(Flags.Flag.DELETED , "T")
+    map.put(Flags.Flag.DRAFT, "D")
+    map.put(Flags.Flag.FLAGGED, "F")
+    map.put(Flags.Flag.SEEN, "S")
+    map
+  }
 
   def create(hostname: Option[String] = None, size: Option[Int] = None) = {
     val buf = new StringBuilder

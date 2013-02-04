@@ -16,218 +16,196 @@
 
 package org.eknet.publet.james.maildir
 
-import lib.MessageName
-import org.apache.james.mailbox.store.mail.model.{Message, AbstractMessage}
+import lib.{MessageFile, MessageName}
+import org.apache.james.mailbox.store.mail.model.AbstractMessage
 import javax.mail.Flags
-import java.nio.file.Path
-import javax.mail.util.SharedFileInputStream
+import java.nio.file.{Files, Path}
+import collection.mutable
+import java.io.{PushbackInputStream, FileInputStream, InputStream}
+import javax.mail.util.SharedByteArrayInputStream
+import org.bouncycastle.mail.smime.util.SharedFileInputStream
 import org.apache.james.mime4j.stream.{EntityState, RecursionMode, MimeTokenStream, MimeConfig}
 import org.apache.james.mime4j.message.{MaximalBodyDescriptor, DefaultBodyDescriptorBuilder}
-import org.apache.james.mailbox.store.streaming.CountingInputStream
-import org.apache.commons.io.IOUtils
-import java.io.{InputStream, PushbackInputStream}
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder
+import com.google.common.io.ByteStreams
+import org.apache.james.mailbox.store.streaming.{LimitingFileInputStream, CountingInputStream}
+import java.util.Date
+import annotation.tailrec
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 31.01.13 12:42
  */
-class MaildirMessage(uid: Long, name: MessageName, file: Path) extends Message[Int] {
+class MaildirMessage(mailboxId: Int, var uid: Long, name: MessageName, file: Path) extends AbstractMessage[Int] {
 
-  private val propertyBuilder = new PropertyBuilder()
-  private var modseq: Long = _
-  private var bodyStartOctet: Int = _
+  private var modseq: Long = Files.getLastModifiedTime(file).toMillis
+  private val flags = new mutable.HashSet[Flags.Flag]()
 
-  private lazy val message = {
-    val tmpMsgIn = new SharedFileInputStream(file.toFile)
-    bodyStartOctet = getBodyStartOctet(tmpMsgIn)
+  private lazy val (bodyStartByte, propertyBuilder) = MaildirMessage.parse(file)
 
-    // Disable line length... This should be handled by the smtp server
-    // component and not the parser itself
-    // https://issues.apache.org/jira/browse/IMAP-122
-    val config: MimeConfig = new MimeConfig
-    config.setMaxLineLen(-1)
-    val parser: MimeTokenStream = new MimeTokenStream(config, new DefaultBodyDescriptorBuilder)
-    parser.setRecursionMode(RecursionMode.M_NO_RECURSE)
-    parser.parse(tmpMsgIn.newStream(0, -1))
-    var next: EntityState = parser.next
-
-    while (next != EntityState.T_BODY && next != EntityState.T_END_OF_STREAM && next != EntityState.T_START_MULTIPART) {
-      next = parser.next
+  setFlags({
+    val flags = name.getFlags
+    if (file.getParent.getFileName.toString.toLowerCase == "new") {
+      flags.add(Flags.Flag.RECENT)
     }
-    val descriptor: MaximalBodyDescriptor = parser.getBodyDescriptor.asInstanceOf[MaximalBodyDescriptor]
-    var mediaType: String = null
-    val mediaTypeFromHeader: String = descriptor.getMediaType
-    var subType: String = null
-    if (mediaTypeFromHeader == null) {
-      mediaType = "text"
-      subType = "plain"
-    }
-    else {
-      mediaType = mediaTypeFromHeader
-      subType = descriptor.getSubType
-    }
-    propertyBuilder.setMediaType(mediaType)
-    propertyBuilder.setSubType(subType)
-    propertyBuilder.setContentID(descriptor.getContentId)
-    propertyBuilder.setContentDescription(descriptor.getContentDescription)
-    propertyBuilder.setContentLocation(descriptor.getContentLocation)
-    propertyBuilder.setContentMD5(descriptor.getContentMD5Raw)
-    propertyBuilder.setContentTransferEncoding(descriptor.getTransferEncoding)
-    propertyBuilder.setContentLanguage(descriptor.getContentLanguage)
-    propertyBuilder.setContentDispositionType(descriptor.getContentDispositionType)
-    propertyBuilder.setContentDispositionParameters(descriptor.getContentDispositionParameters)
-    propertyBuilder.setContentTypeParameters(descriptor.getContentTypeParameters)
+    flags
+  })
 
-    // Add missing types
-    val codeset: String = descriptor.getCharset
-    if (codeset == null) {
-      if ("TEXT".equalsIgnoreCase(mediaType)) {
-        propertyBuilder.setCharset("us-ascii")
-      }
-    }
-    else {
-      propertyBuilder.setCharset(codeset)
-    }
+  def getInternalDate = new Date(name.time)
 
-    val boundary: String = descriptor.getBoundary
-    if (boundary != null) {
-      propertyBuilder.setBoundary(boundary)
-    }
+  def getMailboxId = mailboxId
 
-    if ("text".equalsIgnoreCase(mediaType)) {
-      var lines: Long = -1
-      val bodyStream: CountingInputStream = new CountingInputStream(parser.getInputStream)
-      try {
-        bodyStream.readAll
-        lines = bodyStream.getLineCount
-      }
-      finally {
-        IOUtils.closeQuietly(bodyStream)
-      }
-      next = parser.next
-      if (next eq EntityState.T_EPILOGUE) {
-        val epilogueStream: CountingInputStream = new CountingInputStream(parser.getInputStream)
-        try {
-          epilogueStream.readAll
-          lines += epilogueStream.getLineCount
-        }
-        finally {
-          IOUtils.closeQuietly(epilogueStream)
-        }
-      }
-      val lin:java.lang.Long = lines
-      propertyBuilder.setTextualLineCount(lin)
+  def getMediaType = propertyBuilder.getMediaType
+
+  def getSubType = propertyBuilder.getSubType
+
+  def getTextualLineCount = propertyBuilder.getTextualLineCount
+
+  def getProperties = propertyBuilder.toProperties
+
+  def getFullContentOctets = {
+    name.attributes.get("S").map(_.toLong) getOrElse {
+      file.toFile.length()
     }
   }
 
-  /**
-   * Return the position in the given {@link InputStream} at which the Body of
-   * the Message starts
-   *
-   * @param msgIn
-   * @return bodyStartOctet
-   * @throws IOException
-   */
-  private def getBodyStartOctet(msgIn: InputStream): Int = {
-    val in: PushbackInputStream = new PushbackInputStream(msgIn, 3)
-    var localBodyStartOctet: Int = in.available
-    var i: Int = -1
-    var count: Int = 0
-    while ((({
-      i = in.read; i
-    })) != -1 && in.available > 4) {
-      if (i == 0x0D) {
-        val a: Int = in.read
-        if (a == 0x0A) {
-          val b: Int = in.read
-          if (b == 0x0D) {
-            val c: Int = in.read
-            if (c == 0x0A) {
-              localBodyStartOctet = count + 4
-              return localBodyStartOctet
-            }
-            in.unread(c)
-          }
-          in.unread(b)
-        }
-        in.unread(a)
-      }
-      count += 1
+  override def getFullContent = Files.newInputStream(file)
+
+  def getHeaderContent = {
+    val limit = bodyStartByte match {
+      case l if (l < 0) => 0
+      case l => l
     }
-    return localBodyStartOctet
+    new LimitingFileInputStream(file.toFile, limit)
   }
 
-  def getInternalDate = null
+  def getBodyContent = {
+    val in = getFullContent
+    ByteStreams.skipFully(in, bodyStartByte)
+    in
+  }
 
-  def getMailboxId = 0
+  def getBodyStartOctet = bodyStartByte
+
+  def isAnswered = flags.contains(Flags.Flag.ANSWERED)
+  def isDeleted = flags.contains(Flags.Flag.DELETED)
+  def isDraft = flags.contains(Flags.Flag.DRAFT)
+  def isFlagged = flags.contains(Flags.Flag.FLAGGED)
+  def isRecent = flags.contains(Flags.Flag.RECENT)
+  def isSeen = flags.contains(Flags.Flag.SEEN)
+
+  def setFlags(flags: Flags) {
+    import Flags.Flag._
+    List(ANSWERED, DELETED, DRAFT, FLAGGED, RECENT, SEEN) map addFlag(flags)_
+  }
+
+  private[this] def addFlag(flags: Flags)(f: Flags.Flag) {
+    Option(flags).foreach(set => if (set.contains(f)) this.flags += f)
+  }
+
+  def setUid(uid: Long) {
+    this.uid = uid
+  }
 
   def getUid = uid
 
-  def setUid(p1: Long) {
-    throw new UnsupportedOperationException
-  }
-
-  def setModSeq(p1: Long) {
-    this.modseq = p1
+  def setModSeq(modSeq: Long) {
+    this.modseq = modseq
   }
 
   def getModSeq = modseq
+}
 
-  def isAnswered = false
+object MaildirMessage {
 
-  def isDeleted = false
+  /**
+   * Parses a inputstream to create a MaildirMessage object.
+   *
+   * This code is a scalafied version of the one in James' [[org.apache.james.mailbox.maildir.mail.model.MaildirMessage]]
+   * class.
+   *
+   * @return
+   */
+  private def parse(file: Path): (Int, PropertyBuilder) = {
+    import org.eknet.publet.james.util.autoclose._
+    val sharedIn = new SharedFileInputStream(file.toFile)
+    val mimeConfig = new MimeConfig
+    mimeConfig.setMaxLineLen(-1)
+    val parser = new MimeTokenStream(mimeConfig, new DefaultBodyDescriptorBuilder())
+    parser.setRecursionMode(RecursionMode.M_NO_RECURSE)
 
-  def isDraft = false
+    val skip = Set(EntityState.T_BODY, EntityState.T_END_OF_STREAM, EntityState.T_START_MULTIPART)
+    val propertyBuilder = new PropertyBuilder()
+    sharedIn.exec {
+      val bodyStartByte = getBodyStartOctets(new PushbackInputStream(sharedIn, 3), null, 0, 0)
+      parser.parse(sharedIn.newStream(0, -1))
+      var next = parser.next()
+      while (!skip.contains(next)) {
+        next = parser.next()
+      }
+      val descriptor = parser.getBodyDescriptor.asInstanceOf[MaximalBodyDescriptor]
+      val (mediaType, subType) = Option(descriptor.getMediaType) map {
+        mt => (mt, descriptor.getSubType) } getOrElse(("text", "plain"))
 
-  def isFlagged = false
+      propertyBuilder.setMediaType(mediaType)
+      propertyBuilder.setSubType(subType)
+      propertyBuilder.setContentID(descriptor.getContentId)
+      propertyBuilder.setContentDescription(descriptor.getContentDescription)
+      propertyBuilder.setContentLocation(descriptor.getContentLocation)
+      propertyBuilder.setContentMD5(descriptor.getContentMD5Raw)
+      propertyBuilder.setContentTransferEncoding(descriptor.getTransferEncoding)
+      propertyBuilder.setContentLanguage(descriptor.getContentLanguage)
+      propertyBuilder.setContentDispositionType(descriptor.getContentDispositionType)
+      propertyBuilder.setContentDispositionParameters(descriptor.getContentDispositionParameters)
+      propertyBuilder.setContentTypeParameters(descriptor.getContentTypeParameters)
 
-  def isRecent = false
+      val codeset = Option(descriptor.getCharset)
+        .orElse { if (mediaType.toLowerCase == "text") Some("us-ascii") else None }
+      propertyBuilder.setBoundary(codeset.orNull)
+      Option(descriptor.getBoundary).map(b => propertyBuilder.setBoundary(b))
 
-  def isSeen = false
-
-  def setFlags(p1: Flags) {}
-
-  def createFlags() = {
-    val flags: Flags = new Flags
-    if (isAnswered) {
-      flags.add(Flags.Flag.ANSWERED)
+      if (mediaType.toLowerCase == "text") {
+        val bodyStream = new CountingInputStream(parser.getInputStream)
+        val lines: Long = bodyStream.exec {
+          bodyStream.readAll()
+          bodyStream.getLineCount
+        }
+        next = parser.next()
+        val epiLines: Long = next match {
+          case EntityState.T_EPILOGUE => {
+            val epilogueStream = new CountingInputStream(parser.getInputStream)
+            epilogueStream.exec {
+              epilogueStream.readAll()
+              epilogueStream.getLineCount
+            }
+          }
+          case _ => 0
+        }
+        propertyBuilder.setTextualLineCount(lines + epiLines)
+      }
+      (bodyStartByte, propertyBuilder)
     }
-    if (isDeleted) {
-      flags.add(Flags.Flag.DELETED)
-    }
-    if (isDraft) {
-      flags.add(Flags.Flag.DRAFT)
-    }
-    if (isFlagged) {
-      flags.add(Flags.Flag.FLAGGED)
-    }
-    if (isRecent) {
-      flags.add(Flags.Flag.RECENT)
-    }
-    if (isSeen) {
-      flags.add(Flags.Flag.SEEN)
-    }
-    flags
   }
 
-  def getBodyContent = null
+  private[this] val headerTerminate = Array(0x0D, 0x0A, 0x0D, 0x0A)
 
-  def getMediaType = ""
+  @tailrec
+  private[this] def getBodyStartOctets(inMsg: PushbackInputStream, input: Array[Byte], length: Int, count: Int): Int = {
+    if (input == headerTerminate) {
+      count
+    } else {
+      if (input != null) {
+        for (i <- (1 to (length-1)).reverse) {
+          inMsg.unread(input(i))
+        }
+      }
+      if (inMsg.available() <= 4) -1 else {
+        val next = new Array[Byte](4)
+        val len = inMsg.read(next)
+        getBodyStartOctets(inMsg, next, len, count +1)
+      }
+    }
+  }
 
-  def getSubType = ""
-
-  def getBodyOctets = 0L
-
-  def getFullContentOctets = 0L
-
-  def getTextualLineCount = null
-
-  def getHeaderContent = null
-
-  def getFullContent = null
-
-  def compareTo(o: Message[Int]) = 0
-
-  def getProperties = null
+  def from(boxId: Int, mf: MessageFile) = new MaildirMessage(boxId, mf.uid, mf.name, mf.file)
 }
