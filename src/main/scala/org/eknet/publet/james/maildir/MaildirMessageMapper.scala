@@ -17,24 +17,26 @@
 package org.eknet.publet.james.maildir
 
 import lib.{UidRange, MyMessage}
-import org.apache.james.mailbox.store.mail.{AbstractMessageMapper, ModSeqProvider, UidProvider, MessageMapper}
-import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.store.mail.AbstractMessageMapper
+import org.apache.james.mailbox.{model, MailboxSession}
 import org.apache.james.mailbox.store.mail.model.{Message, Mailbox}
-import org.apache.james.mailbox.model.{MessageMetaData, MessageRange}
+import org.apache.james.mailbox.model.{UpdatedFlags, MessageRange}
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType
 import java.io.{BufferedInputStream, InputStream, OutputStream}
-import com.google.common.io.{ByteStreams, InputSupplier, Files}
-import com.google.common.base.Suppliers
+import com.google.common.io.{ByteStreams, InputSupplier}
 import org.apache.james.mailbox.store.SimpleMessageMetaData
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage
 import javax.mail.Flags
+import grizzled.slf4j.Logging
+import java.nio.file.Files
+import collection.SortedMap
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 15.01.13 19:20
  */
 class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
-  extends AbstractMessageMapper[Int](session, store.newUidProvider, store.newModSeqProvider) {
+  extends AbstractMessageMapper[Int](session, store.newUidProvider, store.newModSeqProvider) with Logging {
 
   implicit private[this] def messageRangeToRange(range: MessageRange) = range.getType match {
     case MessageRange.Type.ALL => UidRange.All
@@ -44,21 +46,25 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
   }
 
   def findInMailbox(mailbox: Mailbox[Int], range: MessageRange, fetchType: FetchType, max: Int) = {
+    debug("> findInMailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+" = "+ messageRangeToRange(range)+ "; "+ fetchType+ "; max="+max)
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
     maildir.getMessages(range).values
       .map(m => MaildirMessage.from(mailbox.getMailboxId, m))
       .toList
       .sortWith((m1, m2) => m1.uid.compareTo(m2.uid) < 0)
+      .take(max)
       .iterator
   }
 
   def countMessagesInMailbox(mailbox: Mailbox[Int]) = {
+    debug("> count messages in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName)
     val maildir = store.getMaildir(mailbox)
     maildir.getMessages(UidRange.All).size
   }
 
   def countUnseenMessagesInMailbox(mailbox: Mailbox[Int]) = {
+    debug("> count unseen messages in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName)
     val maildir = store.getMaildir(mailbox)
     maildir.getMessages(UidRange.All)
       .filter(t => !t._2.name.flags.contains("S"))
@@ -66,11 +72,13 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
   }
 
   def delete(mailbox: Mailbox[Int], message: Message[Int]) {
+    debug("> delete messages in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+" => "+ message.getUid)
     val maildir = store.getMaildir(mailbox)
     maildir.deleteMessage(message.getUid)
   }
 
   def findFirstUnseenMessageUid(mailbox: Mailbox[Int]) = {
+    debug("> find first unseen message uid: " +mailbox.getMailboxId+":"+mailbox.getName)
     val maildir = store.getMaildir(mailbox)
     maildir.getMessages(UidRange.All).find(t => !t._2.name.flags.contains("S"))
       .map(t => Long.box(t._1))
@@ -78,32 +86,55 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
   }
 
   def findRecentMessageUidsInMailbox(mailbox: Mailbox[Int]) = {
+    debug("> find recent message uids in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName)
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
     maildir.getMessages(UidRange.All).values
-      .withFilter(m => m.name.flags.contains("R"))
+      .withFilter(m => maildir.isRecent(m.name))
       .map(m => Long.box(m.uid))
       .toList
       .sorted
   }
 
   def expungeMarkedForDeletionInMailbox(mailbox: Mailbox[Int], range: MessageRange) = {
+    debug("> expunge deleted messages in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+ "; range="+messageRangeToRange(range))
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
     val marked = maildir.getMessages(range).values
-      .withFilter(mf => mf.name.flags.contains("D"))
+      .withFilter(mf => mf.name.flags.contains("T"))
       .map { mf => MaildirMessage.from(mailbox.getMailboxId, mf) }
 
-    val meta = marked.map(m => Long.box(m.uid) -> new SimpleMessageMetaData(m)).toMap
+    val meta = marked.map(m => Long.box(m.uid) -> new SimpleMessageMetaData(m)).toSeq
     marked.foreach(m => maildir.deleteMessage(m.uid))
-    meta
+    SortedMap(meta: _*)
   }
 
   def move(p1: Mailbox[Int], p2: Message[Int]) = {
     throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370")
   }
 
+  override def updateFlags(mailbox: Mailbox[Int], flags: Flags, value: Boolean, replace: Boolean, set: MessageRange) = {
+    import collection.JavaConversions._
+    val maildir = store.getMaildir(mailbox)
+    val iter = for (mf <- maildir.getMessages(set).values) yield {
+      val orgFlags = mf.name.getFlags
+      val newFlags = if (replace) { flags } else {
+        val tmp = mf.name.getFlags
+        if (value) tmp.add(flags) else tmp.remove(flags)
+        tmp
+      }
+      if (orgFlags == newFlags) {
+        new model.UpdatedFlags(mf.uid, Files.getLastModifiedTime(mf.file).toMillis, orgFlags, newFlags)
+      } else {
+        val modSeq = Files.getLastModifiedTime(maildir.setFlags(mf.uid, newFlags).file)
+        new UpdatedFlags(mf.uid, modSeq.toMillis, orgFlags, newFlags)
+      }
+    }
+    iter.iterator
+  }
+
   def save(mailbox: Mailbox[Int], message: Message[Int]) = {
+    debug("> save message in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+" => "+ message.getUid)
     val maildir = store.getMaildir(mailbox)
     val mfile = maildir.putMessage(new MyMessageMessage(message))
     message.setUid(mfile.uid)

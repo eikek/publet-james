@@ -19,6 +19,7 @@ package org.eknet.publet.james.maildir.lib
 import java.nio.file._
 import java.io.BufferedOutputStream
 import scala.Some
+import javax.mail.Flags
 
 /**
  * A "maildir" folder. This is my implementation of what's known to be
@@ -30,9 +31,9 @@ import scala.Some
 class Maildir(val folder: Path, val options: Options = Options()) {
 
   private val folderName = folder.getFileName.toString
-  private val curDir = folder.resolveSibling("cur")
-  private val newDir = folder.resolveSibling("new")
-  private val tmpDir = folder.resolveSibling("tmp")
+  private val curDir = folder.resolve("cur")
+  private val newDir = folder.resolve("new")
+  private val tmpDir = folder.resolve("tmp")
   val uidlist = options.uiddbProvider.newUidDb(this)
 
   private[lib] def visitMessageFiles(f: Path => FileVisitResult) {
@@ -162,7 +163,12 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     //move to correct folder
     val msgName = tmpName.withFlags(msg.getFlags)
     val target = (if (msg.isRecent) newDir else curDir) / msgName.fullName
-    tmpmsgFile.moveTo(target, StandardCopyOption.ATOMIC_MOVE)
+    try {
+      tmpmsgFile.moveTo(target, StandardCopyOption.ATOMIC_MOVE)
+    }
+    catch {
+      case e: AtomicMoveNotSupportedException => tmpmsgFile.moveTo(target)
+    }
 
     //update uid list
     val uid = uidlist.addMessage(msgName)
@@ -189,6 +195,138 @@ class Maildir(val folder: Path, val options: Options = Options()) {
           case None => ioError("Unable to find file for message '"+mn+"' with uid: "+ uid)
         }
       }
+    }
+  }
+
+  /**
+   * Returns `true` if the message with the given name exists
+   * in the `cur` folder.
+   *
+   * @param name
+   * @return
+   */
+  def isCurrent(name: MessageName) = {
+    val file = curDir / name.fullName
+    file.exists
+  }
+
+  /**
+   * Returns `true` if the message with the given uid exists
+   * in the `cur` folder.
+   *
+   * @param uid
+   * @return
+   */
+  def isCurrent(uid: Long) = getMessage(uid).file.getParent == curDir
+
+  /**
+   * Moves the message with the given uid to the `cur` folder.
+   *
+   * @param uid
+   * @return
+   */
+  def setCurrent(uid: Long): MessageFile = {
+    setCurrent(getMessage(uid))
+  }
+
+  /**
+   * Moves the given message to the `cur` folder.
+   *
+   * @param mf
+   * @return
+   */
+  def setCurrent(mf: MessageFile): MessageFile = {
+    val target = curDir / mf.name.fullName
+    if (target != mf.file) {
+      mf.file.moveTo(target, StandardCopyOption.ATOMIC_MOVE)
+      uidlist.updateMessage(mf.uid, mf.name)
+      MessageFile(mf.uid, mf.name, target)
+    } else {
+      mf
+    }
+  }
+
+  /**
+   * Updates the message with the given uid according to the given
+   * flags. That can involve a rename and a move to either the
+   * `new` or `cur` folder.
+   *
+   * @param uid
+   * @param flags
+   * @return
+   */
+  def setFlags(uid: Long, flags: Flags): MessageFile = {
+    setFlags(getMessage(uid), flags)
+  }
+
+  /**
+   * Updates the message with the given uid according to the given
+   * flags. That can involve a rename and a move to either the
+   * `new` or `cur` folder.
+   *
+   * @param mf
+   * @param flags
+   * @return
+   */
+  def setFlags(mf: MessageFile, flags: Flags): MessageFile = {
+    if (mf.name.getFlags != flags) {
+      val newName = mf.name.withFlags(flags)
+      if (flags.contains(Flags.Flag.RECENT)) {
+        setRecent(mf.copy(name = newName))
+      } else {
+        setCurrent(mf.copy(name = newName))
+      }
+    } else {
+      mf
+    }
+  }
+
+  /**
+   * Returns `true` if the message with the given uid exists
+   * in the `new` folder.
+   *
+   * @param uid
+   * @return
+   */
+  def isRecent(uid: Long) = getMessage(uid).file.getParent == newDir
+
+  /**
+   * Returns `true`, if the message with the given name exists
+   * in the `new` folder.
+   *
+   * @param name
+   * @return
+   */
+  def isRecent(name: MessageName) = {
+    val file = newDir / name.fullName
+    file.exists
+  }
+
+  /**
+   * Moves the message with the given uid to the `new` folder.
+   *
+   * @param uid
+   * @return
+   */
+  def setRecent(uid: Long): MessageFile = {
+    setRecent(getMessage(uid))
+  }
+
+  /**
+   * Moves the given message to the `new` folder.
+   *
+   * @param mf
+   * @return
+   */
+  def setRecent(mf: MessageFile): MessageFile = {
+    val newName = mf.name.copy(flags = Set())
+    val target = newDir / newName.fullName
+    if (target != mf.file) {
+      mf.file.moveTo(target, StandardCopyOption.ATOMIC_MOVE)
+      uidlist.updateMessage(mf.uid, newName)
+      MessageFile(mf.uid, newName, target)
+    } else {
+      mf
     }
   }
 

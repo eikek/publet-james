@@ -63,15 +63,18 @@ trait UidDb {
 class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], maxValue: Long = Long.MaxValue) extends UidDb with Logging {
 
   private val uidFile = maildir.folder / filename
+  if (!uidFile.exists) {
+    initialize()
+  }
 
-  private val LineRegex = "^(\\d+)\\s([^\\s]*)\\s*$".r
+  private val LineRegex = "^(\\d+)\\s([^\\s]+)$".r
 
   private lazy val header = new Supplier(() => Header.readFrom(uidFile))
 
 
   private def withFileLock[A](f: => A): A = lock.withLock(uidFile)(f)
 
-  private def splitLine(line: String) = line match {
+  private def splitLine(line: String) = line.trim match {
     case LineRegex(uid, name) => Some((uid.toLong, name))
     case _ => None
   }
@@ -91,12 +94,13 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
   private def findByUid(comp: Long => Boolean)(line: String) = {
     splitLine(line) match {
       case Some((id, name)) if (comp(id)) => Some(MessageName(name))
-      case _ => ioError("Invalid uidlist line: "+ line)
+      case Some((id, name)) => None
+      case _ => ioError("Invalid uidlist line: '"+ line+ "'")
     }
   }
 
   def findMessageName(uid: Long) = withFileLock {
-    findAndMap(uidFile.getLines, findByUid(_ == uid)_)
+    findAndMap(uidFile.getLines.drop(1), findByUid(_ == uid)_)
   }
 
   def getMessageNames(from: Long, to: Long) = withFileLock {
@@ -133,14 +137,18 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
     val temp = Files.createTempFile("uidlist-new", ".lst")
     val tempOut = temp.getWriter(StandardOpenOption.WRITE, StandardOpenOption.CREATE)
     val lineCount = new AtomicLong(0)
-    uidFile.getLines map { line =>
+    uidFile.getLines.toList map { line =>
       f(lineCount.getAndIncrement, line) match {
         case Some(s) => tempOut.write(s)
         case None =>
       }
     }
     tempOut.close()
-    temp.moveTo(uidFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    try {
+      temp.moveTo(uidFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    } catch {
+      case e: AtomicMoveNotSupportedException => temp.moveTo(uidFile, StandardCopyOption.REPLACE_EXISTING)
+    }
     header.clear()
   }
 
@@ -154,8 +162,8 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
   def updateMessage(uid: Long, name: MessageName) {
     filterFile { (num, line) =>
       splitLine(line) match {
-        case Some((id, fname)) if (uid == uid) => Some(toMessageLine(id, name.fullName))
-        case _ => Some(toMessageLine(num, line))
+        case Some((id, fname)) if (id == uid) => Some(toMessageLine(id, name.fullName))
+        case _ => Some(line+"\n")
       }
     }
   }
@@ -163,8 +171,8 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
   def removeMessage(uid: Long) {
     filterFile { (num, line) =>
       splitLine(line) match {
-        case Some((id, fname)) if (uid == uid) => None
-        case _ => Some(toMessageLine(num, line))
+        case Some((id, fname)) if (id == uid) => None
+        case _ => Some(line+"\n")
       }
     }
   }
@@ -182,8 +190,9 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
     if (uidFile.notExists) {
       withFileLock {
         val fout = uidFile.getWriter(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
-        val fileCount = new AtomicLong(0)
-        fout.write(" " * 80) //preserve header space
+        val fileCount = new AtomicLong(1)
+        fout.write(" " * Header.headerSpace) //preserve header space
+        fout.write("\n")
         maildir.visitMessageFiles { mf =>
           if (fileCount.get() == maxValue) {
             ioError("The maildir '"+maildir.folder+"' is full. Maximum messages allowed: "+ maxValue)
@@ -192,7 +201,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
           FileVisitResult.CONTINUE
         }
         fout.close()
-        Header(fileCount.incrementAndGet(), uidvalidity).write(uidFile)
+        Header(fileCount.get(), uidvalidity).write(uidFile)
       }
     }
   }
@@ -204,13 +213,15 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
     def write(file: Path) {
       val rf = new RandomAccessFile(file.toFile, "rw")
       rf.seek(0)
-      rf.writeBytes("1 "+ nextUid +" "+ uidvalidity + (" "*80) +"\n")
+      val line = "1 " + nextUid +" "+ uidvalidity
+      rf.writeBytes(line + (" "* (Header.headerSpace-line.length-1)))
       rf.close()
     }
   }
 
   private object Header {
 
+    val headerSpace = 80
     private val HeaderRegex = "^(\\d+)\\s+(\\d+)\\s+(\\d+)$".r
 
     def readFrom(file: Path) = {
@@ -219,9 +230,9 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
         rf.seek(0)
         val next = rf.readLine()
         rf.close()
-        next
+        Option(next).map(_.trim)
       }
-      parseLine(firstLine)
+      parseLine(firstLine.getOrElse(sys.error("Uid file corrupted! No header found.")))
     }
 
     def parseLine(line: String) = line.trim match {

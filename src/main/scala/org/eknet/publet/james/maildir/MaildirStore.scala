@@ -18,7 +18,7 @@ package org.eknet.publet.james.maildir
 
 import lib.{TextFileUidDb, Options, Maildir, PathLock}
 import java.nio.file.{Paths, Path}
-import org.apache.james.mailbox.model.MailboxPath
+import org.apache.james.mailbox.model.{MailboxConstants, MailboxPath}
 import java.net.URI
 import java.util.Locale
 import org.apache.james.mailbox.store.mail.model.Mailbox
@@ -58,11 +58,19 @@ class MaildirStore(maildirLocation: String, lock: PathLock[Path]) {
   }
 
   def getMaildir(path: MailboxPath) = {
-    getInbox(path.getUser).resolve(path.getName)
+    if (path.getName == MailboxConstants.INBOX) {
+      getInbox(path.getUser)
+    } else {
+      getInbox(path.getUser).resolve(path.getName)
+    }
   }
 
   def getMaildir(mailbox: Mailbox[Int]) = {
-    getInbox(mailbox.getUser).resolve(mailbox.getName)
+    if (mailbox.getName == MailboxConstants.INBOX) {
+      getInbox(mailbox.getUser)
+    } else {
+      getInbox(mailbox.getUser).resolve(mailbox.getName)
+    }
   }
 
   def newUidProvider: UidProvider[Int] = new UidProviderImpl

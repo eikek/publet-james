@@ -24,12 +24,14 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import java.util.concurrent.atomic.AtomicInteger
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox
+import java.util.regex.Pattern
+import grizzled.slf4j.Logging
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 13.01.13 00:28
  */
-class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends MailboxMapper[Int] with NoTransaction {
+class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends MailboxMapper[Int] with NoTransaction with Logging {
 
   private val mailboxCache: collection.mutable.Map[Int, Mailbox[Int]] = new collection.mutable.HashMap()
   private val idCounter = new AtomicInteger(0)
@@ -37,6 +39,7 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
   private def cacheMailbox(mbox: Mailbox[Int]) {
     val copy = new SimpleMailbox[Int](mbox)
     copy.setMailboxId(idCounter.getAndIncrement)
+    debug("Cache mailbox " + copy.getMailboxId+":"+ copy.getName)
     mbox match {
       case smbox: SimpleMailbox[Int] => smbox.setMailboxId(copy.getMailboxId)
       case _ =>
@@ -45,6 +48,7 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
   }
 
   def save(mailbox: Mailbox[Int]) {
+    debug("save mailbox "+ mailbox.getMailboxId+":"+mailbox.getName)
     mailboxCache.get(mailbox.getMailboxId) match {
       case Some(orgMbox) => {
         if (orgMbox.getName != mailbox.getName) {
@@ -64,11 +68,13 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
   }
 
   def delete(mailbox: Mailbox[Int]) {
+    debug("Delete mailbox "+ mailbox.getMailboxId+":"+mailbox.getName)
     val maildir = store.getMaildir(mailbox)
     maildir.delete()
   }
 
   def findMailboxByPath(path: MailboxPath) = {
+    debug("Find mailbox by path: "+ path.toString)
     val maildir = store.getMaildir(path)
     if (!maildir.exists) {
       throw new MailboxNotFoundException(path)
@@ -79,7 +85,18 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
   }
 
   def findMailboxWithPathLike(path: MailboxPath) = {
-    throw new UnsupportedOperationException()
+    debug("Find mailbox with pathlike: "+ path)
+    import collection.JavaConversions._
+    val inbox = store.getInbox(path.getUser)
+    if (!inbox.exists) {
+      List()
+    } else {
+      val pattern = Pattern.compile(Pattern.quote(path.getName).replace("%", ".*"))
+      (inbox :: inbox.listChildren(includeSubfolder = true).toList)
+        .withFilter(md => pattern.matcher(md.name).matches())
+        .map(md => new MaildirMailbox[Int](md, new MailboxPath(path.getNamespace, path.getUser, md.name)))
+        .toList
+    }
   }
 
   def hasChildren(mailbox: Mailbox[Int], delimiter: Char) = {
@@ -87,10 +104,12 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
     if (!maildir.exists) {
       throw new MailboxNotFoundException(mailbox.getName)
     }
+    debug("mailbox "+ mailbox.getMailboxId+":"+mailbox.getName + " has children: "+ maildir.hasChildren)
     maildir.hasChildren
   }
 
   def list() = {
+    debug("List mailboxes for "+ session.getUser.getUserName)
     import collection.JavaConversions._
     val maildir = store.getInbox(session.getUser.getUserName)
     if (!maildir.exists) {

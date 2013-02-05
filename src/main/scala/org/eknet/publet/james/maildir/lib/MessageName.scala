@@ -62,6 +62,7 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
   def withFlagSeen = copy(flags = this.flags + "S")
   def withFlagDraft = copy(flags = this.flags + "D")
   def withFlagFlagged = copy(flags = this.flags + "F")
+  def withFlagAnswered = copy(flags = this.flags + "R")
 
   def withFlags(flags: Flags) = {
     import collection.JavaConversions._

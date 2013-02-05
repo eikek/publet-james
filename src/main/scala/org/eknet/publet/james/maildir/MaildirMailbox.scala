@@ -26,5 +26,7 @@ import org.apache.james.mailbox.model.MailboxPath
  */
 class MaildirMailbox[Id](maildir: Maildir, path: MailboxPath) extends SimpleMailbox[Id](path, maildir.uidlist.getUidValidity) {
 
-
+  if (!maildir.exists) {
+    maildir.create()
+  }
 }

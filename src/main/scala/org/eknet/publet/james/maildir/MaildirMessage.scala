@@ -21,8 +21,7 @@ import org.apache.james.mailbox.store.mail.model.AbstractMessage
 import javax.mail.Flags
 import java.nio.file.{Files, Path}
 import collection.mutable
-import java.io.{PushbackInputStream, FileInputStream, InputStream}
-import javax.mail.util.SharedByteArrayInputStream
+import java.io.PushbackInputStream
 import org.bouncycastle.mail.smime.util.SharedFileInputStream
 import org.apache.james.mime4j.stream.{EntityState, RecursionMode, MimeTokenStream, MimeConfig}
 import org.apache.james.mime4j.message.{MaximalBodyDescriptor, DefaultBodyDescriptorBuilder}
