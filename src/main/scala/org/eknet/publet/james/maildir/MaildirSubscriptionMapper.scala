@@ -39,10 +39,9 @@ class MaildirSubscriptionMapper(store: MaildirStore) extends SubscriptionMapper 
     import collection.JavaConversions._
     val subscriptions = readSubscriptions(subscription.getUser)
     if (!subscriptions.contains(subscription.getMailbox)) {
-      Files.write(subscriptionFile(
-        subscription.getUser),
+      subscriptionFile(subscription.getUser).map(f => Files.write(f,
         subscription.getMailbox :: subscriptions,
-        Charset.defaultCharset())
+        Charset.defaultCharset()))
     }
   }
 
@@ -55,19 +54,20 @@ class MaildirSubscriptionMapper(store: MaildirStore) extends SubscriptionMapper 
     import collection.JavaConversions._
     val subscriptions = readSubscriptions(subscription.getUser)
     if (subscriptions.contains(subscription.getMailbox)) {
-      Files.write(subscriptionFile(
-        subscription.getUser),
-        subscriptions.filter(_ != subscription.getMailbox),
-        Charset.defaultCharset())
+      subscriptionFile(subscription.getUser).map(f =>
+        Files.write(f, subscriptions.filter(_ != subscription.getMailbox), Charset.defaultCharset()))
     }
   }
 
   private def readSubscriptions(user: String) = {
     import collection.JavaConversions._
-    Files.readAllLines(subscriptionFile(user), Charset.defaultCharset()).toList
+    subscriptionFile(user).map(f => Files.readAllLines(f, Charset.defaultCharset()).toList).getOrElse(List())
   }
 
-  private def subscriptionFile(user: String) = store.getInbox(user).folder.resolve(fileName)
+  private def subscriptionFile(user: String) = store.getInbox(user).folder.resolve(fileName) match {
+    case f if (Files.exists(f)) => Some(f)
+    case _ => None
+  }
 
   def endRequest() {
   }

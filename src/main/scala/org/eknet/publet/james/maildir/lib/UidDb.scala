@@ -63,7 +63,7 @@ trait UidDb {
 class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], maxValue: Long = Long.MaxValue) extends UidDb with Logging {
 
   private val uidFile = maildir.folder / filename
-  if (!uidFile.exists) {
+  if (!uidFile.exists && maildir.exists) {
     initialize()
   }
 
@@ -189,6 +189,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
   def initialize(uidvalidity: Long) {
     if (uidFile.notExists) {
       withFileLock {
+        uidFile.getParent.ensureDirectories()
         val fout = uidFile.getWriter(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
         val fileCount = new AtomicLong(1)
         fout.write(" " * Header.headerSpace) //preserve header space
