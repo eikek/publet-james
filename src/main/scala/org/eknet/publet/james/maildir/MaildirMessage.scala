@@ -28,7 +28,7 @@ import org.apache.james.mime4j.message.{MaximalBodyDescriptor, DefaultBodyDescri
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder
 import com.google.common.io.ByteStreams
 import org.apache.james.mailbox.store.streaming.{LimitingFileInputStream, CountingInputStream}
-import java.util.Date
+import java.util.{Objects, Date}
 import annotation.tailrec
 
 /**
@@ -186,17 +186,15 @@ object MaildirMessage {
     }
   }
 
-  private[this] val headerTerminate = Array(0x0D, 0x0A, 0x0D, 0x0A)
+  private[this] val headerTerminate = Array[Byte](0x0D, 0x0A, 0x0D, 0x0A)
 
   @tailrec
   private[this] def getBodyStartOctets(inMsg: PushbackInputStream, input: Array[Byte], length: Int, count: Int): Int = {
-    if (input == headerTerminate) {
+    if (Objects.deepEquals(input, headerTerminate)) {
       count
     } else {
-      if (input != null) {
-        for (i <- (1 to (length-1)).reverse) {
-          inMsg.unread(input(i))
-        }
+      for (i <- (1 to (length-1)).reverse) {
+        inMsg.unread(input(i))
       }
       if (inMsg.available() <= 4) -1 else {
         val next = new Array[Byte](4)
