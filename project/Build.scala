@@ -49,8 +49,16 @@ object Dependencies {
 
   val mail = "javax.mail" % "mail" % "1.4"
 
-  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) %
-    Version.james exclude("commons-logging", "commons-logging") exclude("commons-logging", "commons-logging-api")
+  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james excludeAll (
+    ExclusionRule("commons-logging", "commons-logging"),
+    ExclusionRule("commons-logging", "commons-logging-api"),
+    ExclusionRule("ch.qos.logback", "logback-classic"),
+    ExclusionRule("ch.qos.logback", "logback-core"),
+    ExclusionRule("org.apache.ant", "ant"),
+    ExclusionRule("org.apache.ant", "ant-launcher"),
+    ExclusionRule("org.apache.ftpserver", "ftplet-api"),
+    ExclusionRule("com.google.guava", "guava")
+  )
 
   val jamesServerCore = jamesServer("core")
   val jamesServerDataApi = jamesServer("data-api")
@@ -103,7 +111,7 @@ object Dependencies {
 
   val testDeps = Seq(
     "org.slf4j" % "slf4j-simple" % Version.slf4j,
-    "org.eknet.neoswing" % "neoswing" % Version.neoswing,
+    "org.eknet.neoswing" % "neoswing" % Version.neoswing exclude("ch.qos.logback", "logback-classic") exclude("ch.qos.logback", "logback-core"),
     "junit" % "junit" % "4.10",
     "org.eknet.scue" %% "scue" % Version.scue classifier("test"),
     jamesServerDataLibTest,

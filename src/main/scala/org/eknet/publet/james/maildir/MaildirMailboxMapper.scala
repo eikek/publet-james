@@ -41,7 +41,7 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
     copy.setMailboxId(idCounter.getAndIncrement)
     debug("Cache mailbox " + copy.getMailboxId+":"+ copy.getName)
     mbox match {
-      case smbox: SimpleMailbox[Int] => smbox.setMailboxId(copy.getMailboxId)
+      case smbox: SimpleMailbox[_] => smbox.asInstanceOf[SimpleMailbox[Int]].setMailboxId(copy.getMailboxId)
       case _ =>
     }
     mailboxCache.put(copy.getMailboxId, copy)
