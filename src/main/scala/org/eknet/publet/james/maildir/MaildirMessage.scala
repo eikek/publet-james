@@ -36,7 +36,7 @@ import grizzled.slf4j.Logging
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 31.01.13 12:42
  */
-class MaildirMessage(mailboxId: Int, var uid: Long, name: MessageName, file: Path) extends AbstractMessage[Int] {
+class MaildirMessage(mailboxId: Int, var uid: Long, val name: MessageName, val file: Path) extends AbstractMessage[Int] {
 
   private var modseq: Long = Files.getLastModifiedTime(file).toMillis
   private val flags = new mutable.HashSet[Flags.Flag]()
@@ -114,9 +114,21 @@ class MaildirMessage(mailboxId: Int, var uid: Long, name: MessageName, file: Pat
   }
 
   def getModSeq = modseq
+
+  def asMessageFile = MessageFile(uid, name, file)
 }
 
 object MaildirMessage extends Logging {
+
+  /**
+   * Creates a new [[org.eknet.publet.james.maildir.MaildirMessage]] for the given
+   * mailbox id and [[org.eknet.publet.james.maildir.lib.MessageFile]].
+   *
+   * @param boxId
+   * @param mf
+   * @return
+   */
+  def from(boxId: Int, mf: MessageFile) = new MaildirMessage(boxId, mf.uid, mf.name, mf.file)
 
   /**
    * Parses a inputstream to create a MaildirMessage object.
@@ -211,5 +223,4 @@ object MaildirMessage extends Logging {
     }
   }
 
-  def from(boxId: Int, mf: MessageFile) = new MaildirMessage(boxId, mf.uid, mf.name, mf.file)
 }

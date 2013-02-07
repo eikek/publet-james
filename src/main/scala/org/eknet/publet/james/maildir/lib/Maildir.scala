@@ -309,7 +309,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
    */
   def moveMessage(mf: MessageFile, target: Maildir): MessageFile = {
     val targetFile = target.curDir / mf.name.fullName
-    mf.file.moveTo(targetFile)
+    mf.file.moveToLenient(targetFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.COPY_ATTRIBUTES)
     val newUid = target.uidlist.addMessage(mf.name)
     uidlist.removeMessage(mf.uid)
     MessageFile(newUid, mf.name, targetFile)

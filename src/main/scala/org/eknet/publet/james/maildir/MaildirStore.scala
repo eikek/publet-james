@@ -70,6 +70,11 @@ class MaildirStore(maildirLocation: String, lock: PathLock[Path]) {
 
   def getMaildir(mailbox: Mailbox[Int]): Maildir = getMaildir(mailbox.getUser, mailbox.getName)
 
+  def getMaildir(mm: MaildirMessage): Maildir = {
+    val folder = mm.file.getParent
+    new Maildir(folder, maildirOptions)
+  }
+
   def nextUid(mailbox: Mailbox[Int]) = getMaildir(mailbox).uidlist.getNextUid
   def lastUid(mailbox: Mailbox[Int]) = nextUid(mailbox) -1
 

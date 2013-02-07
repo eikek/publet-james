@@ -16,7 +16,7 @@
 
 package org.eknet.publet.james.maildir
 
-import lib.{UidRange, MyMessage}
+import lib.{MessageFile, UidRange, MyMessage}
 import org.apache.james.mailbox.store.mail.{MessageMapper, AbstractMessageMapper}
 import org.apache.james.mailbox.{model, MailboxSession}
 import org.apache.james.mailbox.store.mail.model.{Message, Mailbox}
@@ -114,7 +114,16 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession) extends
   }
 
   def move(mailbox: Mailbox[Int], message: Message[Int]) = {
-    throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370")
+    message match {
+      case mm: MaildirMessage => {
+        val maildir = store.getMaildir(mm)
+        val target = store.getMaildir(mailbox)
+        val newMail = maildir.moveMessage(mm.asMessageFile, target)
+        new SimpleMessageMetaData(MaildirMessage.from(mailbox.getMailboxId, newMail))
+      }
+      case _ => throw new UnsupportedOperationException("Not implemented")
+    }
+    //throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370")
   }
 
   def updateFlags(mailbox: Mailbox[Int], flags: Flags, value: Boolean, replace: Boolean, set: MessageRange) = {

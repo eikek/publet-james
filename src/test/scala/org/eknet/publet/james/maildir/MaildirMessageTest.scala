@@ -28,21 +28,7 @@ import org.apache.james.mailbox.store.streaming.CountingInputStream
  */
 class MaildirMessageTest extends FunSuite with ShouldMatchers {
 
-  private val testmailLfLf = MessageName("1355543030.15049_0.km20731:2,S")
-  private val testmailCrLf = MessageName("1360244851.62ad1b340f5e45d8b94a2c907a0b83aa-20373.ithaka,S=1372:2,S")
-
-  private def readMessage(name: MessageName) = {
-    val url = getClass.getResource("/"+name.fullName)
-    url should not be (null)
-    val path = if (url.toURI.getScheme != "file") {
-      Paths.get("target", "scala-2.9.2", "test-classes", name.fullName)
-    } else {
-      Paths.get(url.toURI)
-    }
-    val mf = MessageFile(1231L, name, path)
-    Files.exists(mf.file) should be (true)
-    mf
-  }
+  import MessageProvider._
 
   test ("Parse message with LFLF ") {
     val message = MaildirMessage.from(2, readMessage(testmailLfLf))

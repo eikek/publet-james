@@ -186,6 +186,7 @@ package object lib {
     }
 
     def lastModifiedTime = Files.getLastModifiedTime(path)
+    def fileSize = Files.size(path)
   }
 
 

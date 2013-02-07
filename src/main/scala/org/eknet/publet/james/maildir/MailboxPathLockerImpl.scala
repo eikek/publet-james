@@ -34,8 +34,7 @@ class MailboxPathLockerImpl @Inject() (store: MaildirStore, lock: PathLock[Path]
     executeWithLock(session, path, callback, writeLock = true)
 
   def executeWithLock[T](session: MailboxSession, mboxPath: MailboxPath, callback: LockAwareExecution[T], writeLock: Boolean) = {
-    val inbox = store.getInbox(session.getUser.getUserName)
-    val path = inbox.folder.resolve(mboxPath.getName)
+    val path = store.getMaildir(mboxPath).folder
     lock.withLock(path, exclusive = writeLock) {
       callback.execute()
     }

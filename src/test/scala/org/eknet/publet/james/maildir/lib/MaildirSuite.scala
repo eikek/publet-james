@@ -20,6 +20,7 @@ import org.scalatest.{BeforeAndAfterEach, BeforeAndAfter, FunSuite}
 import org.scalatest.matchers.ShouldMatchers
 import java.nio.file.{Files, Paths}
 import java.util.UUID
+import org.eknet.publet.james.maildir.{MaildirMessage, MessageProvider}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -39,6 +40,22 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
   }
 
   private def maildirCompare(d1: Maildir, d2: Maildir) = d1.name.compareTo(d2.name) < 0
+
+  test ("move message") {
+    import MessageProvider._
+    val added = inbox.putMessage(new MyMessageFile(readMessage(testmailLfLf)))
+    inbox.getMessages(UidRange.All) should have size (1)
+    val targetBox = new Maildir(Paths.get("target", "testmailbox", UUID.randomUUID().toString))
+    targetBox.create()
+    try {
+      val moved = inbox.moveMessage(added.uid, targetBox)
+      inbox.getMessages(UidRange.All) should have size (0)
+      targetBox.getMessages(UidRange.All) should have size (1)
+      moved.name should be (added.name)
+    } finally {
+      targetBox.folder.deleteTree()
+    }
+  }
 
   test ("list subfolder children deep") {
     inbox.resolve("subf2").create()
