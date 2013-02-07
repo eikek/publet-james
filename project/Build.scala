@@ -80,7 +80,7 @@ object Dependencies {
   val jamesServerProtoImap4 = jamesServer("protocols-imap4")
   val jamesServerProtoPop3 = jamesServer("protocols-pop3")
   val jamesServerFetchmail = jamesServer("fetchmail")
-  val jamesServerQueueFile = jamesServer("queue-file")
+//  val jamesServerQueueFile = jamesServer("queue-file")
   val jamesServerMailets = jamesServer("mailets")
 
   // for tests
@@ -91,7 +91,7 @@ object Dependencies {
   val jamesServerAll = Seq(jamesServerCore, jamesServerDataApi, jamesServerDataFile, jamesServerDnsLib,
     jamesServerDnsApi, jamesServerDnsJava, jamesServerFsApi, jamesServerLifecycleApi, jamesServerMailetApi,
     jamesServerMailetCamel, jamesServerQueueApi, jamesServerMailboxAdapater, jamesServerProtoLib, jamesServerUtil,
-    jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, jamesServerQueueFile,
+    jamesServerDataLib,  jamesServerProtoSmtp, jamesServerProtoImap4,jamesServerProtoPop3, 
     jamesServerMailets, jamesServerFetchmail
   )
 

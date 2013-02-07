@@ -18,7 +18,7 @@ package org.eknet.publet.james.maildir
 
 import org.apache.james.mailbox.store.user.SubscriptionMapper
 import org.apache.james.mailbox.store.user.model.Subscription
-import java.nio.file.Files
+import java.nio.file.{Path, Files}
 import java.nio.charset.Charset
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription
 
@@ -39,9 +39,12 @@ class MaildirSubscriptionMapper(store: MaildirStore) extends SubscriptionMapper 
     import collection.JavaConversions._
     val subscriptions = readSubscriptions(subscription.getUser)
     if (!subscriptions.contains(subscription.getMailbox)) {
-      subscriptionFile(subscription.getUser).map(f => Files.write(f,
+      val file = subscriptionFile(subscription.getUser).getOrElse {
+        getPath(subscription.getUser)
+      }
+      Files.write(file,
         subscription.getMailbox :: subscriptions,
-        Charset.defaultCharset()))
+        Charset.defaultCharset())
     }
   }
 
@@ -67,6 +70,9 @@ class MaildirSubscriptionMapper(store: MaildirStore) extends SubscriptionMapper 
   private def subscriptionFile(user: String) = store.getInbox(user).folder.resolve(fileName) match {
     case f if (Files.exists(f)) => Some(f)
     case _ => None
+  }
+  private def getPath(user: String): Path = {
+    store.getInbox(user).folder.resolve(fileName)
   }
 
   def endRequest() {

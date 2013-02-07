@@ -178,7 +178,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
   }
 
   def initialize() {
-    initialize(1L)
+    initialize(math.round((math.random * math.pow(10, 12))))
   }
 
 

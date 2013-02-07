@@ -17,9 +17,8 @@
 package org.eknet.publet.james.maildir
 
 import org.apache.james.mailbox.store.mail.MailboxMapper
-import org.apache.james.mailbox.store.transaction.Mapper.Transaction
 import org.apache.james.mailbox.store.mail.model.Mailbox
-import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
+import org.apache.james.mailbox.model.MailboxPath
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import java.util.concurrent.atomic.AtomicInteger
@@ -91,11 +90,17 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
     if (!inbox.exists) {
       List()
     } else {
-      val pattern = Pattern.compile(Pattern.quote(path.getName).replace("%", ".*"))
-      (inbox :: inbox.listChildren(includeSubfolder = true).toList)
+      val regex = path.getName.split('.')
+        .map(_.replace("%", "[^.]+"))
+        .mkString(Pattern.quote(inbox.options.mailboxDelimiter.toString))
+      val pattern = Pattern.compile("\\.?"+ regex)
+      val list = (inbox :: inbox.listChildren(includeSubfolder = true).toList)
         .withFilter(md => pattern.matcher(md.name).matches())
-        .map(md => new MaildirMailbox[Int](md, new MailboxPath(path.getNamespace, path.getUser, md.name)))
+        .map(md => new MaildirMailbox[Int](md, new MailboxPath(path.getNamespace, path.getUser, stripDelimiter(md.name, md.options.mailboxDelimiter))))
         .toList
+
+      debug("Mailboxes: "+ list)
+      list
     }
   }
 
@@ -104,8 +109,9 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
     if (!maildir.exists) {
       throw new MailboxNotFoundException(mailbox.getName)
     }
-    debug("mailbox "+ mailbox.getMailboxId+":"+mailbox.getName + " has children: "+ maildir.hasChildren)
-    maildir.hasChildren
+    val rc = if (maildir.isRoot) false else maildir.hasChildren
+    debug("mailbox "+ mailbox.getMailboxId+":"+mailbox.getName + " has children: "+ rc)
+    rc
   }
 
   def list() = {

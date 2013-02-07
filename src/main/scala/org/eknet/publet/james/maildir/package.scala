@@ -20,6 +20,8 @@ import org.apache.james.mailbox.store.transaction.Mapper
 import org.apache.james.mailbox.store.transaction.Mapper.Transaction
 import org.apache.james.mailbox.store.mail.model.Mailbox
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.MailboxConstants
+import javax.mail.Flags
 
 /**
  *
@@ -32,4 +34,34 @@ package object maildir {
     def execute[T](tx: Transaction[T]) = tx.run()
   }
 
+  def stripInbox(name: String) = if (name.startsWith(MailboxConstants.INBOX)) {
+    name.substring(MailboxConstants.INBOX.length+1)
+  } else {
+    name
+  }
+
+  def stripDelimiter(name: String, delimiter: Char = '.') = if (name.startsWith(delimiter.toString)) {
+    name.substring(1)
+  } else {
+    name
+  }
+
+  def flagsToString(flags: Flags) = {
+    val buf = new StringBuilder
+    if (flags.contains(Flags.Flag.DELETED))
+      buf.append("D")
+    if (flags.contains(Flags.Flag.ANSWERED))
+      buf.append("R")
+    if (flags.contains(Flags.Flag.DRAFT))
+      buf.append("D")
+    if (flags.contains(Flags.Flag.FLAGGED))
+      buf.append("F")
+    if (flags.contains(Flags.Flag.SEEN))
+      buf.append("S")
+    if (flags.contains(Flags.Flag.RECENT))
+      buf.append("~")
+    if (flags.contains(Flags.Flag.USER))
+      buf.append("u")
+    buf.toString()
+  }
 }

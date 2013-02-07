@@ -109,11 +109,12 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
     SortedMap(meta: _*)
   }
 
-  def move(p1: Mailbox[Int], p2: Message[Int]) = {
+  def move(mailbox: Mailbox[Int], message: Message[Int]) = {
     throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370")
   }
 
   override def updateFlags(mailbox: Mailbox[Int], flags: Flags, value: Boolean, replace: Boolean, set: MessageRange) = {
+    debug("> update flags: "+ mailbox.getMailboxId+":"+mailbox.getName+"; flags="+flagsToString(flags)+"; value="+value+"; replace="+replace+"; set="+set)
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
     val iter = for (mf <- maildir.getMessages(set).values) yield {

@@ -41,8 +41,19 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     curDir.visitFiles(f)
   }
 
+  /**
+   * Checks whether this maildir exists.
+   *
+   * @return
+   */
   def exists: Boolean = curDir.exists && newDir.exists && tmpDir.exists
 
+  /**
+   * Attempts to create this maildir by creating the three known subfolders
+   * `cur`, `new` and `tmp` as well as the uiddb. If this maildir already
+   * exists, an exception is thrown.
+   *
+   */
   def create() {
     if (exists) {
       ioError("The maildir already exists")
@@ -54,6 +65,11 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     uidlist.initialize()
   }
 
+  /**
+   * Deletes this maildir and _all_ of its contents! If this maildir
+   * is the root (INBOX) then all subfolders are also deleted.
+   *
+   */
   def delete() {
     if (!exists) {
       ioError("The maildir does not exist.")
@@ -150,23 +166,37 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     new Maildir(folder / path, options)
   }
 
+  /**
+   * Returns whether `path` is a sub mailbox of this mailbox. That is
+   * either `path` is a direct or some deeper child to this maildir.
+   *
+   * @param path
+   * @return
+   */
   private def isSubMailbox(path: Path) = {
-    val name = path.getFileName.toString
-    path.isDirectory && path.startsWith(folder) && (
-      if (isRoot) {
-        name.startsWith(String.valueOf(options.mailboxDelimiter))
-      } else {
-        name.startsWith(folderName)
-      }
-    )
+    if (path == folder) {
+      false
+    } else {
+      val name = path.getFileName.toString
+      path.isDirectory && path.startsWith(rootMaildir.folder) && (
+        if (isRoot) {
+          name.startsWith(String.valueOf(options.mailboxDelimiter))
+        } else {
+          name.startsWith(folderName)
+        }
+      )
+    }
   }
 
+  /**
+   * Returns whether `child` is a direct child to this maildir.
+   *
+   * @param path
+   * @return
+   */
   private def isChild(path: Path) = {
     val name = path.getFileName.toString
-    val lastDelimiterIdx = if (isRoot) 0 else {
-      folderName.length +1
-    }
-    isSubMailbox(path) && name.indexOf(options.mailboxDelimiter, lastDelimiterIdx) < 0
+    isSubMailbox(path) && name.substring(folderName.length+1).indexOf(options.mailboxDelimiter) == -1
   }
 
 
@@ -176,7 +206,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
    * @return
    */
   def hasChildren = {
-    val ds = folder.list(options.mailboxDelimiter +"*")
+    val ds = rootMaildir.folder.list(options.mailboxDelimiter +"*")
     ds.find(isSubMailbox).isDefined
   }
 
@@ -231,6 +261,35 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     //update uid list
     val uid = uidlist.addMessage(msgName)
     MessageFile(uid, msgName, target)
+  }
+
+  /**
+   * Moves the message with the given uid from this maildir to the given
+   * maildir.
+   *
+   * @param uid
+   * @param target
+   * @return
+   */
+  def moveMessage(uid: Long, target: Maildir): MessageFile = {
+    val msg = getMessage(uid)
+    moveMessage(msg, target)
+  }
+
+  /**
+   * "Moves" the given message file into the given target maildir. The file
+   * is moved into the `cur` folder of the target mailbox.
+   *
+   * @param mf
+   * @param target
+   * @return
+   */
+  def moveMessage(mf: MessageFile, target: Maildir): MessageFile = {
+    val targetFile = target.curDir / mf.name.fullName
+    mf.file.moveTo(targetFile)
+    val newUid = target.uidlist.addMessage(mf.name)
+    uidlist.removeMessage(mf.uid)
+    MessageFile(newUid, mf.name, targetFile)
   }
 
   private def findMessageFile(name: MessageName) = {
@@ -433,8 +492,8 @@ class Maildir(val folder: Path, val options: Options = Options()) {
   def getMessages(range: UidRange): Map[Long, MessageFile] = {
     range match {
       case UidRange.Single(a) => {
-        val msg = getMessage(a)
-        Map(msg.uid -> msg)
+        val msg = findMessage(a)
+        msg.map(m => Map(m.uid -> m)).getOrElse(Map())
       }
       case _ => {
         val set = range match {

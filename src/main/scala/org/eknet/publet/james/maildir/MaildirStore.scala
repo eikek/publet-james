@@ -57,21 +57,18 @@ class MaildirStore(maildirLocation: String, lock: PathLock[Path]) {
     new Maildir(Paths.get(new URI(path)), maildirOptions)
   }
 
-  def getMaildir(path: MailboxPath) = {
-    if (path.getName == MailboxConstants.INBOX) {
-      getInbox(path.getUser)
-    } else {
-      getInbox(path.getUser).resolve(path.getName)
+  private def getMaildir(user: String, name: String) = {
+    if (name == MailboxConstants.INBOX) {
+      getInbox(user)
+    }
+    else {
+      getInbox(user).resolve(stripInbox(name))
     }
   }
 
-  def getMaildir(mailbox: Mailbox[Int]) = {
-    if (mailbox.getName == MailboxConstants.INBOX) {
-      getInbox(mailbox.getUser)
-    } else {
-      getInbox(mailbox.getUser).resolve(mailbox.getName)
-    }
-  }
+  def getMaildir(path: MailboxPath): Maildir = getMaildir(path.getUser, path.getName)
+
+  def getMaildir(mailbox: Mailbox[Int]): Maildir = getMaildir(mailbox.getUser, mailbox.getName)
 
   def newUidProvider: UidProvider[Int] = new UidProviderImpl
   def newModSeqProvider: ModSeqProvider[Int] = new ModSeqProviderImpl
