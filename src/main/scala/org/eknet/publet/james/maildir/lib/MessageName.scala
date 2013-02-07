@@ -25,6 +25,8 @@ import javax.mail.Flags
 import java.nio.file.Path
 import javax.mail
 import com.google.common.collect.{HashBiMap, Maps}
+import collection.mutable
+import grizzled.slf4j.Logging
 
 /**
  * A maildir message name as specified in [[http://cr.yp.to/proto/maildir.html]]
@@ -46,12 +48,14 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
 
     //a name that is accepted by james parser
 //    val attrs = if (attributes.isEmpty) Map("S"->"100") else attributes
-    buf.append(",")
     for (kv <- attributes) {
+      buf.append(",")
       buf.append(kv._1).append("=").append(kv._2)
     }
 
-    buf.append(":2,")
+    if (!flags.isEmpty || !attributes.isEmpty) {
+      buf.append(":2,")
+    }
     for (f <- flags.toList.sorted) {
       buf.append(f)
     }
@@ -87,7 +91,7 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
   }
 }
 
-object MessageName {
+object MessageName extends Logging {
   private lazy val vmpid = ManagementFactory.getRuntimeMXBean.getName.takeWhile(_ != '@')
 
   private val flagBiMap = {
@@ -115,7 +119,36 @@ object MessageName {
     MessageName(buf.toString())
   }
 
-  def apply(name: String): MessageName = Parser.parseAll(Parser.messageName, name).get
+  def apply(name: String): MessageName = {
+    try {
+      Parser.parseAll(Parser.messageName, name).get
+    } catch {
+      case e: RuntimeException => throw new RuntimeException("Parsing message name failed: "+ name, e)
+    }
+  }
+
+  def tryParse(name: String) = {
+    try {
+      Some(Parser.parseAll(Parser.messageName, name).get)
+    } catch {
+      case e: RuntimeException => {
+        warn("Invalid message name encountered: "+ name)
+        None
+      }
+    }
+  }
+
+  def parseFunction = new PartialFunction[String, MessageName] {
+    private val names = mutable.Map[String, MessageName]()
+
+    def apply(x: String) = {
+      names.remove(x) getOrElse MessageName(x)
+    }
+
+    def isDefinedAt(x: String) = {
+      tryParse(x).map(mn => names.put(x, mn)).isDefined
+    }
+  }
 
   private object Parser extends RegexParsers {
 
