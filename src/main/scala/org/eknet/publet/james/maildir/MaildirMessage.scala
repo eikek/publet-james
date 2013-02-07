@@ -22,7 +22,6 @@ import javax.mail.Flags
 import java.nio.file.{Files, Path}
 import collection.mutable
 import java.io.PushbackInputStream
-import org.bouncycastle.mail.smime.util.SharedFileInputStream
 import org.apache.james.mime4j.stream.{EntityState, RecursionMode, MimeTokenStream, MimeConfig}
 import org.apache.james.mime4j.message.{MaximalBodyDescriptor, DefaultBodyDescriptorBuilder}
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder
@@ -31,6 +30,7 @@ import org.apache.james.mailbox.store.streaming.{LimitingFileInputStream, Counti
 import java.util.{Objects, Date}
 import annotation.tailrec
 import grizzled.slf4j.Logging
+import javax.mail.util.SharedFileInputStream
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

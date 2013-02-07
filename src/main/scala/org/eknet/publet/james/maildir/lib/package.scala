@@ -22,6 +22,7 @@ import java.io._
 import scala.Some
 import javax.annotation.concurrent.NotThreadSafe
 import java.nio.file.DirectoryStream.Filter
+import java.nio.charset.Charset
 
 /**
  *
@@ -159,7 +160,10 @@ package object lib {
       }
     }
 
-    def getLines = scala.io.Source.fromFile(path.toFile).getLines()
+    def getLines = {
+      import collection.JavaConversions._
+      Files.readAllLines(path, Charset.defaultCharset()).toList
+    }
 
     def findFile(filter: Path => Boolean) = {
       var result: Option[Path] = None

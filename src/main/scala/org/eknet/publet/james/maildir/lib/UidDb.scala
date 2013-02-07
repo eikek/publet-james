@@ -100,7 +100,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
   }
 
   def findMessageName(uid: Long) = withFileLock {
-    findAndMap(uidFile.getLines.drop(1), findByUid(_ == uid)_)
+    findAndMap(uidFile.getLines.drop(1).iterator, findByUid(_ == uid)_)
   }
 
   def getMessageNames(from: Long, to: Long) = withFileLock {
