@@ -17,7 +17,7 @@
 package org.eknet.publet.james.maildir
 
 import lib.{UidRange, MyMessage}
-import org.apache.james.mailbox.store.mail.AbstractMessageMapper
+import org.apache.james.mailbox.store.mail.{MessageMapper, AbstractMessageMapper}
 import org.apache.james.mailbox.{model, MailboxSession}
 import org.apache.james.mailbox.store.mail.model.{Message, Mailbox}
 import org.apache.james.mailbox.model.{UpdatedFlags, MessageRange}
@@ -35,8 +35,7 @@ import collection.SortedMap
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 15.01.13 19:20
  */
-class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
-  extends AbstractMessageMapper[Int](session, store.newUidProvider, store.newModSeqProvider) with Logging {
+class MaildirMessageMapper(store: MaildirStore, session: MailboxSession) extends MessageMapper[Int] with NoTransaction with Logging {
 
   implicit private[this] def messageRangeToRange(range: MessageRange) = range.getType match {
     case MessageRange.Type.ALL => UidRange.All
@@ -44,6 +43,10 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
     case MessageRange.Type.ONE => UidRange.Single(range.getUidFrom)
     case MessageRange.Type.RANGE => UidRange.Interval(range.getUidFrom, range.getUidTo)
   }
+
+  def getLastUid(mailbox: Mailbox[Int]) = store.lastUid(mailbox)
+
+  def getHighestModSeq(mailbox: Mailbox[Int]) = store.highestModSeq(mailbox)
 
   def findInMailbox(mailbox: Mailbox[Int], range: MessageRange, fetchType: FetchType, max: Int) = {
     debug("> findInMailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+" = "+ messageRangeToRange(range)+ "; "+ fetchType+ "; max="+max)
@@ -113,7 +116,7 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
     throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370")
   }
 
-  override def updateFlags(mailbox: Mailbox[Int], flags: Flags, value: Boolean, replace: Boolean, set: MessageRange) = {
+  def updateFlags(mailbox: Mailbox[Int], flags: Flags, value: Boolean, replace: Boolean, set: MessageRange) = {
     debug("> update flags: "+ mailbox.getMailboxId+":"+mailbox.getName+"; flags="+flagsToString(flags)+"; value="+value+"; replace="+replace+"; set="+set)
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
@@ -134,7 +137,7 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
     iter.iterator
   }
 
-  def save(mailbox: Mailbox[Int], message: Message[Int]) = {
+  def add(mailbox: Mailbox[Int], message: Message[Int]) = {
     debug("> save message in mailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+" => "+ message.getUid)
     val maildir = store.getMaildir(mailbox)
     val mfile = maildir.putMessage(new MyMessageMessage(message))
@@ -143,12 +146,12 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession)
     new SimpleMessageMetaData(message)
   }
 
-  def copy(mailbox: Mailbox[Int], uid: Long, modseq: Long, message: Message[Int]) = {
+  def copy(mailbox: Mailbox[Int], message: Message[Int]) = {
     val copyMsg = new SimpleMessage[Int](mailbox, message)
     val flags = copyMsg.createFlags()
     flags.add(Flags.Flag.RECENT)
     copyMsg.setFlags(flags)
-    save(mailbox, copyMsg)
+    add(mailbox, copyMsg)
   }
 
   // unused methods

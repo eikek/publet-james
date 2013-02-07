@@ -70,28 +70,9 @@ class MaildirStore(maildirLocation: String, lock: PathLock[Path]) {
 
   def getMaildir(mailbox: Mailbox[Int]): Maildir = getMaildir(mailbox.getUser, mailbox.getName)
 
-  def newUidProvider: UidProvider[Int] = new UidProviderImpl
-  def newModSeqProvider: ModSeqProvider[Int] = new ModSeqProviderImpl
+  def nextUid(mailbox: Mailbox[Int]) = getMaildir(mailbox).uidlist.getNextUid
+  def lastUid(mailbox: Mailbox[Int]) = nextUid(mailbox) -1
 
-  private class UidProviderImpl extends UidProvider[Int] {
-    def nextUid(session: MailboxSession, mailbox: Mailbox[Int]) = {
-      val maildir = getMaildir(mailbox)
-      maildir.uidlist.getNextUid
-    }
-
-    def lastUid(session: MailboxSession, mailbox: Mailbox[Int]) = {
-      nextUid(session, mailbox) -1
-    }
-  }
-
-  private class ModSeqProviderImpl extends ModSeqProvider[Int] {
-    def nextModSeq(session: MailboxSession, mailbox: Mailbox[Int]) = {
-      System.currentTimeMillis()
-    }
-
-    def highestModSeq(session: MailboxSession, mailbox: Mailbox[Int]) = {
-      val maildir = getMaildir(mailbox)
-      maildir.lastModified
-    }
-  }
+  def nextModSeq = System.currentTimeMillis()
+  def highestModSeq(mailbox: Mailbox[Int]) = getMaildir(mailbox).lastModified
 }
