@@ -133,6 +133,7 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
     maildir.exists should be (false)
     maildir.create()
     maildir.exists should be (true)
+    maildir.folder.deleteTree()
   }
 
   test ("delete root maildir") {
@@ -149,5 +150,6 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
     maildir.delete()
     maildir.exists should be (false)
     Files.exists(maildir.folder) should be (true)
+    maildir.folder.deleteTree()
   }
 }
