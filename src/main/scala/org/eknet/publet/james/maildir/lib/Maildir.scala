@@ -66,8 +66,8 @@ class Maildir(val folder: Path, val options: Options = Options()) {
   }
 
   /**
-   * Deletes this maildir and _all_ of its contents! If this maildir
-   * is the root (INBOX) then all subfolders are also deleted.
+   * Deletes this maildir with all of its messages. If this maildir
+   * is the root (INBOX) then the subfolders are not deleted.
    *
    */
   def delete() {
@@ -127,6 +127,13 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     new Maildir(folder.resolve(box), options)
   }
 
+  /**
+   * Replaces '/' with mailbox delimiter and adds a delimiter in front of
+   * the name.
+   *
+   * @param name
+   * @return
+   */
   private[this] def normalizeChildname(name: String) = {
     //also allow '/' for separating mailboxes
     val n = name.replace('/', options.mailboxDelimiter)
@@ -155,9 +162,13 @@ class Maildir(val folder: Path, val options: Options = Options()) {
    * @param maildirpath
    * @return
    */
-  def resolve(maildirpath: String) = {
+  def resolve(maildirpath: String): Maildir = {
     val path = normalizeChildname(maildirpath)
-    new Maildir(folder / path, options)
+    if (isRoot) {
+      new Maildir(folder / path, options)
+    } else {
+      rootMaildir.resolve(folderName + path)
+    }
   }
 
   /**
@@ -172,7 +183,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
       false
     } else {
       val name = path.getFileName.toString
-      path.isDirectory && path.startsWith(rootMaildir.folder) && (
+      path.startsWith(rootMaildir.folder) && (
         if (isRoot) {
           name.startsWith(String.valueOf(options.mailboxDelimiter))
         } else {
@@ -183,24 +194,12 @@ class Maildir(val folder: Path, val options: Options = Options()) {
   }
 
   /**
-   * Returns whether `child` is a direct child to this maildir.
-   *
-   * @param path
-   * @return
-   */
-  private def isChild(path: Path) = {
-    val name = path.getFileName.toString
-    isSubMailbox(path) && name.substring(folderName.length+1).indexOf(options.mailboxDelimiter) == -1
-  }
-
-
-  /**
    * Returns whether this mailbox has any child mailboxes.
    *
    * @return
    */
   def hasChildren = {
-    val ds = rootMaildir.folder.list(options.mailboxDelimiter +"*")
+    val ds = rootMaildir.folder.list(folderName+options.mailboxDelimiter +"*")
     ds.find(isSubMailbox).isDefined
   }
 
@@ -209,12 +208,47 @@ class Maildir(val folder: Path, val options: Options = Options()) {
    * the list returns all nested children as well. Otherwise only the direct subfolders
    * to this maildir are returned.
    *
+   * The list is not ordered.
+   *
    * @param includeSubfolder
    * @return
    */
-  def listChildren(includeSubfolder: Boolean = false) = {
-    val filter: Path => Boolean = if (includeSubfolder) isSubMailbox else isChild
-    folder.list(filter).map(path => new Maildir(path, options))
+  def listChildren(includeSubfolder: Boolean = false): Iterable[Maildir] = {
+    val filter: Path => Boolean = p => p.isDirectory && p.getFileName.toString.startsWith(options.mailboxDelimiter.toString)
+    rootMaildir.folder.list(filter)
+      .collect(ChildFun(includeSubfolder))
+      .flatten
+      .toSet
+      .map((path: String) => resolve(path))
+  }
+
+  private final case class ChildFun(subfolders: Boolean) extends PartialFunction[Path, List[String]] {
+
+    private def normalize(path: Path) = {
+      val filename = normalizeChildname(path.getFileName.toString)
+      if (isRoot) Some(filename) else {
+        if (filename.length > folderName.length && filename.startsWith(folderName)) {
+          Some(filename.substring(folderName.length))
+        } else {
+          None
+        }
+      }
+    }
+
+    def isDefinedAt(path: Path) = path.startsWith(rootMaildir.folder) && normalize(path).isDefined
+
+    def apply(path: Path) = normalize(path).map(partName => {
+      val segments = partName.split(options.mailboxDelimiter).toList.drop(1)
+      if (!subfolders) {
+        pathFrom(segments).getName(0).toString :: Nil
+      } else {
+        // does: a.b.c => List(a), List(a,b), List(a,b,c)
+        val sublists = for (el <- segments) yield {
+          (el :: segments.takeWhile(_ != el).reverse).reverse
+        }
+        sublists.map(part => part.mkString(options.mailboxDelimiter.toString))
+      }
+    }) getOrElse(ioError("Internal error: `apply` does not match `isDefinedAt` in partial function"))
   }
 
   /**
@@ -493,12 +527,14 @@ class Maildir(val folder: Path, val options: Options = Options()) {
           case UidRange.All => (Long.MinValue, Long.MaxValue)
         }
         uidlist.getMessageNames(set._1, set._2)
-          .map(t => t._1 -> MessageFile(t._1, t._2, findMessageFile(t._2).get))
+          .map(t => t._1 -> MessageFile(t._1, t._2, findMessageFile(t._2).getOrElse(ioError("Cannot find message uid="+t._1+" name="+t._2.fullName))))
       }
     }
   }
 
   def lastModified = scala.math.max(curDir.lastModifiedTime.toMillis, newDir.lastModifiedTime.toMillis)
+
+  override def toString = getClass.getName+"[name="+name+", folder="+folder+", options="+options+"]"
 }
 
 case class Options(mailboxDelimiter: Char = '.', uiddbProvider: UidDbProvider = TextFileUidDb)

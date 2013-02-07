@@ -20,8 +20,6 @@ import java.nio.file._
 import attribute.BasicFileAttributes
 import java.io._
 import scala.Some
-import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.locks.ReentrantLock
 import javax.annotation.concurrent.NotThreadSafe
 import java.nio.file.DirectoryStream.Filter
 
@@ -36,6 +34,10 @@ package object lib {
     case Some(c) => throw new IOException(msg, c)
     case None => throw new IOException(msg)
   }
+
+
+  implicit def decoratePath(p: Path) = new DecoratedPath(p)
+  implicit def undecoratePath(dp: DecoratedPath) = dp.path
 
   class DecoratedPath(val path: Path) {
     def notExists = Files.notExists(path)
@@ -186,9 +188,6 @@ package object lib {
     def lastModifiedTime = Files.getLastModifiedTime(path)
   }
 
-  implicit def decoratePath(p: Path) = new DecoratedPath(p)
-  implicit def undecoratePath(dp: DecoratedPath) = dp.path
-
 
   @NotThreadSafe
   class Supplier[A <: AnyRef](factory: () => A) {
@@ -206,5 +205,11 @@ package object lib {
     def clear() {
       ref = clean
     }
+  }
+
+  def pathFrom(names: List[String]): java.nio.file.Path = names match {
+    case a::Nil => Paths.get(a)
+    case a::as => Paths.get(a, as: _*)
+    case Nil => sys.error("Name must not be empty")
   }
 }

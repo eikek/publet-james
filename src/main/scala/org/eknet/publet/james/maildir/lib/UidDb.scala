@@ -105,8 +105,9 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
 
   def getMessageNames(from: Long, to: Long) = withFileLock {
     val filter = (id: Long) => id >= from && id <= to
+    val parser = MessageName.parseFunction
     uidFile.getLines.collect({
-      case LineRegex(uid, name) if (filter(uid.toLong)) => (uid.toLong, MessageName(name))
+      case LineRegex(uid, name) if (filter(uid.toLong) && parser.isDefinedAt(name)) => (uid.toLong, parser(name))
     }).toMap
   }
 
@@ -148,7 +149,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
     header.clear()
   }
 
-  def getUidValidity = header.get.uidvalidity
+  def getUidValidity = if (uidFile.exists) header.get.uidvalidity else -1L
 
   def setUidValidity(validity: Long) {
     header.get.copy(uidvalidity = validity).write(uidFile)
