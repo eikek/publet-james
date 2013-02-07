@@ -106,9 +106,8 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
 
   def hasChildren(mailbox: Mailbox[Int], delimiter: Char) = {
     val maildir = store.getMaildir(mailbox)
-    if (!maildir.exists) {
-      throw new MailboxNotFoundException(mailbox.getName)
-    }
+    // a maildir may not exists, but have children (maildir "a.b.c" may exists, but "a.b" not)
+    // if INBOX returns true here, some mail clients do only allow to go into INBOX but not select it
     val rc = if (maildir.isRoot) false else maildir.hasChildren
     debug("mailbox "+ mailbox.getMailboxId+":"+mailbox.getName + " has children: "+ rc)
     rc

@@ -52,11 +52,13 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession) extends
     debug("> findInMailbox: "+ mailbox.getMailboxId+":"+mailbox.getName+" = "+ messageRangeToRange(range)+ "; "+ fetchType+ "; max="+max)
     import collection.JavaConversions._
     val maildir = store.getMaildir(mailbox)
-    maildir.getMessages(range).values
-      .map(m => MaildirMessage.from(mailbox.getMailboxId, m))
+    val files = maildir.getMessages(range)
+      .withFilter(t => range.includes(t._1))
+      .map(m => MaildirMessage.from(mailbox.getMailboxId, m._2))
       .toList
       .sortWith((m1, m2) => m1.uid.compareTo(m2.uid) < 0)
-      .iterator
+
+    files.iterator
   }
 
   def countMessagesInMailbox(mailbox: Mailbox[Int]) = {
