@@ -21,6 +21,7 @@ import org.scalatest.matchers.ShouldMatchers
 import java.nio.file.{Files, Paths}
 import java.util.UUID
 import org.eknet.publet.james.maildir.{MaildirMessage, MessageProvider}
+import javax.mail.Flags
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -40,6 +41,92 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
   }
 
   private def maildirCompare(d1: Maildir, d2: Maildir) = d1.name.compareTo(d2.name) < 0
+
+  test ("set flags") {
+    import MessageProvider._
+    val added1 = inbox.putMessage(new MyMessageFile(readMessage(testmailLfLf), recent = false))
+    val flags = new Flags()
+    flags.add(Flags.Flag.RECENT)
+    val added2 = inbox.setFlags(added1, flags)
+    inbox.isRecent(added2.name) should be (true)
+    inbox.getMessage(added1.uid).name should be (added2.name)
+
+    flags.remove(Flags.Flag.RECENT)
+    flags.add(Flags.Flag.SEEN)
+    flags.add(Flags.Flag.ANSWERED)
+    val added3 = inbox.setFlags(added2, flags)
+    inbox.isCurrent(added3.name) should be (true)
+    added3.name.flags should be (Set("R", "S"))
+  }
+
+  test ("put and delete message") {
+    import MessageProvider._
+    val added1 = inbox.putMessage(new MyMessageFile(readMessage(testmailLfLf), recent = false))
+    inbox.isCurrent(added1.name) should be (true)
+    inbox.isCurrent(added1.uid) should be (true)
+    inbox.isRecent(added1.name) should be (false)
+    inbox.isRecent(added1.uid) should be (false)
+    added1.file.exists should be (true)
+    added1.file.isFile should be (true)
+    inbox.findMessage(added1.uid) should be (Some(added1))
+
+    val added2 = inbox.putMessage(new MyMessageFile(readMessage(testmailLfLf), recent = true))
+    inbox.isCurrent(added2.name) should be (false)
+    inbox.isCurrent(added2.uid) should be (false)
+    inbox.isRecent(added2.name) should be (true)
+    inbox.isRecent(added2.uid) should be (true)
+    added2.file.exists should be (true)
+    added2.file.isFile should be (true)
+    inbox.findMessage(added2.uid) should be (Some(added2))
+
+    inbox.deleteMessage(added1.uid)
+    added1.file.exists should be (false)
+    inbox.findMessage(added1.uid) should be (None)
+
+    inbox.deleteMessage(added2.uid)
+    added2.file.exists should be (false)
+    inbox.findMessage(added2.uid) should be (None)
+  }
+
+  test ("has children") {
+    inbox.hasChildren should be (false)
+    inbox.resolve("sub1/sub2").create()
+    inbox.hasChildren should be (true)
+    inbox.resolve("sub3").create()
+    inbox.hasChildren should be (true)
+
+    inbox.delete()
+    inbox.create()
+    inbox.resolve("sub1").create()
+    inbox.resolve("sub2").create()
+    inbox.hasChildren should be (true)
+    inbox.resolve("sub2").hasChildren should be (false)
+    inbox.resolve("sub4.sub1").create()
+    inbox.resolve("sub4").hasChildren should be (true)
+  }
+
+  test ("resolve child") {
+    val sub1 = inbox.resolve("sub1")
+    sub1.name should be (".sub1")
+    val sub1sub2 = sub1.resolve("sub2")
+    sub1sub2.name should be (".sub1.sub2")
+    sub1.rootMaildir.folder == sub1sub2.rootMaildir.folder
+
+    val ab = inbox.resolve("a/b")
+    ab.create()
+    ab.name should be (".a.b")
+  }
+
+  test ("rename maildir") {
+    val messages = inbox.getMessages(UidRange.All).size
+    val folders = inbox.listChildren().size
+    val mbox = inbox.rename("ymca")
+    mbox.exists should be (true)
+    inbox.exists should be (false)
+    mbox.getMessages(UidRange.All) should have size (messages)
+    mbox.listChildren() should have size (folders)
+    mbox.rename(inbox.folder.getFileName.toString)
+  }
 
   test ("move message") {
     import MessageProvider._

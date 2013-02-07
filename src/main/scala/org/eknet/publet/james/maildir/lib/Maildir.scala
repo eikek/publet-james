@@ -67,7 +67,9 @@ class Maildir(val folder: Path, val options: Options = Options()) {
 
   /**
    * Deletes this maildir with all of its messages. If this maildir
-   * is the root (INBOX) then the subfolders are not deleted.
+   * is the root (INBOX) then any subfolders are not deleted. The
+   * root folder is also not deleted. If this maildir is a subfolder,
+   * then the folder is removed completely.
    *
    */
   def delete() {
@@ -75,14 +77,15 @@ class Maildir(val folder: Path, val options: Options = Options()) {
       ioError("The maildir does not exist.")
     }
     if (isRoot) {
+      uidlist.clear()
       curDir.deleteTree()
       curDir.deleteIfExists()
       newDir.deleteTree()
       newDir.deleteIfExists()
       tmpDir.deleteTree()
       tmpDir.deleteIfExists()
-      uidlist.clear()
     } else {
+      uidlist.clear()
       folder.deleteTree()
       folder.deleteIfExists()
     }
@@ -199,7 +202,11 @@ class Maildir(val folder: Path, val options: Options = Options()) {
    * @return
    */
   def hasChildren = {
-    val ds = rootMaildir.folder.list(folderName+options.mailboxDelimiter +"*")
+    val ds = if (isRoot) {
+      folder.list(options.mailboxDelimiter+"*")
+    } else {
+      rootMaildir.folder.list(folderName+options.mailboxDelimiter +"*")
+    }
     ds.find(isSubMailbox).isDefined
   }
 
