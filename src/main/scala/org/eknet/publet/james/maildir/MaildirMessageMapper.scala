@@ -56,7 +56,6 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession) extends
       .map(m => MaildirMessage.from(mailbox.getMailboxId, m))
       .toList
       .sortWith((m1, m2) => m1.uid.compareTo(m2.uid) < 0)
-      .take(max)
       .iterator
   }
 
@@ -163,9 +162,7 @@ class MaildirMessageMapper(store: MaildirStore, session: MailboxSession) extends
   private class MyMessageMessage(msg: Message[Int]) extends MyMessage {
 
     def isRecent = msg.isRecent
-
     def getSize = Some(msg.getFullContentOctets.toInt)
-
     def getFlags = msg.createFlags()
 
     def writeTo(out: OutputStream) {

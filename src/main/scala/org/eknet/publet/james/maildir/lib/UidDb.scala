@@ -144,11 +144,7 @@ class TextFileUidDb(maildir: Maildir, filename: String, lock: PathLock[Path], ma
       }
     }
     tempOut.close()
-    try {
-      temp.moveTo(uidFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-    } catch {
-      case e: AtomicMoveNotSupportedException => temp.moveTo(uidFile, StandardCopyOption.REPLACE_EXISTING)
-    }
+    temp.moveToLenient(uidFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
     header.clear()
   }
 

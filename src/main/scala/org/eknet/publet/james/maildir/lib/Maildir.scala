@@ -145,13 +145,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     if (target.exists) {
       ioError("Cannot rename this folder, because a folder with that name already exists")
     }
-    try {
-      folder.moveTo(target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.COPY_ATTRIBUTES)
-    } catch {
-      case e: AtomicMoveNotSupportedException => folder.moveTo(target)
-      case e: UnsupportedOperationException => folder.moveTo(target)
-    }
-
+    folder.moveToLenient(target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.COPY_ATTRIBUTES)
     new Maildir(target, options)
   }
 
@@ -251,12 +245,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
     //move to correct folder
     val msgName = tmpName.withFlags(msg.getFlags)
     val target = (if (msg.isRecent) newDir else curDir) / msgName.fullName
-    try {
-      tmpmsgFile.moveTo(target, StandardCopyOption.ATOMIC_MOVE)
-    }
-    catch {
-      case e: AtomicMoveNotSupportedException => tmpmsgFile.moveTo(target)
-    }
+    tmpmsgFile.moveToLenient(target, StandardCopyOption.ATOMIC_MOVE)
 
     //update uid list
     val uid = uidlist.addMessage(msgName)

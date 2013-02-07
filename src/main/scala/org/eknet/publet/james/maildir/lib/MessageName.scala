@@ -45,9 +45,9 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
     buf.append(baseName)
 
     //a name that is accepted by james parser
-    val attrs = if (attributes.isEmpty) Map("S"->"100") else attributes
+//    val attrs = if (attributes.isEmpty) Map("S"->"100") else attributes
     buf.append(",")
-    for (kv <- attrs) {
+    for (kv <- attributes) {
       buf.append(kv._1).append("=").append(kv._2)
     }
 

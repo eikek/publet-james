@@ -74,6 +74,24 @@ package object lib {
     def copyTo(other: Path, options: CopyOption*) = Files.copy(path, other, options: _*)
     def moveTo(other: Path, options: CopyOption*) = Files.move(path, other, options: _*)
 
+    /**
+     * Same as `moveTo(Path, CopyOption*)` but it handles [[java.nio.file.AtomicMoveNotSupportedException]]
+     * and retries without this options. It also handles [[java.lang.UnsupportedOperationException]] and
+     * retries without any copy options.
+     *
+     * @param other
+     * @param options
+     * @return
+     */
+    def moveToLenient(other: Path, options: CopyOption*) = {
+      try {
+        moveTo(other, options: _*)
+      } catch {
+        case e: AtomicMoveNotSupportedException => moveTo(other, options.filter(_ != StandardCopyOption.ATOMIC_MOVE): _*)
+        case e: UnsupportedOperationException => moveTo(other)
+      }
+    }
+
     def getOutput(options: OpenOption*) = Files.newOutputStream(path, options: _*)
     def getWriter(options: OpenOption*) = new BufferedWriter(new OutputStreamWriter(getOutput(options: _*)))
     def getInput(options: OpenOption*) = Files.newInputStream(path, options: _*)

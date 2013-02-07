@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  */
 class MessageNameTest extends FunSuite with ShouldMatchers {
 
-  val validNames = List(
+  val validNames = Map(
     "1355675651.f3dd564265174501.foohost,S=661:2," -> MessageName(1355675651, "f3dd564265174501", "foohost", Map("S"->"661")),
     "1355675588.5c7e107958851103.foohost,S=654:2,S" -> MessageName(1355675588, "5c7e107958851103", "foohost", Map("S" -> "654"), Set("S")),
     "1355543030.15049_0.foo.org" -> MessageName(1355543030, "15049_0", "foo.org"),
@@ -39,13 +39,10 @@ class MessageNameTest extends FunSuite with ShouldMatchers {
     }
   }
 
-  test ("lock reentrant") {
-    val lock = new JvmLocker[String]()
-    lock.withLock("path", timeout = (4, TimeUnit.SECONDS)) {
-      println("Hello 1")
-      lock.withLock("path", timeout = (1, TimeUnit.MILLISECONDS)) {
-        println("Hello 2")
-      }
+  test ("parse generated names") {
+    for (i <- 1 to 10) {
+      val name = MessageName.create()
+      MessageName(name.fullName) should be (name)
     }
   }
 }

@@ -17,6 +17,8 @@
 package org.eknet.publet.james.maildir.lib
 
 import java.util.concurrent.{TimeoutException, TimeUnit, ConcurrentHashMap}
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -27,7 +29,7 @@ trait PathLock[Path] {
   type Timeout = (Long, TimeUnit)
 
   def withLock[A](path: Path, timeout: Timeout = (30, TimeUnit.SECONDS), exclusive: Boolean = true)(fun: => A): A= {
-    lock(path, timeout)
+    lock(path, timeout, exclusive)
     try {
       fun
     } finally {
@@ -44,32 +46,45 @@ trait PathLock[Path] {
 class JvmLocker[Path] extends PathLock[Path] {
   private implicit def timeoutToMillis(timeout: Timeout) = timeout._2.toMillis(timeout._1)
 
-  private val locks = new ConcurrentHashMap[Path, Thread]()
-  private val exclusive = new ConcurrentHashMap[Thread, Boolean]()
+  private val locks = new ConcurrentHashMap[Path, ReentrantReadWriteLock]()
 
+  private[lib] def containsLocks = !locks.isEmpty
+
+
+  /**
+   * Returns whether the current thread holds an exclusive lock for `p`.
+   * @param p
+   * @return
+   */
+  def isLockedExclusivelyByCurrentThread(p: Path) = {
+    Option(locks.get(p)).map(l => l.isWriteLockedByCurrentThread).getOrElse(false)
+  }
 
   def lock(path: Path, timeout: Timeout, excl: Boolean) {
-    val current = Thread.currentThread()
-    exclusive.putIfAbsent(current, excl)
-    Option(locks.putIfAbsent(path, current)) match {
-      case Some(t) if (t != current) => {
-        if (excl || Option(exclusive.get(t)).exists(_ == true)) {
-          val start = System.currentTimeMillis()
-          synchronized { wait(timeout) }
-          if (System.currentTimeMillis() - start >= timeoutToMillis(timeout)) {
-            throw new TimeoutException("lock timed out")
-          }
-          lock(path, timeout, excl)
-        }
-      }
-      case _ =>
+    val l = new ReentrantReadWriteLock()
+    val lock = Option(locks.putIfAbsent(path, l)).getOrElse(l)
+    val success = if (excl) lock.writeLock().tryLock(timeout._1, timeout._2)
+                  else lock.readLock().tryLock(timeout._1, timeout._2)
+    if (!success) {
+      throw new TimeoutException(Thread.currentThread()+" timed out waiting to lock '"+ path+"'")
     }
-    exclusive.remove(Thread.currentThread())
   }
 
   def unlock(path: Path) {
-    if (Option(locks.remove(path)) != None) {
-      synchronized { notifyAll() }
+    Option(locks.get(path)).map(unlock(path, _))
+  }
+
+  private[this] def unlock(path: Path, lock: ReentrantReadWriteLock) {
+    if (lock.isWriteLockedByCurrentThread) {
+      if (lock.getWriteHoldCount == 1 && !lock.hasQueuedThreads) {
+        locks.remove(path)
+      }
+      lock.writeLock().unlock()
+    } else {
+      if (lock.getReadHoldCount == 1 && !lock.hasQueuedThreads) {
+        locks.remove(path)
+      }
+      lock.readLock().unlock()
     }
   }
 
