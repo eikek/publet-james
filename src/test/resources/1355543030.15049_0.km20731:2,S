@@ -1,0 +1,30 @@
+Return-Path: <ossecm@km20731>
+X-Original-To: root@mymail.org
+Delivered-To: root@mymail.org
+Received: from notify.ossec.net (localhost.localdomian [127.0.0.1])
+	by mail.mymail.org (Postfix) with SMTP id A635B9D4064
+	for <root@mymail.org>; Sat, 15 Dec 2012 04:43:49 +0100 (CET)
+To: <root@mymail.org>
+From: OSSEC HIDS <ossecm@mymail>
+Date: Sat, 15 Dec 2012 04:43:49 +0100
+Subject: OSSEC Notification - km20731 - Alert level 8
+Message-Id: <20121215034349.A635B9D4064@mail.mymail.org>
+X-Spam: NO
+X-Spam-Rating: 0
+X-Spam-Level:  0
+
+OSSEC HIDS Notification.
+2012 Dec 15 04:43:36
+
+Received From: km20731->/var/log/auth.log
+Rule: 5701 fired (level 8) -> "Possible attack on the ssh server (or version gathering)."
+Portion of the log(s):
+
+Dec 15 04:43:35 mymail sshd[15025]: Bad protocol version identification '\026\003' from 116.253.69.218
+
+
+
+ --END OF NOTIFICATION
+
+
+
