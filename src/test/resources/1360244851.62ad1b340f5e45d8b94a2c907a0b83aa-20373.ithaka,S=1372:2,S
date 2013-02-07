@@ -1,0 +1,45 @@
+Return-Path: <john@localhost>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-UserIsAuth: true
+Delivered-To: eike@localhost
+Received: from localhost (EHLO ithaka.local) ([127.0.0.1])
+          by ithaka (JAMES SMTP Server ) with ESMTPA ID 10223652
+          for <eike@localhost>;
+          Thu, 07 Feb 2013 14:47:31 +0100 (CET)
+Date: Thu, 7 Feb 2013 14:47:28 +0100
+From: John Doe <john@localhost>
+To: eike@localhost
+Subject: [ossecm@km20731: OSSEC Notification - km20731 - Alert level 8]
+Message-ID: <20130207134728.GA20514@ithaka.local>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.5.21 (2010-09-15)
+
+A forwaded message just for you. Original was a utf8 text file. Now
+this is saved as iso8859.
+
+----- Forwarded message from OSSEC HIDS <ossecm@km20731> -----
+
+Date: Sat, 15 Dec 2012 04:43:49 +0100
+From: OSSEC HIDS <ossecm@km20731>
+To: root@eknet.org
+Subject: OSSEC Notification - km20731 - Alert level 8
+
+OSSEC HIDS Notification.
+2012 Dec 15 04:43:36
+
+Received From: km20731->/var/log/auth.log
+Rule: 5701 fired (level 8) -> "Possible attack on the ssh server (or version gathering)."
+Portion of the log(s):
+
+Dec 15 04:43:35 km20731 sshd[15025]: Bad protocol version identification '\026\003' from 116.253.69.218
+
+
+
+ --END OF NOTIFICATION
+
+
+
+
+----- End forwarded message -----

@@ -30,6 +30,7 @@ import com.google.common.io.ByteStreams
 import org.apache.james.mailbox.store.streaming.{LimitingFileInputStream, CountingInputStream}
 import java.util.{Objects, Date}
 import annotation.tailrec
+import grizzled.slf4j.Logging
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -115,7 +116,7 @@ class MaildirMessage(mailboxId: Int, var uid: Long, name: MessageName, file: Pat
   def getModSeq = modseq
 }
 
-object MaildirMessage {
+object MaildirMessage extends Logging {
 
   /**
    * Parses a inputstream to create a MaildirMessage object.
@@ -136,7 +137,7 @@ object MaildirMessage {
     val skip = Set(EntityState.T_BODY, EntityState.T_END_OF_STREAM, EntityState.T_START_MULTIPART)
     val propertyBuilder = new PropertyBuilder()
     sharedIn.exec {
-      val bodyStartByte = getBodyStartOctets(new PushbackInputStream(sharedIn, 3), null, 0, 0)
+      val bodyStartByte = getBodyStartOctets(new PushbackInputStream(sharedIn, 3), Array(), 0, 0)
       parser.parse(sharedIn.newStream(0, -1))
       var next = parser.next()
       while (!skip.contains(next)) {
@@ -186,17 +187,23 @@ object MaildirMessage {
     }
   }
 
-  private[this] val headerTerminate = Array[Byte](0x0D, 0x0A, 0x0D, 0x0A)
+  // double line break \r\n\r\n (2xCRLF)
+  private[this] val rnrn = Array[Byte](0x0D, 0x0A, 0x0D, 0x0A)
+  // double line break \n\n (2xLF)
+  private[this] val nn = Array[Byte](0x0A, 0x0A)
 
   @tailrec
   private[this] def getBodyStartOctets(inMsg: PushbackInputStream, input: Array[Byte], length: Int, count: Int): Int = {
-    if (Objects.deepEquals(input, headerTerminate)) {
+    if (Objects.deepEquals(input, rnrn) || Objects.deepEquals(input.take(2), nn)) {
       count
     } else {
       for (i <- (1 to (length-1)).reverse) {
         inMsg.unread(input(i))
       }
-      if (inMsg.available() <= 4) -1 else {
+      if (inMsg.available() <= 4) {
+        warn("Unable to find body start byte.")
+        -1
+      } else {
         val next = new Array[Byte](4)
         val len = inMsg.read(next)
         getBodyStartOctets(inMsg, next, len, count +1)
