@@ -26,15 +26,15 @@ class ImapStatsCollector extends LoginStatsService {
         isSuccessful(ev.response).map(succ => stats.countLogin(loginReq.getUserid, succ))
       }
       case irLoginReq: IRAuthenticateRequest => {
-        val decoded = new String(Base64.decodeBase64(irLoginReq.getInitialClientResponse))
+        val decoded = new String(Base64.decodeBase64(irLoginReq.getInitialClientResponse)).trim
         val login = if (decoded.indexOf('\u0000') > 0) {
-          Some(decoded.takeWhile(_ != '\u0000'))
-        }
-        else if (decoded.indexOf('=') > 0) {
-          val un = decoded.split("=", 2)(0)
-          Some(un)
-        }
-        else None
+            Some(decoded.takeWhile(_ != '\u0000'))
+          }
+          else if (decoded.indexOf('=') > 0) {
+            val un = decoded.split("=", 2)(0)
+            Some(un)
+          }
+          else None
 
         login.map(l => {
           //Strange: successful IR logins are not delegated to the LOGIN command. failed ones are...
