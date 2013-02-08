@@ -90,10 +90,24 @@ class MaildirMailboxMapper(session: MailboxSession, store: MaildirStore) extends
     if (!inbox.exists) {
       List()
     } else {
-      val regex = path.getName.split('.')
-        .map(_.replace("%", "[^.]+"))
-        .mkString(Pattern.quote(inbox.options.mailboxDelimiter.toString))
-      val pattern = Pattern.compile("\\.?"+ regex)
+      // I have no clue what is expected here. There were requests
+      // like "subfolder.%", "%" or "%.%". The last one made me
+      // think that a single '%' means "match one folder name", but
+      // the clients did always want to see all folders (including sub
+      // folders). So what follows  is something that worked with a
+      // few mail clients I tried with:
+      // if "%" is the last character, it is replaced with the ".*" regex
+      // otherwise a "%" is replaced to match all but the delimiter char
+      val query = path.getName match {
+        case q if (q.endsWith("%.%")) => q.substring(0, q.length-3) + "MATCH_ALL"
+        case q if (q.endsWith("%")) => q.substring(0, q.length-1) + "MATCH_ALL"
+        case q => q
+      }
+      val delimiterRegex = Pattern.quote(inbox.options.mailboxDelimiter.toString)
+      val regex = query.split(inbox.options.mailboxDelimiter)
+        .map(_.replace("%", "[^"+inbox.options.mailboxDelimiter+"]+").replace("MATCH_ALL", ".*"))
+        .mkString(delimiterRegex)
+      val pattern = Pattern.compile(delimiterRegex+"?"+ regex)
       val list = (inbox :: inbox.listChildren(includeSubfolder = true).toList)
         .withFilter(md => pattern.matcher(md.name).matches())
         .map(md => new MaildirMailbox[Int](md, new MailboxPath(path.getNamespace, path.getUser, stripDelimiter(md.name, md.options.mailboxDelimiter))))
