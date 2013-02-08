@@ -474,7 +474,7 @@ class Maildir(val folder: Path, val options: Options = Options()) {
    * @return
    */
   def setRecent(mf: MessageFile): MessageFile = {
-    val newName = mf.name.copy(flags = Set())
+    val newName = mf.name.toRecent
     val target = newDir / newName.fullName
     if (target != mf.file) {
       mf.file.moveTo(target, StandardCopyOption.ATOMIC_MOVE)

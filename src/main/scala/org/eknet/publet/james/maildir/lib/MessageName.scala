@@ -34,7 +34,12 @@ import grizzled.slf4j.Logging
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 10.01.13 20:40
  */
-final case class MessageName(time: Long, unique: String, host: String, attributes: Map[String, String] = Map(), flags: Set[String] = Set()) {
+final case class MessageName(time: Long,
+                             unique: String,
+                             host: String,
+                             attributes: Map[String, String] = Map(),
+                             flags: Set[String] = Set(),
+                             flagPrefix: String = "") {
 
   lazy val baseName = {
     val buf = new StringBuilder
@@ -53,7 +58,10 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
       buf.append(kv._1).append("=").append(kv._2)
     }
 
-    if (!flags.isEmpty || !attributes.isEmpty) {
+    if (!flagPrefix.isEmpty) {
+      buf.append(flagPrefix)
+    }
+    else if (!flags.isEmpty) {
       buf.append(":2,")
     }
     for (f <- flags.toList.sorted) {
@@ -72,9 +80,23 @@ final case class MessageName(time: Long, unique: String, host: String, attribute
     import collection.JavaConversions._
     val set = (for (t <- MessageName.flagBiMap) yield {
       if (flags.contains(t._1)) Some(t._2) else None
-    }).toList.flatten.toSet
+    }).flatten.toSet
     copy(flags = set)
   }
+
+  /**
+   * Creates a new message name from this one as usually seen in the
+   * `new` folder for recent messages. This name has no flags set
+   *
+   * So it will then look like either one of these:
+   * {{{
+   *   1355543030.15049_0.foo.org
+   *   1355543030.15049_0.foo.org:2,
+   * }}}
+   *
+   * @return
+   */
+  def toRecent = copy(flags = Set())
 
   def getFlags: Flags = {
     val flags = new mail.Flags()
@@ -105,18 +127,15 @@ object MessageName extends Logging {
   }
 
   def create(hostname: Option[String] = None, size: Option[Int] = None) = {
-    val buf = new StringBuilder
-    buf.append(TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS))
-    buf.append(".")
-    buf.append(UUID.randomUUID().toString.replaceAll("-", ""))
-    buf.append("-")
-    buf.append(vmpid)
-    buf.append(".")
-    buf.append(hostname.getOrElse(InetAddress.getLocalHost.getHostName))
-    size filter(_ > 0)  map { sz =>
-      buf.append(",S=").append(sz)
-    }
-    MessageName(buf.toString())
+    val prefix = ":2,"
+    MessageName(
+      TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS),
+      UUID.randomUUID().toString.replaceAll("-", "") +"-"+ vmpid,
+      hostname.getOrElse(InetAddress.getLocalHost.getHostName),
+      size.filter(_ > 0).map(sz => Map("S"->sz.toString)).getOrElse(Map()),
+      Set(),
+      size.filter(_ > 0).map(s=>prefix).getOrElse("")
+    )
   }
 
   def apply(name: String): MessageName = {
@@ -154,7 +173,7 @@ object MessageName extends Logging {
 
     def messageName = timestamp ~ "." ~ clientUnique ~ "." ~ hostname ~ attributes ~ flags ^^ {
       case (ts ~ "." ~ uniq ~ "." ~ host ~ attrMap ~ flag) => {
-        new MessageName(ts, uniq, host, attrMap, flag)
+        new MessageName(ts, uniq, host, attrMap, flag._2, flag._1)
       }
       case x@_ => sys.error("Wrong message name: "+ x)
     }
@@ -173,9 +192,11 @@ object MessageName extends Logging {
       case None => Map[String, String]()
       case x@_ => sys.error("Unknown attribute repetition: " + x)
     }
+    private val emptySet = Set[String]()
     private val flags = opt(":[21],".r ~ opt("[A-Z]+".r))  ^^ {
-      case Some(_ ~ Some(f)) => f.toCharArray.map(_.toString).toSet
-      case x@_ => Set[String]()
+      case Some(prefix ~ Some(f)) => (prefix, f.toCharArray.map(_.toString).toSet)
+      case Some(prefix ~ _) => (prefix, emptySet)
+      case x@_ => ("", emptySet)
     }
   }
 }
