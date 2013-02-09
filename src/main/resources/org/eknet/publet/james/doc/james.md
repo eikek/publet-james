@@ -118,7 +118,7 @@ configure the thread pool using `quartz.properties` configuration file. Please s
 ### Sieve
 
 [Apache James](http://james.apache.org) supports filtering incoming mails using
-[Sieve](http://en.wikipedia.org/wiki/Sieve_(mail_filtering_language) scripts. The sieve
+[Sieve](http://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)) scripts. The sieve
 scripts are hold inside a git repository `publet-james-sieve` that is mounted to
 `publet/james/sieve/`. You can restrict access to the repository by adding a repository
 model entry to the `repositories.xml` file as explained in the
