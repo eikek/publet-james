@@ -150,6 +150,9 @@ object MaildirMessage extends Logging {
     val propertyBuilder = new PropertyBuilder()
     sharedIn.exec {
       val bodyStartByte = getBodyStartOctets(new PushbackInputStream(sharedIn, 3), Array(), 0, 0)
+      if (bodyStartByte == -1) {
+        warn("Unable to find body start byte in message: " + file)
+      }
       parser.parse(sharedIn.newStream(0, -1))
       var next = parser.next()
       while (!skip.contains(next)) {
@@ -213,7 +216,6 @@ object MaildirMessage extends Logging {
         inMsg.unread(input(i))
       }
       if (inMsg.available() <= 4) {
-        warn("Unable to find body start byte.")
         -1
       } else {
         val next = new Array[Byte](4)
