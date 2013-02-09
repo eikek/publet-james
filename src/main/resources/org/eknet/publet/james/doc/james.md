@@ -29,8 +29,6 @@ or something similiar can be used to forward traffic from the standard ports to 
 
     iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 25 -j REDIRECT --to-port 9025
 
-I found it easier while testing, because when removing this rule I can safely test on
-the local port without outside access.
 
 #### Users
 
@@ -47,11 +45,11 @@ This extension provides default configuration for james that aims to be as
 sensible as possible. These are the templates provided by James with only
 slight modifications. The configuration is provided by the following files:
 
-* [domainlist.conf](domainlist.html)
-* [imapserver.conf](imapserver.html)
-* [smtpserver.conf](smtpserver.html)
-* [pop3server.conf](pop3server.html)
-* [mailetcontainer.conf](mailetcontainer.html)
+* [domainlist.xml](domainlist.html)
+* [imapserver.xml](imapserver.html)
+* [smtpserver.xml](smtpserver.html)
+* [pop3server.xml](pop3server.html)
+* [mailetcontainer.xml](mailetcontainer.html)
 
 If any such file is placed in the `etc/` directory, the default file is
 discarded.
@@ -301,13 +299,26 @@ registered mbean).
 
 ### Web Interface
 
-The following give a quick view of the two management sites available. In general, every
-submission is immediately applying to the services. For example, as soon as you remove a
-domain, the mail server does not accept mails with this domain anymore.
+The following give a quick view of the two management sites available -- `/publet/james/manage.html` and
+`/publet/james/mailsettings.html. In general, every submission is immediately applying to the services. For
+example, as soon as you remove a domain, the mail server does not accept mails to this domain anymore.
 
 #### Domains
 
 Managing domains is not much. You can add and remove domains.
+
+Be aware that the list of domains can be read by any authenticated user. This is necessary
+to allow users to create mail alias for themselves. In this case it can be desireable
+to narrow down the domain list for specific users (user A should only see domain X, while
+user B can see domain X and Y). The list of domains that is returned to the ui can be narrowed
+by specifying a regular expression in `settings.properties`, for example:
+
+    james.ui.domainFilter.<login>=(domain1.*|domain2.*)
+    james.ui.defaultDomainFilter=(domain1.*|domain2.*)
+
+At first the filter for a specific login is tried, secondly the default domain filter
+is used. If nothing is specified the complete domainlist is returned.
+
 
 #### Mappings
 
@@ -322,6 +333,9 @@ on a target, the form is filled with that information and you can edit the entry
 
 In the screenshot above, all mails to `me@localhost` are forwarded to the local account `john`,
 while all mails to `mail@localhost` is forwarded to the local account `eike`.
+
+The mail alias management widget is internally editing these mappings, while restricting the
+target to the logged in user.
 
 #### Fetchmail Accounts
 

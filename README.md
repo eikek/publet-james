@@ -3,11 +3,12 @@
 This is an extension for [publet](https://eknet.org/main/projects/publet/index.html) that
 adds the [Apache James](http://james.apache.org) server to the play.
 
-With this extension publet advances to an email platform.
+With this extension publet advances to an email platform. It is build against the current
+snaptshot version of James (which is 3.0-beta5) and uses a custom maildir implementation.
 
 The complete documentation is provided in the source tree at
 `src/main/resources/org/eknet/publet/james/doc/` and visible if this extension is
-added to a publet instance.
+installed to a publet instance.
 
 ## Configuration
 
@@ -28,8 +29,6 @@ or something similiar can be used to forward traffic from the standard ports to 
 
     iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 25 -j REDIRECT --to-port 9025
 
-I found it easier while testing, because when removing this rule I can safely test on
-the local port without outside access.
 
 #### Users
 
@@ -46,11 +45,11 @@ This extension provides default configuration for james that aims to be as
 sensible as possible. These are the templates provided by James with only
 slight modifications. The configuration is provided by the following files:
 
-* `domainlist.conf`
-* `imapserver.conf`
-* `smtpserver.conf`
-* `pop3server.conf`
-* `mailetcontainer.conf`
+* `domainlist.xml`
+* `imapserver.xml`
+* `smtpserver.xml`
+* `pop3server.xml`
+* `mailetcontainer.xml`
 
 If any such file is placed in the `etc/` directory, the default file is
 discarded.

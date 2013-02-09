@@ -19,6 +19,7 @@ package org.eknet.publet.james.ui
 import org.eknet.publet.engine.scala.ScalaScript
 import org.eknet.publet.web.util.RenderUtils
 import org.eknet.publet.james.Permissions
+import org.eknet.publet.web.shiro.Security
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -37,10 +38,18 @@ class ManageDomains extends ScalaScript {
   }
 
   def getDomains = authenticated {
-    RenderUtils.makeJson((domainList.getDefaultDomain :: maildb.getDomainList).distinct)
+    val login = Security.username
+    val regex = settings("james.ui.domainFilter."+login)
+      .orElse(settings("james.ui.defaultDomainFilter"))
+      .getOrElse(".*")
+    val byRegex : String => Boolean = _.matches(regex)
+    val domains = (domainList.getDefaultDomain :: maildb.getDomainList).distinct
+    RenderUtils.makeJson(domains filter byRegex)
   }
 
-  def getDefaultDomain = RenderUtils.makeJson(domainList.getDefaultDomain)
+  def getDefaultDomain = authenticated {
+    RenderUtils.makeJson(domainList.getDefaultDomain)
+  }
 
   def addDomain() = paramLc("domain") match {
     case Some(d) => withPerm(Permissions.addDomain(d)) {

@@ -24,7 +24,7 @@ import org.eknet.publet.web.shiro.Security
 import org.apache.shiro.authz.{UnauthorizedException, UnauthenticatedException}
 import org.apache.shiro.authz
 import org.eknet.publet.auth.store.UserProperty
-import org.eknet.publet.web.{RunMode, Config}
+import org.eknet.publet.web.{Settings, RunMode, Config}
 import grizzled.slf4j.Logging
 
 /**
@@ -50,6 +50,7 @@ package object ui extends Logging {
   def domainList = PubletWeb.instance[DomainList].get
   def maildb = PubletWeb.instance[MailDb].get
   def config = PubletWeb.instance[Config].get
+  def settings = PubletWeb.instance[Settings].get
 
   def success(msg: String) = RenderUtils.makeJson(Map("success"->true, "message"->msg))
   def failure(msg: String) = RenderUtils.makeJson(Map("success"->false, "message"->msg))
