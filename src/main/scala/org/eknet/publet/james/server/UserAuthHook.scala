@@ -25,8 +25,14 @@ class UserAuthHook @Inject() (repo: UsersRepository) extends UsersRepositoryAuth
 
   override def doAuth(session: SMTPSession, username: String, password: String) = {
     val watch = new Stopwatch().start()
+    //debugging here showed that this flag was set to true?! The super.doAuth is setting it on successful auth
+    session.setRelayingAllowed(false)
     val result = super.doAuth(session, username, password)
     val execTime = watch.stop().elapsedMillis()
+    //set the user regardless of auth result, to be available for the hooks
+    if (session.getUser == null) {
+      session.setUser(username)
+    }
     hookResultListener.foreach(_.onHookResult(session, result, execTime, this))
     result
   }

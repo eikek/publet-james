@@ -11,7 +11,7 @@ class SmtpStats {
 
   val created = new AtomicLong(System.currentTimeMillis())
   private val counters = new ConcurrentHashMap[SmtpStats.Keys.Key, AtomicLong]()
-  private val loginStats = new LoginStats
+  val loginStats = new LoginStats
 
   def count(key: SmtpStats.Keys.Key) {
     val c = counters.putIfAbsent(key, new AtomicLong(1))
@@ -21,15 +21,6 @@ class SmtpStats {
   }
 
   def getCount(key: SmtpStats.Keys.Key) = Option(counters.get(key)).map(_.get()).getOrElse(0L)
-
-  def countLogin(success: Boolean) {
-    loginStats.countLogin("dummy", success = success)
-  }
-
-
-  def getSuccessfulLogins = loginStats.getSuccessfulLogins("dummy").getOrElse(0L)
-  def getFailedLogins = loginStats.getFailedLogins("dummy").getOrElse(0L)
-
 
   def clear() {
     counters.clear()

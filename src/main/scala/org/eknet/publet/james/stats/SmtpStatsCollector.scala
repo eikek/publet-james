@@ -34,7 +34,8 @@ class SmtpStatsCollector extends SmtpStatsService {
     ev.hook match {
       case auth: UsersRepositoryAuthHook => {
         val success = ev.result.getResult == HookReturnCode.OK
-        stats.countLogin(success)
+        val login = Option(ev.session.getUser).getOrElse("dummy")
+        stats.loginStats.countLogin(login, success)
       }
       case rcpvalid: ValidRcptHandler => {
         if (ev.result.getResult == HookReturnCode.DENY) {
@@ -67,14 +68,17 @@ class SmtpStatsCollector extends SmtpStatsService {
     }
   }
 
-  def clearValues() {
+  def reset() {
     stats.clear()
   }
 
+  def getSuccessfulLogins(user: String) = stats.loginStats.getSuccessfulLogins(user).getOrElse(0L)
+  def getFailedLogins(user: String) = stats.loginStats.getFailedLogins(user).getOrElse(0L)
+  def getUsernames = stats.loginStats.getAllUsers.toArray
 
   def getSince = new Date(stats.created.get())
-  def getSuccessfulLogins = stats.getSuccessfulLogins
-  def getFailedLogins = stats.getFailedLogins
+  def getSuccessfulLogins = stats.loginStats.getSuccessfulLogins
+  def getFailedLogins = stats.loginStats.getFailedLoginAttempts
   def getConnectionAttempts = stats.getCount(connections)
   def getAcceptedMails = stats.getCount(acceptedMails)
   def getUnknownLocalUser = stats.getCount(unknownUser)

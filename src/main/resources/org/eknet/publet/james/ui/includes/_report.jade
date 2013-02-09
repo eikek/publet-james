@@ -16,26 +16,16 @@
     h1
       | James Report
       small =formatDate(now)
-h3 SMTP
+h3 SMTP Delivery
 table.table
   tr
     th Since
     th = formatDate(smtpStats.getSince)
   tr
-    td Connections
+    td Connections Attempts
     td
       span.badge.badge-info
         =smtpStats.getConnectionAttempts
-  tr
-    td Successful Logins
-    td
-      span.badge.badge-success
-        =smtpStats.getSuccessfulLogins
-  tr
-    td Failed Logins
-    td
-      span.badge.badge-important
-        =smtpStats.getFailedLogins
   tr
     td Mails accepted
     td
@@ -61,6 +51,10 @@ table.table
     td
       span.badge.badge-important
         =smtpStats.getRelayDenies
+
+- setAttribute("header", Some("SMTP Logins"))
+- setAttribute("stats", Some(smtpStats))
+- include("_loginreport.jade")
 
 - setAttribute("header", Some("IMAP"))
 - setAttribute("stats", Some(imapStats))

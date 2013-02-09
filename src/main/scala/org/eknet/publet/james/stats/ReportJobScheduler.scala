@@ -100,7 +100,7 @@ class ReportJobScheduler @Inject() (scheduler: Scheduler,
   }
 
   def resetSmtp() {
-    smtpStats.clearValues()
+    smtpStats.reset()
   }
 
   def resetImap() {

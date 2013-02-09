@@ -8,10 +8,7 @@ import java.util.Date
  * @since 10.01.13 15:46
  */
 @MXBean
-trait SmtpStatsService {
-
-  def getSuccessfulLogins: Long
-  def getFailedLogins: Long
+trait SmtpStatsService extends LoginStatsService {
 
   def getConnectionAttempts: Long
 
@@ -21,8 +18,6 @@ trait SmtpStatsService {
 
   def getUnknownLocalUser: Long
   def getRelayDenies: Long
-
-  def clearValues()
 
   def getSince: Date
 }
