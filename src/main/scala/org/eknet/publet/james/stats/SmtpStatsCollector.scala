@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler
 import org.eknet.publet.james.mailets.IncomeMailEvent
 import java.util.Date
+import org.apache.mailet.{MailetContext, MailAddress}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -60,12 +61,16 @@ class SmtpStatsCollector extends SmtpStatsService {
   def onMail(ev: IncomeMailEvent) {
     import collection.JavaConversions._
     for (addr <- ev.mail.getRecipients) {
-      if (ev.config.getMailetContext.isLocalEmail(addr)) {
+      if (isLocalAddress(addr, ev.config.getMailetContext)) {
         stats.count(localDelivery)
       } else {
         stats.count(remoteDelivery)
       }
     }
+  }
+
+  private[this] def isLocalAddress(addr: MailAddress, ctx: MailetContext) = {
+    ctx.isLocalServer(addr.getDomain.toLowerCase)
   }
 
   def reset() {
