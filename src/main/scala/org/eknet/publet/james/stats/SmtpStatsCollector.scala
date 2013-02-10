@@ -11,6 +11,7 @@ import org.apache.james.smtpserver.fastfail.ValidRcptHandler
 import org.eknet.publet.james.mailets.IncomeMailEvent
 import java.util.Date
 import org.apache.mailet.{MailetContext, MailAddress}
+import org.eknet.publet.vfs.util.ByteSize
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -60,10 +61,13 @@ class SmtpStatsCollector extends SmtpStatsService {
   @Subscribe
   def onMail(ev: IncomeMailEvent) {
     import collection.JavaConversions._
+    val size = Option(ev.mail.getMessageSize).getOrElse(0L)
     for (addr <- ev.mail.getRecipients) {
       if (isLocalAddress(addr, ev.config.getMailetContext)) {
+        stats.count(localDeliverySize, size)
         stats.count(localDelivery)
       } else {
+        stats.count(remoteDeliverySize, size)
         stats.count(remoteDelivery)
       }
     }
@@ -90,4 +94,10 @@ class SmtpStatsCollector extends SmtpStatsService {
   def getRelayDenies = stats.getCount(relayDenied)
   def getLocalDeliveries = stats.getCount(localDelivery)
   def getRemoteDeliveries = stats.getCount(remoteDelivery)
+  def getAcceptedMailsBytes = stats.getSizeOfAll
+  def getAcceptedMailsSize = ByteSize.bytes.normalizeString(stats.getSizeOfAll)
+  def getLocalDeliveredBytes = stats.getLocalDeliverySize
+  def getLocalDeliveredSize = ByteSize.bytes.normalizeString(stats.getLocalDeliverySize)
+  def getRemoteDeliveredBytes = stats.getRemoteDeliverySize
+  def getRemoteDeliveredSize = ByteSize.bytes.normalizeString(stats.getRemoteDeliverySize)
 }

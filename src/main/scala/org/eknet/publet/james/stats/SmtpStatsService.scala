@@ -13,8 +13,16 @@ trait SmtpStatsService extends LoginStatsService {
   def getConnectionAttempts: Long
 
   def getAcceptedMails: Long
+  def getAcceptedMailsBytes: Long
+  def getAcceptedMailsSize: String
+
   def getLocalDeliveries: Long
+  def getLocalDeliveredBytes: Long
+  def getLocalDeliveredSize: String
+
   def getRemoteDeliveries: Long
+  def getRemoteDeliveredBytes: Long
+  def getRemoteDeliveredSize: String
 
   def getUnknownLocalUser: Long
   def getRelayDenies: Long

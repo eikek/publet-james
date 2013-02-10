@@ -31,16 +31,22 @@ table.table
     td
       span.badge.badge-success
         =smtpStats.getAcceptedMails
+      | &nbsp;
+      b (= #{smtpStats.getAcceptedMailsSize})
   tr
     td Remote Deliveries
     td
       span.badge.badge-info
         =smtpStats.getRemoteDeliveries
+      | &nbsp;
+      b (= #{smtpStats.getRemoteDeliveredSize})
   tr
     td Local Delivieries
     td
       span.badge.badge-info
         =smtpStats.getLocalDeliveries
+      | &nbsp;
+      b (= #{smtpStats.getLocalDeliveredSize})
   tr
     td Unknown Local User
     td
