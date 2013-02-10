@@ -28,6 +28,8 @@ object MessageProvider {
   val testmailLfLf = MessageName("1355543030.15049_0.km20731:2,S")
   val testmailCrLf = MessageName("1360244851.62ad1b340f5e45d8b94a2c907a0b83aa-20373.ithaka,S=1372:2,S")
 
+  val emptyMail = MessageName("1201013920.M667822P28232V000000000000FE0BI0036A4AD_0.binvoll,S=357:2,S")
+
   def readMessage(name: MessageName) = {
     val url = getClass.getResource("/"+name.fullName)
     require(url != null)

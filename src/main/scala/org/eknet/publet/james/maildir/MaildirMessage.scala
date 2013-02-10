@@ -211,7 +211,11 @@ object MaildirMessage extends Logging {
   private[this] def getBodyStartOctets(inMsg: PushbackInputStream, input: Array[Byte], length: Int, count: Int): Int = {
     if (Objects.deepEquals(input, rnrn) || Objects.deepEquals(input.take(2), nn)) {
       count
-    } else {
+    }
+    else if (Objects.deepEquals(input.drop(2), nn)) {
+      count + 2
+    }
+    else {
       for (i <- (1 to (length-1)).reverse) {
         inMsg.unread(input(i))
       }

@@ -46,4 +46,11 @@ class MaildirMessageTest extends FunSuite with ShouldMatchers {
     cin.getOctetCount should be (666)
   }
 
+  test ("Parse body start byte") {
+    val mails = List(testmailCrLf, testmailLfLf, emptyMail)
+    for (name <- mails) {
+      val message = MaildirMessage.from(2, readMessage(name))
+      message.getBodyStartOctet should (be > 0)
+    }
+  }
 }
