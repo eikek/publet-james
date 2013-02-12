@@ -3,6 +3,7 @@
 - import java.text.DateFormat
 - import java.util.Date
 
+-@ val renderNav: Boolean = true
 -@ val smtpStats: SmtpStatsService
 -@ val imapStats: LoginStatsService
 -@ val pop3Stats: LoginStatsService
@@ -16,6 +17,7 @@
     h1
       | James Report
       small =formatDate(now)
+.reportNav
 h3 SMTP Delivery
 table.table
   tr
@@ -69,3 +71,11 @@ table.table
 - setAttribute("header", Some("POP3"))
 - setAttribute("stats", Some(pop3Stats))
 - include("_loginreport.jade")
+
+- if (renderNav)
+  :javascript
+    $(function() {
+      $('.reportNav').reportnav({
+        actionUrl: "../action/reportlist.json"
+      });
+    });

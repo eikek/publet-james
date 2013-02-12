@@ -16,10 +16,8 @@
 
 package org.eknet.publet.james.maildir
 
-import lib.{MessageFile, MessageName}
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
-import java.nio.file.{Files, Paths}
 import org.apache.james.mailbox.store.streaming.CountingInputStream
 
 /**
@@ -30,7 +28,7 @@ class MaildirMessageTest extends FunSuite with ShouldMatchers {
 
   import MessageProvider._
 
-  test ("Parse message with LFLF ") {
+  test ("Parse message with LF") {
     val message = MaildirMessage.from(2, readMessage(testmailLfLf))
     message.getBodyStartOctet should be (525)
     val cin = new CountingInputStream(message.getHeaderContent)

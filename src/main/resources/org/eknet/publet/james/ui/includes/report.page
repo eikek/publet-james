@@ -35,4 +35,5 @@ title: James Report
 - setAttribute("imapStats", Some(imapStats))
 - setAttribute("pop3Stats", Some(pop3Stats))
 - setAttribute("showHeader", Some(false))
+- setAttribute("renderNav", Some(false))
 =include("_report.jade")

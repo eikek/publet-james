@@ -55,6 +55,7 @@ class Setup @Inject() (@Named("james-reports") reportPart: FilesystemPartition, 
     scripts.addResource(new WebScriptResource("managemailalias.json".rn, new ManageAlias))
     scripts.addResource(new WebScriptResource("managespool.json".rn, new ManageSpool))
     scripts.addResource(new WebScriptResource("managesieve.json".rn, new ManageSieve))
+    scripts.addResource(new WebScriptResource("reportlist.json".rn, new ReportList))
     publet.mountManager.mount(Path("/publet/james/action"), scripts)
 
     //mount partition for sieve scripts
@@ -86,6 +87,7 @@ class Setup @Inject() (@Named("james-reports") reportPart: FilesystemPartition, 
       .add(resource("js/jquery.spool-manager.js"))
       .add(resource("js/codemirror/sieve.js"))
       .add(resource("js/jquery.sieve-manager.js"))
+      .add(resource("js/jquery.reportnav.js"))
       .require(DefaultLayout.Assets.jquery.name, DefaultLayout.Assets.bootstrap.name)
       .require(DefaultLayout.Assets.mustache.name)
       .require(Assets.codemirrorJquery.name)
