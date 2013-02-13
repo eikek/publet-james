@@ -26,6 +26,7 @@
       "{{#prevReport}}" +
       "  <li class='previous'><a href='{{prevReport}}' class='pull-left'>&larr; {{prevReportName}}</a></li>" +
       "{{/prevReport}}" +
+      "  <li><a href='../report.html'>Current Report</a></li> " +
       "{{#nextReport}}" +
       "  <li class='next'><a href='{{nextReport}}' class='pull-right'>{{nextReportName}} &rarr;</a></li>" +
       "{{/nextReport}}" +
