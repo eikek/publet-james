@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.guice
+package org.eknet.publet.james.data
 
 import com.google.inject.{Provider, Inject}
 import org.eknet.publet.ext.graphdb.{GraphDb, GraphDbProvider}

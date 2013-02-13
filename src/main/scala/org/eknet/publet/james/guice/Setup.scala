@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james
+package org.eknet.publet.james.guice
 
 import com.google.inject.{Inject, Singleton}
 import com.google.common.eventbus.{EventBus, Subscribe}

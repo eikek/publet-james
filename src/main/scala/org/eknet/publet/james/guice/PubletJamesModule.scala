@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james
+package org.eknet.publet.james.guice
 
 import com.google.inject._
-import fetchmail.{FetchmailAccountsMBean, FetchmailAccounts, FetchmailScheduler}
-import maildir.lib.{JvmLocker, PathLock}
-import maildir.{MaildirSessionMapperFactory, MaildirStore, MailboxPathLockerImpl}
-import mailets.{PubletSieveMailet, MailPoster, SieveScriptLocator, SimpleMailingListHeaders}
 import name.{Named, Names}
 import org.eknet.publet.james.data._
-import guice._
 import org.eknet.publet.web.guice.{AbstractPubletModule, PubletModule, PubletBinding}
 import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.dnsservice.dnsjava.DNSJavaService
@@ -55,17 +50,22 @@ import org.apache.james.domainlist.lib.DomainListManagement
 import org.eknet.publet.james.guice.test.TestUserStore
 import org.eknet.publet.ext.graphdb.GraphDb
 import org.eknet.publet.auth.store.{PermissionStore, UserStore}
-import server.{NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.vfs.{Path, Resource}
 import org.eknet.publet.vfs.util.SimpleContentResource
 import org.apache.james.fetchmail.FetchScheduler
 import org.eknet.publet.gitr.partition.{GitPartition, GitPartMan, Config => GitConfig}
 import org.apache.jsieve.mailet.{Poster, ResourceLocator}
 import com.google.common.eventbus.EventBus
-import stats._
 import org.eknet.publet.web.Config
 import org.eknet.publet.vfs.fs.FilesystemPartition
 import java.nio.file
+import org.eknet.publet.james.Reflect
+import org.eknet.publet.james.server.{NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
+import org.eknet.publet.james.stats.{ReportJobScheduler, ReportJobMBean, Pop3StatsCollector, ImapStatsCollector, LoginStatsService, SmtpStatsCollector, SmtpStatsService}
+import org.eknet.publet.james.mailets.{SimpleMailingListHeaders, PubletSieveMailet, MailPoster, SieveScriptLocator}
+import org.eknet.publet.james.maildir.lib.{JvmLocker, PathLock}
+import org.eknet.publet.james.maildir.{MaildirSessionMapperFactory, MaildirStore, MailboxPathLockerImpl}
+import org.eknet.publet.james.fetchmail.{FetchmailAccounts, FetchmailAccountsMBean, FetchmailScheduler}
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
