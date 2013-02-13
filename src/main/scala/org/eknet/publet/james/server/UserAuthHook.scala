@@ -19,7 +19,7 @@ import com.google.common.base.Stopwatch
 //must not be a singleton
 class UserAuthHook @Inject() (repo: UsersRepository) extends UsersRepositoryAuthHook with ExtensibleHandler {
 
-  setUsers(repo)
+  setUsersRepository(repo)
 
   private var hookResultListener: Iterable[HookResultHook] = Nil
 

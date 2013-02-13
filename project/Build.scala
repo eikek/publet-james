@@ -57,7 +57,8 @@ object Dependencies {
     ExclusionRule("org.apache.ant", "ant"),
     ExclusionRule("org.apache.ant", "ant-launcher"),
     ExclusionRule("org.apache.ftpserver", "ftplet-api"),
-    ExclusionRule("com.google.guava", "guava")
+    ExclusionRule("com.google.guava", "guava"),
+    ExclusionRule("org.slf4j", "slf4j-log4j12")
   )
 
   val jamesServerCore = jamesServer("core")
@@ -111,9 +112,9 @@ object Dependencies {
 
   val testDeps = Seq(
     "org.slf4j" % "slf4j-simple" % Version.slf4j,
-    "org.eknet.neoswing" % "neoswing" % Version.neoswing exclude("ch.qos.logback", "logback-classic") exclude("ch.qos.logback", "logback-core"),
-    "junit" % "junit" % "4.10",
-    "org.eknet.scue" %% "scue" % Version.scue classifier("test"),
+    "org.eknet.neoswing" % "neoswing" % Version.neoswing exclude("ch.qos.logback", "logback-classic") exclude("ch.qos.logback", "logback-core") exclude("org.slf4j", "slf4j-log4j12"),
+    "junit" % "junit" % "4.10" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.eknet.scue" %% "scue" % Version.scue classifier("test") exclude("org.slf4j", "slf4j-log4j12"),
     jamesServerDataLibTest,
     jamesServerDataApiTest,
     jamesServerDnsApiTest
