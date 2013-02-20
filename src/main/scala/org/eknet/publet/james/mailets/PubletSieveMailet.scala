@@ -18,7 +18,7 @@ package org.eknet.publet.james.mailets
 
 import com.google.inject.{Inject, Singleton}
 import org.apache.jsieve.mailet.{ResourceLocator, SieveMailboxMailet, Poster}
-import org.apache.mailet.MailAddress
+import org.apache.mailet.{Mail, MailAddress}
 import org.apache.james.user.api.UsersRepository
 
 /**
@@ -38,4 +38,16 @@ class PubletSieveMailet @Inject() (poster: Poster, locator: ResourceLocator, use
       super.getUsername(m)
     }
   }
+
+  override def sieveMessage(recipient: MailAddress, aMail: Mail) {
+    if (aMail.getRecipients.size() > 1) {
+      //the FileInto action expects exactly one recipient. This method is invoked
+      //for each recipient in the mail. so it is safe to override the recipients
+      //here with the single one from the arguments. The next calls are just about
+      //to save the mail.
+      aMail.setRecipients(java.util.Arrays.asList(recipient))
+    }
+    super.sieveMessage(recipient, aMail)
+  }
+
 }
