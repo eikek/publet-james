@@ -27,6 +27,7 @@ import grizzled.slf4j.Logging
 import org.eknet.publet.ext.jmx.JmxService
 import java.util.Hashtable
 import javax.management.ObjectName
+import annotation.tailrec
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -143,9 +144,13 @@ class FileMailQ(parentDir: File, queueName: String, sync: Boolean) extends Manag
 
     def size = handleQueue.size()
 
+    @tailrec
     def take: FileSpool#MailHandle = {
       val key = handleQueue.take()
-      spool.get(key).getOrElse(take)
+      spool.get(key) match {
+        case Some(el) => el
+        case None => take
+      }
     }
 
     def put(mail: Mail) {

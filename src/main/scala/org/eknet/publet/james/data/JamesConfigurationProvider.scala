@@ -50,6 +50,7 @@ import org.apache.james.pop3server.netty.POP3ServerFactory
 import org.apache.james.fetchmail.FetchScheduler
 import com.google.common.base.{Suppliers, Supplier}
 import java.util.concurrent.ConcurrentHashMap
+import annotation.tailrec
 
 /**
  * This class looks up configuration files for apache services. It will first
@@ -153,6 +154,7 @@ class JamesConfigurationProvider @Inject() (filesystem: FileSystem, conf: Config
 
 
     def load = {
+      @tailrec
       def loadRecursive(urls: List[String]): InputStream = urls match {
         case a::as => fs.findResource(a) match {
           case Some(in) => debug("Found resource "+ a); in
