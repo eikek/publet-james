@@ -24,7 +24,7 @@ trait FetchmailAccountsMBean {
 
   def getAccounts(login: String): Array[String]
 
-  def updateAccount(login: String, user: String, host: String, password: String, interval: Int, active: Boolean)
+  def updateAccount(login: String, user: String, host: String, ssl: Boolean, password: String, interval: Int, active: Boolean)
 
   def setActive(user: String, host: String, active: Boolean)
 

@@ -30,8 +30,8 @@ class FetchmailAccounts @Inject() (maildb: MailDb) extends FetchmailAccountsMBea
   def getAccounts(login: String) = maildb.getAccountsForLogin(login).map(accountToString).toArray
 
 
-  def updateAccount(login: String, user: String, host: String, password: String, interval: Int, active: Boolean) {
-    val account = Account(login, host, user, password, interval, active)
+  def updateAccount(login: String, user: String, host: String, ssl: Boolean, password: String, interval: Int, active: Boolean) {
+    val account = Account(login, host, ssl, user, password, interval, active)
     maildb.updateAccount(account)
   }
 
@@ -46,7 +46,9 @@ class FetchmailAccounts @Inject() (maildb: MailDb) extends FetchmailAccountsMBea
 
   private[this] def accountToString(account: Account) = {
     "'"+ account.user+"@"+account.host + "' is '" +
-      account.login + "' here. Updates every "+
+      account.login + "' here. "+
+      (if (account.ssl) "with SSL" else "") +
+      "Updates every "+
       account.runInterval + " runs; active=" +
       account.active+
       "."

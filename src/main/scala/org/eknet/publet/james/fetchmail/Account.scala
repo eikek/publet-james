@@ -20,7 +20,7 @@ package org.eknet.publet.james.fetchmail
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 15.12.12 18:54
  */
-case class Account(login: String, host: String, user: String, password: String, runInterval: Int, active: Boolean) {
+case class Account(login: String, host: String, ssl: Boolean, user: String, password: String, runInterval: Int, active: Boolean) {
   precondition(host != null && !host.isEmpty, "No host given")
   precondition(user != null && !user.isEmpty, "No user given")
   precondition(login != null && !user.isEmpty, "No login given")

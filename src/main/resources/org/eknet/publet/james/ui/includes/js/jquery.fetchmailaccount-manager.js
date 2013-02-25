@@ -37,6 +37,9 @@
       '      <input type="text" placeholder="remote user" name="user" required="required"/>\n' +
       '      <label>Pop3 Host</label>\n' +
       '      <input type="text" placeholder="remote pop3 host" name="host" required="required"/>\n' +
+      '      <label class="checkbox">\n' +
+      '        <input type="checkbox" name="ssl"> SSL</input>\n' +
+      '      </label>\n' +
       '      <label>Password</label>\n' +
       '      <input type="password" placeholder="remote password" name="password" />\n' +
       '      <label>Update interval</label>\n' +
@@ -72,7 +75,9 @@
       '  <tr><th>Active</th><th>User</th><th>Host</th><th>Interval</th><th></th></tr>' +
       '{{#accounts}} \n' +
       '  <tr data-login="{{login}}">\n' +
-      '    <td data-name="active"><input type="checkbox" {{#active}}checked="yes"{{/active}} disabled="disabled"> </td>\n' +
+      '    <td data-name="active">' +
+      '      {{#ssl}}<i class="icon-lock"></i>\n{{/ssl}}' +
+      '      <input type="checkbox" {{#active}}checked="yes"{{/active}} disabled="disabled"> </td>\n' +
       '    <td data-name="user">{{user}}</td>\n' +
       '    <td data-name="host">{{host}}</td>\n' +
       '    <td data-name="runInterval" data-value="{{runInterval}}">{{runIntervalMinutes}}</td>\n' +
@@ -157,6 +162,9 @@
         if (dataname === "active") {
           if (child.find('input').is(':checked')) {
             form.find('[name="'+dataname+'"]').attr("checked", "yes");
+          }
+          if (child.find('i')) {
+            form.find('[name="ssl"]').attr("checked", "yes");
           }
         } else {
           form.find('[name="'+dataname+'"]').val(datavalue);

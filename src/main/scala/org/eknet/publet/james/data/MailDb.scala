@@ -194,23 +194,38 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb, userRepo: UsersReposi
     def runFilter(v: Vertex) =
       v.get[Boolean]("active").exists(_ == true) && (run % v.get[Int]("runInterval").getOrElse(2) == 0)
 
+    val hostPort = "([^:]+):([\\d]+)".r
     val counter = new AtomicInteger(0)
     val session = Session.getInstance(new Properties(System.getProperties))
     withTx {
       vertices("type" := "fetchmailAccount").withFilter(runFilter).map { v =>
         val cfg = new AccountConfiguration()
-        cfg.setHost(v.get[String]("host").getOrElse(sys.error("No host specified.")))
+        val acc = vertexToAccount(v)
+        cfg.setJavaMailProviderName(
+          if (acc.ssl) "pop3s" else "pop3"
+        )
+        acc.host match {
+          case hostPort(h, p) => {
+            cfg.setHost(h)
+            session.getProperties.setProperty("mail."+cfg.getJavaMailProviderName+".port", p)
+          }
+          case _ => cfg.setHost(acc.host)
+        }
         cfg.setRejectRemoteRecipient(true)
         cfg.setMarkSeen(false)
+
         cfg.setLeaveMaxMessageSizeExceeded(true)
+        session.getProperties.setProperty("mail.pop3.ssl.enable", java.lang.Boolean.toString(acc.ssl))
+        if (!acc.ssl) {
+          session.getProperties.setProperty("mail.pop3.starttls.enable", "true")
+        }
 
         val account = new ConfiguredAccount()
         account.setSequenceNumber(counter.getAndIncrement)
         account.setSession(session)
-        account.setUser(v.get[String]("user").getOrElse(sys.error("No user specified")))
-        account.setPassword(v.get[String]("password").getOrElse(sys.error("No password specified")))
-        val login = v.get[String]("recipient").getOrElse(sys.error("No recipient specified"))
-        account.setRecipient(login +"@"+ localDomain)
+        account.setUser(acc.user)
+        account.setPassword(acc.password)
+        account.setRecipient(acc.login +"@"+ localDomain)
         account.setParsedConfiguration(cfg)
         account.setCustomRecipientHeader("")
         account.setIgnoreRecipientHeader(true)
@@ -235,6 +250,7 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb, userRepo: UsersReposi
         userv --> "fetchmailAccount" --> v
       })
       v("host") = account.host
+      v("ssl") = account.ssl
       v("user") = account.user
       v("recipient") = account.login
       v("password") = account.password
@@ -246,6 +262,7 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb, userRepo: UsersReposi
   private[this] def vertexToAccount(v: Vertex) = Account(
     v.get[String]("recipient").getOrElse(sys.error("no login found")),
     v.get[String]("host").getOrElse(sys.error("no host found")),
+    v.get[Boolean]("ssl").getOrElse(false),
     v.get[String]("user").getOrElse(sys.error("no remote user found")),
     v.get[String]("password").getOrElse(sys.error("no password found")),
     v.get[Int]("runInterval").getOrElse(2),

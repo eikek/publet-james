@@ -83,7 +83,10 @@ class ManageFetchmailAccounts extends ScalaScript {
             withPerm(Permissions.addFetchmailAccount(login)) {
               val acc = Account(
                 login,
-                h, u, pw,
+                h,
+                boolParam("ssl").getOrElse(false),
+                u,
+                pw,
                 param("runInterval").map(_.toInt).getOrElse(2),
                 boolParam("active").getOrElse(false)
               )
@@ -102,6 +105,7 @@ class ManageFetchmailAccounts extends ScalaScript {
     Map(
       "login" -> account.login,
       "host" -> account.host,
+      "ssl" -> account.ssl,
       "user" -> account.user,
       "password" -> account.password,
       "runInterval" -> account.runInterval,
