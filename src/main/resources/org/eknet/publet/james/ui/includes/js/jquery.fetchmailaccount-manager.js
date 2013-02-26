@@ -163,7 +163,7 @@
           if (child.find('input').is(':checked')) {
             form.find('[name="'+dataname+'"]').attr("checked", "yes");
           }
-          if (child.find('i')) {
+          if (child.find('i').length === 1) {
             form.find('[name="ssl"]').attr("checked", "yes");
           }
         } else {
