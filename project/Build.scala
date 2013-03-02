@@ -180,7 +180,7 @@ object RootBuild extends Build {
   ) ++ PubletPlugin.publetSettings
 
   override lazy val settings = super.settings ++ Seq(
-    version := "0.1.0",
+    version := "0.2.0-SNAPSHOT",
     organization := "org.eknet.publet.james",
     scalaVersion := Version.scala,
     exportJars := true,
