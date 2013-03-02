@@ -32,7 +32,8 @@ class MessageNameTest extends FunSuite with ShouldMatchers {
     "1355543030.15049_0.foo.org" -> MessageName(1355543030, "15049_0", "foo.org"),
     "1106685752.12132_0.km1111:2,FRS" -> MessageName(1106685752, "12132_0", "km1111", Map(), Set("F", "R", "S"), ":2,"),
     "1334580646.8700_0.km11111:2,S" -> MessageName(1334580646, "8700_0", "km11111", Map(), Set("S"), ":2,"),
-    "1356958317.V902I69c70fM941470.km20731:2," -> MessageName(1356958317, "V902I69c70fM941470", "km20731", Map(), Set(), ":2,")
+    "1356958317.V902I69c70fM941470.km20731:2," -> MessageName(1356958317, "V902I69c70fM941470", "km20731", Map(), Set(), ":2,"),
+    "1285145964.M884771P11730V0000000000000902I0066C039_2.blups.org,S=2848:2,S" -> MessageName(1285145964, "M884771P11730V0000000000000902I0066C039_2", "blups.org", Map("S"->"2848"), Set("S"), ":2,")
   )
 
   test ("Valid message file names") {
