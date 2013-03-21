@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.eknet.publet.james.stats.intern
+package org.eknet.publet.james.server
 
 import org.apache.james.protocols.smtp.hook._
 import org.apache.james.protocols.smtp.SMTPSession
@@ -26,7 +26,7 @@ import com.google.common.eventbus.EventBus
  * @since 09.01.13 22:26
  */
 @Singleton
-class SmtpStatsHook @Inject() (bus: EventBus) extends HookResultHook {
+class SmtpHookEventForward @Inject() (bus: EventBus) extends HookResultHook {
 
   def onHookResult(session: SMTPSession, result: HookResult, execTime: Long, hook: Hook) = {
     bus.post(new SmtpHookEvent(session, result, execTime, hook))

@@ -61,4 +61,13 @@ class MailDbSuite extends MaildbFixture with ShouldMatchers with BeforeAndAfter 
     maildb.userDomainMappings("user1", "domain.org") should contain ("user2")
     maildb.userDomainMappings("user1", "domain.org") should contain ("user3")
   }
+
+  test ("add and remove blacklist ips") { maildb =>
+    maildb.addToBlacklist("127.0.0.1")
+    maildb.isInBlacklist("127.0.0.1") should be (true)
+    maildb.getBlacklistedIps should have size (1)
+    maildb.removeFromBlacklist("127.0.0.1")
+    maildb.isInBlacklist("127.0.0.1") should be (false)
+    maildb.getBlacklistedIps should have size (0)
+  }
 }

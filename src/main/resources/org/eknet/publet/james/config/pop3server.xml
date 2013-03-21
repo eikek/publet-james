@@ -71,7 +71,8 @@
        <connectionLimitPerIP>0</connectionLimitPerIP>
 
        <handlerchain>
-           <handler class="org.eknet.publet.james.stats.intern.Pop3StatsHandler" />
+           <handler class="org.eknet.publet.james.server.BlacklistHandler" />
+           <handler class="org.eknet.publet.james.server.Pop3EventForward" />
 
            <!-- work around not being notified on LOGIN commands -->
            <handler class="org.eknet.publet.james.server.UserAuthHook" />

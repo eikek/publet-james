@@ -14,6 +14,7 @@ title: Manage JAMES
     $('.fetchmailWidget').fetchmailSchedulerManager();
     $('#manageQueues').spoolManager();
     $('#manageSieve').sieveManager({ currentUser: false });
+    $('#manageBlacklist').blacklistManager();
   });
 
 
@@ -56,9 +57,12 @@ title: Manage JAMES
         a(href="#manageQueues" data-toggle="tab") Queues
       li
         a(href="#manageSieve" data-toggle="tab") Sieve
+      li
+        a(href="#manageBlacklist" data-toggle="tab") Blacklist
     .tab-content
       #manageDomains.tab-pane.active
       #manageMappings.tab-pane
       #fetchmailAccounts.tab-pane
       #manageQueues.tab-pane
       #manageSieve.tab-pane
+      #manageBlacklist.tab-pane

@@ -2,16 +2,15 @@ package org.eknet.publet.james.stats
 
 import com.google.inject.Singleton
 import com.google.common.eventbus.Subscribe
-import intern.{SmtpHandlerEvent, SmtpHookEvent}
 import org.apache.james.protocols.smtp.hook.{HookReturnCode, HookResult}
 import org.apache.james.smtpserver.{AuthRequiredToRelayRcptHook, SendMailHandler, UsersRepositoryAuthHook}
 import org.apache.james.protocols.smtp.core.WelcomeMessageHandler
-import java.util.concurrent.atomic.AtomicReference
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler
 import org.eknet.publet.james.mailets.IncomeMailEvent
 import java.util.Date
 import org.apache.mailet.{MailetContext, MailAddress}
 import org.eknet.publet.vfs.util.ByteSize
+import org.eknet.publet.james.server.{SmtpHookEvent, SmtpHandlerEvent}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

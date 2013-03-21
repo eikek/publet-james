@@ -1,4 +1,4 @@
-package org.eknet.publet.james.stats.intern
+package org.eknet.publet.james.server
 
 import org.apache.james.protocols.api.handler.{ProtocolHandler, ProtocolHandlerResultHandler}
 import org.apache.james.protocols.api.{ProtocolSession, Response}
@@ -12,7 +12,7 @@ import com.google.common.eventbus.EventBus
  * @since 10.01.13 13:59
  */
 @Singleton
-class SmtpStatsHandler @Inject() (bus: EventBus) extends ProtocolHandlerResultHandler[Response, SMTPSession] with Logging {
+class SmtpProtocolEventForward @Inject() (bus: EventBus) extends ProtocolHandlerResultHandler[Response, SMTPSession] with Logging {
 
   def onResponse(session: ProtocolSession, response: Response, execTime: Long, handler: ProtocolHandler) = {
     session match {

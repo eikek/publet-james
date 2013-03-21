@@ -137,8 +137,9 @@
 
         <!-- The configuration handler chain -->
         <handlerchain>
-            <handler class="org.eknet.publet.james.stats.intern.SmtpStatsHook" />
-            <handler class="org.eknet.publet.james.stats.intern.SmtpStatsHandler" />
+            <handler class="org.eknet.publet.james.server.BlacklistHandler" />
+            <handler class="org.eknet.publet.james.server.SmtpHookEventForward" />
+            <handler class="org.eknet.publet.james.server.SmtpProtocolEventForward" />
 
             <!-- work around not being notified on LOGIN commands -->
             <handler class="org.eknet.publet.james.server.UserAuthHook" />

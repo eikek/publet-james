@@ -48,6 +48,7 @@ class Setup @Inject() (@Named("james-reports") reportPart: FilesystemPartition, 
     import org.eknet.publet.vfs.ResourceName._
     val scripts = new MapContainer
     scripts.addResource(new WebScriptResource("managedomains.json".rn, new ManageDomains))
+    scripts.addResource(new WebScriptResource("manageblacklist.json".rn, new ManageBlacklist))
     scripts.addResource(new WebScriptResource("managemappings.json".rn, new ManageMappings))
     scripts.addResource(new WebScriptResource("manageserver.json".rn, new ManageServer))
     scripts.addResource(new WebScriptResource("managefetchmailaccounts.json".rn, new ManageFetchmailAccounts))
@@ -79,6 +80,7 @@ class Setup @Inject() (@Named("james-reports") reportPart: FilesystemPartition, 
     val jamesGroup = Group("publet.james")
       .add(resource("css/james.css"))
       .add(resource("js/jquery.domain-manager.js"))
+      .add(resource("js/jquery.blacklist-manager.js"))
       .add(resource("js/jquery.mapping-manager.js"))
       .add(resource("js/jquery.server-manager.js"))
       .add(resource("js/jquery.fetchmailaccount-manager.js"))

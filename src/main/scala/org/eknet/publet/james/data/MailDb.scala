@@ -305,4 +305,30 @@ class MailDb @Inject() (@Named("jamesdb") val db: GraphDb, userRepo: UsersReposi
       v("sieveEnabled") = enabled
     }
   }
+
+
+  // ip blacklist
+
+  private[this] def blacklistNode = withTx(vertex("name" := "blacklist"))
+
+  def addToBlacklist(ip: String) {
+    withTx {
+      vertex("blacklistip" := ip, v => blacklistNode --> "blacklisted" --> v)
+    }
+  }
+
+  def removeFromBlacklist(ip: String) {
+    withTx {
+      singleVertex("blacklistip" := ip).map(v => graph.removeVertex(v))
+    }
+  }
+
+  def isInBlacklist(ip: String): Boolean = withTx {
+    singleVertex("blacklistip" := ip).isDefined
+  }
+
+  def getBlacklistedIps = withTx {
+    val list = blacklistNode ->- "blacklisted" mapEnds(v => v.get[String]("blacklistip"))
+    list.flatten.toList.sorted
+  }
 }

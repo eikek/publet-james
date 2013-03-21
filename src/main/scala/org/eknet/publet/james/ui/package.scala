@@ -26,6 +26,7 @@ import org.apache.shiro.authz
 import org.eknet.publet.auth.store.UserProperty
 import org.eknet.publet.web.{Settings, RunMode, Config}
 import grizzled.slf4j.Logging
+import server.ConnectionBlacklist
 
 /**
  *
@@ -47,6 +48,8 @@ package object ui extends Logging {
     case "yes" | "YES" | "Yes" => true
     case _ => false
   })
+
+  def blackList = PubletWeb.instance[ConnectionBlacklist].get
   def domainList = PubletWeb.instance[DomainList].get
   def maildb = PubletWeb.instance[MailDb].get
   def config = PubletWeb.instance[Config].get

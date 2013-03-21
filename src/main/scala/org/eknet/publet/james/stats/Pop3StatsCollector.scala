@@ -19,10 +19,10 @@ package org.eknet.publet.james.stats
 import com.google.inject.Singleton
 import com.google.common.eventbus.Subscribe
 import grizzled.slf4j.Logging
-import intern.Pop3HandlerEvent
 import java.util.Date
 import org.apache.james.pop3server.core.PassCmdHandler
 import org.apache.james.protocols.pop3.POP3Response
+import org.eknet.publet.james.server.Pop3HandlerEvent
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com

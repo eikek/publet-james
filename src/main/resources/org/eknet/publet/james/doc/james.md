@@ -273,6 +273,18 @@ The `sieveUpdate` permission is checked for any update of a sieve script for a p
 `sieveGet` permission is checked, if such a script is requested. The `sieveManage` permission is checked
 for other actions needed by the widget (like getting a list of all logins).
 
+#### Blacklist
+
+There is a global blacklist of ip addresses that is consulted on any connect. If the remote address
+is found in the blacklist, the connection is denied. The blacklist can be managed via MBean and
+web interface. The list is saved in the local mail database.
+
+There are two permissions that allow for showing the blacklist and for modifying it:
+
+    val showBlacklist = "james:blacklist:view"
+    val modifyBlacklist = "james:blacklist:modify"
+
+The `modify` permission is for both, adding and removing items.
 
 ### Statistics
 
@@ -319,6 +331,10 @@ by specifying a regular expression in `settings.properties`, for example:
 At first the filter for a specific login is tried, secondly the default domain filter
 is used. If nothing is specified the complete domainlist is returned.
 
+#### Blacklist
+
+The blacklist widget can be used to list, add and remove ips. The change is immediately
+visible to the connect handlers.
 
 #### Mappings
 

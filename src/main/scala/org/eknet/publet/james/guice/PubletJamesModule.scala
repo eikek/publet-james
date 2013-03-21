@@ -60,7 +60,7 @@ import org.eknet.publet.web.Config
 import org.eknet.publet.vfs.fs.FilesystemPartition
 import java.nio.file
 import org.eknet.publet.james.Reflect
-import org.eknet.publet.james.server.{NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
+import org.eknet.publet.james.server.{ConnectionBlacklistImpl, ConnectionBlacklist, NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
 import org.eknet.publet.james.stats.{ReportJobScheduler, ReportJobMBean, Pop3StatsCollector, ImapStatsCollector, LoginStatsService, SmtpStatsCollector, SmtpStatsService}
 import org.eknet.publet.james.mailets.{SimpleMailingListHeaders, PubletSieveMailet, MailPoster, SieveScriptLocator}
 import org.eknet.publet.james.maildir.lib.{JvmLocker, PathLock}
@@ -170,6 +170,8 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
 
     bind[ReportJobMBean].to[ReportJobScheduler].asEagerSingleton()
 
+    bind[ConnectionBlacklist].to[ConnectionBlacklistImpl].in(Scopes.SINGLETON)
+
     ///test
     bind[TestUserStore]
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
@@ -198,10 +200,10 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
   def createEncode(encfac: ImapEncoderFactory): ImapEncoder = encfac.buildImapEncoder()
 
   @Provides@Singleton
-  def createImapProcessor(boxman: MailboxManager, subman: SubscriptionManager, bus: EventBus): ImapProcessor = {
+  def createImapProcessor(boxman: MailboxManager, subman: SubscriptionManager, bus: EventBus, blacklist: ConnectionBlacklist): ImapProcessor = {
     import collection.JavaConversions._
     val imapproc = DefaultImapProcessorFactory.createXListSupportingProcessor(boxman, subman, null, 120L, Set("ACL"))
-    new NotifyingImapProcessor(bus, imapproc)
+    new NotifyingImapProcessor(bus, blacklist, imapproc)
   }
 
   val name = "James Mailserver"

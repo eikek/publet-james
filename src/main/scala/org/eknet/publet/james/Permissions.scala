@@ -54,4 +54,6 @@ object Permissions {
 
   val reportView = "james:report:view"
 
+  val showBlacklist = "james:blacklist:view"
+  val modifyBlacklist = "james:blacklist:modify"
 }

@@ -3,6 +3,7 @@ package org.eknet.publet.james.stats
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.ThreadSafe
+import org.eknet.publet.web.util.{PubletWebContext, ClientInfo}
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
