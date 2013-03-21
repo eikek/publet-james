@@ -1,5 +1,6 @@
 - import org.eknet.publet.james.stats.SmtpStatsService
 - import org.eknet.publet.james.stats.LoginStatsService
+- import org.eknet.publet.james.server.ConnectionBlacklist
 - import java.text.DateFormat
 - import java.util.Date
 
@@ -7,6 +8,7 @@
 -@ val smtpStats: SmtpStatsService
 -@ val imapStats: LoginStatsService
 -@ val pop3Stats: LoginStatsService
+-@ val blackList: ConnectionBlacklist
 -@ val locale : java.util.Locale
 -@ val showHeader: Boolean = true
 - val now = new Date()
@@ -19,7 +21,7 @@
       small =formatDate(now)
 .reportNav
 h3 SMTP Delivery
-table.table
+table.table.table-striped
   tr
     th Since
     th = formatDate(smtpStats.getSince)
@@ -64,13 +66,29 @@ table.table
 - setAttribute("stats", Some(smtpStats))
 - include("_loginreport.jade")
 
+hr/
+
 - setAttribute("header", Some("IMAP"))
 - setAttribute("stats", Some(imapStats))
 - include("_loginreport.jade")
 
+hr/
+
 - setAttribute("header", Some("POP3"))
 - setAttribute("stats", Some(pop3Stats))
 - include("_loginreport.jade")
+
+hr/
+
+h3 Blacklist
+
+p The following IPs are currently in the blacklist:
+- if (blackList.listIps.isEmpty)
+  p.alert.alert-block.alert-info The blacklist is empty.
+- else
+  ul
+    - for (ip <- blackList.listIps)
+      li #{ip}
 
 - if (renderNav)
   :javascript

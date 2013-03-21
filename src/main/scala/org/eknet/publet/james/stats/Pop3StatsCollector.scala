@@ -16,38 +16,49 @@
 
 package org.eknet.publet.james.stats
 
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import com.google.common.eventbus.Subscribe
 import grizzled.slf4j.Logging
 import java.util.Date
 import org.apache.james.pop3server.core.PassCmdHandler
 import org.apache.james.protocols.pop3.POP3Response
-import org.eknet.publet.james.server.Pop3HandlerEvent
+import org.eknet.publet.james.server.{Pop3BlacklistEvent, Pop3HandlerEvent}
+import com.google.inject.name.Named
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 01.02.13 20:59
  */
 @Singleton
-class Pop3StatsCollector extends LoginStatsService with Logging {
+class Pop3StatsCollector @Inject() (@Named("connectionCounter") tree: CounterTree) extends LoginStatsService with Logging {
 
-  val stats = new LoginStats
+  val stats = new SimpleStats("pop3", tree)
+
+  @Subscribe
+  def onBlockedConnection(ev: Pop3BlacklistEvent) {
+    stats.count("blockedConnections")
+  }
 
   @Subscribe
   def onPop3Response(ev: Pop3HandlerEvent) {
     ev.handler match {
       case ph: PassCmdHandler => {
         val success = ev.response.getRetCode == POP3Response.OK_RESPONSE
-        stats.countLogin(ev.session.getUser, success)
+        stats.countLogin(ev.session.getUser, success, Some(ev.session.getRemoteAddress.getAddress.getHostAddress))
       }
       case _ =>
     }
   }
 
   def getSince = new Date(stats.created.get())
-  def getSuccessfulLogins(user: String) = stats.getSuccessfulLogins(user).getOrElse(0L)
-  def getFailedLogins(user: String) = stats.getFailedLogins(user).getOrElse(0L)
+  def getSuccessfulLogins(user: String) = stats.getSuccessfulLogins(user)
+  def getFailedLogins(user: String) = stats.getFailedLogins(user)
   def getUsernames = stats.getAllUsers.toArray
+  def getIpAddresses = stats.getIpAddresses.toArray
+  def getFailedLoginsByIp(ip: String) = stats.getFailedLoginsByIp(ip)
+  def getSuccessfulLoginsByIp(ip: String) = stats.getSuccessfulLoginsByIp(ip)
+
+  def getBlockedConnections = stats.getCount("blockedConnections")
   def getSuccessfulLogins = stats.getSuccessfulLogins
   def getFailedLogins = stats.getFailedLoginAttempts
   def reset() {

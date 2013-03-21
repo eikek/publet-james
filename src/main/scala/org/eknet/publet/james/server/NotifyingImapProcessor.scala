@@ -4,7 +4,7 @@ import com.google.common.eventbus.EventBus
 import org.apache.james.imap.api.process.{ImapSession, ImapProcessor}
 import org.apache.james.imap.api.ImapMessage
 import org.apache.james.imap.api.process.ImapProcessor.Responder
-import org.apache.james.imap.api.message.response.ImapResponseMessage
+import org.apache.james.imap.api.message.response.{StatusResponse, ImapResponseMessage}
 import org.eknet.publet.james.JamesEvent
 import org.apache.james.imapserver.netty.NettyImapSession
 import java.net.InetSocketAddress
@@ -27,14 +27,12 @@ class NotifyingImapProcessor(bus: EventBus, blacklist: ConnectionBlacklist, self
   def process(msg: ImapMessage, responder: Responder, session: ImapSession) {
     val ip = findIp(session)
     val blacklisted = ip map { ip => blacklist.isBlacklisted(ip) } getOrElse (false)
-    if (blacklisted) {
-      bus.post(new ImapBlacklistEvent(ip.get))
-      val wrapped = new FailedResponder(msg, responder)
-      self.process(msg, wrapped, session)
+    val wrapped = if (blacklisted) {
+      new FailedResponder(msg, responder, ip.getOrElse("unknown"))
     } else {
-      val wrapped = new NotifyingResponder(msg, responder)
-      self.process(msg, wrapped, session)
+      new NotifyingResponder(msg, responder, ip)
     }
+    self.process(msg, wrapped, session)
   }
 
   private[this] def findIp(session: ImapSession): Option[String] = {
@@ -47,18 +45,23 @@ class NotifyingImapProcessor(bus: EventBus, blacklist: ConnectionBlacklist, self
     }
   }
 
-  class NotifyingResponder(in: ImapMessage, val self: Responder) extends Responder with Proxy {
+  class NotifyingResponder(in: ImapMessage, val self: Responder, ip: Option[String]) extends Responder with Proxy {
     def respond(resp: ImapResponseMessage) {
-      bus.post(new ImapResponseEvent(in, resp))
+      bus.post(new ImapResponseEvent(in, resp, ip))
       self.respond(resp)
     }
   }
 
-  class FailedResponder(in: ImapMessage, val self: Responder) extends Responder with Proxy {
+  class FailedResponder(in: ImapMessage, val self: Responder, ip: String) extends Responder with Proxy {
     def respond(ignored: ImapResponseMessage) {
-      self.respond(failedResponse)
+      if (ignored.isInstanceOf[StatusResponse]) {
+        bus.post(new ImapBlacklistEvent(ip))
+        self.respond(ignored)
+      } else {
+        self.respond(failedResponse)
+      }
     }
   }
 }
 
-case class ImapResponseEvent(request: ImapMessage, response: ImapResponseMessage) extends JamesEvent
+case class ImapResponseEvent(request: ImapMessage, response: ImapResponseMessage, ip: Option[String]) extends JamesEvent

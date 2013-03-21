@@ -6,11 +6,13 @@ title: James Report
 - import org.eknet.publet.james.stats.SmtpStatsService
 - import org.eknet.publet.james.stats.LoginStatsService
 - import org.eknet.publet.james.stats.ReportWriter
+- import org.eknet.publet.james.server.ConnectionBlacklist
 - import org.eknet.publet.james.Permissions
 - import java.util.Date
 - import java.text.DateFormat
 - Security.checkPerm(Permissions.reportView)
 - val smtpStats = PubletWeb.instance[SmtpStatsService].get
+- val blackList = PubletWeb.instance[ConnectionBlacklist].get
 - val imapStats = PubletWeb.instance[LoginStatsService].named("imap")
 - val pop3Stats = PubletWeb.instance[LoginStatsService].named("pop3")
 - val writer = PubletWeb.instance[ReportWriter].get
@@ -34,6 +36,7 @@ title: James Report
 - setAttribute("smtpStats", Some(smtpStats))
 - setAttribute("imapStats", Some(imapStats))
 - setAttribute("pop3Stats", Some(pop3Stats))
+- setAttribute("blackList", Some(blackList))
 - setAttribute("showHeader", Some(false))
 - setAttribute("renderNav", Some(false))
 =include("_report.jade")

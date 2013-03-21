@@ -61,7 +61,7 @@ import org.eknet.publet.vfs.fs.FilesystemPartition
 import java.nio.file
 import org.eknet.publet.james.Reflect
 import org.eknet.publet.james.server.{ConnectionBlacklistImpl, ConnectionBlacklist, NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
-import org.eknet.publet.james.stats.{ReportJobScheduler, ReportJobMBean, Pop3StatsCollector, ImapStatsCollector, LoginStatsService, SmtpStatsCollector, SmtpStatsService}
+import org.eknet.publet.james.stats.{CounterTree, ReportJobScheduler, ReportJobMBean, Pop3StatsCollector, ImapStatsCollector, LoginStatsService, SmtpStatsCollector, SmtpStatsService}
 import org.eknet.publet.james.mailets.{SimpleMailingListHeaders, PubletSieveMailet, MailPoster, SieveScriptLocator}
 import org.eknet.publet.james.maildir.lib.{JvmLocker, PathLock}
 import org.eknet.publet.james.maildir.{MaildirSessionMapperFactory, MaildirStore, MailboxPathLockerImpl}
@@ -176,6 +176,11 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
     bind[TestUserStore]
     setOf[UserStore].add[TestUserStore].in(Scopes.SINGLETON)
     setOf[PermissionStore].add[TestUserStore].in(Scopes.SINGLETON)
+  }
+
+  @Provides@Singleton@Named("connectionCounter")
+  def createCounterTree(): CounterTree = {
+    new CounterTree(5000)
   }
 
   // sieve partition

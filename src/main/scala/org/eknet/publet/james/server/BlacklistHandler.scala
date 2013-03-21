@@ -24,6 +24,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus
 import org.apache.james.protocols.pop3.{POP3Session, POP3Response}
 import grizzled.slf4j.Logging
 import com.google.common.eventbus.EventBus
+import org.apache.james.protocols.pop3.core.{WelcomeMessageHandler => Pop3WelcomHandler}
+import org.apache.james.protocols.smtp.core.{WelcomeMessageHandler => SmtpWelcomHandler}
 
 /**
  * Hooks into the pop3 and smtp server and returns error responses for blacklisted
@@ -40,12 +42,16 @@ class BlacklistHandler @Inject() (blacklist: ConnectionBlacklist, bus: EventBus)
       session match {
         case smtp: SMTPSession => {
           warn("Deny smtp access for '"+ip+"'. Blacklisted.")
-          bus.post(new SmtpBlacklistEvent(ip))
+          if (handler.isInstanceOf[SmtpWelcomHandler]) { //make sure to post one event per connection attempt
+            bus.post(new SmtpBlacklistEvent(ip))
+          }
           smtpResponse
         }
         case pop: POP3Session => {
           warn("Deny pop3 access for '"+ip+"'. Blacklisted.")
-          bus.post(new Pop3BlacklistEvent(ip))
+          if (handler.isInstanceOf[Pop3WelcomHandler]) { //make sure to post one event per connection attempt
+            bus.post(new Pop3BlacklistEvent(ip))
+          }
           pop3Response
         }
         case _ => {

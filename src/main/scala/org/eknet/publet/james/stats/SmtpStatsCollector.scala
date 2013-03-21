@@ -1,8 +1,8 @@
 package org.eknet.publet.james.stats
 
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import com.google.common.eventbus.Subscribe
-import org.apache.james.protocols.smtp.hook.{HookReturnCode, HookResult}
+import org.apache.james.protocols.smtp.hook.HookReturnCode
 import org.apache.james.smtpserver.{AuthRequiredToRelayRcptHook, SendMailHandler, UsersRepositoryAuthHook}
 import org.apache.james.protocols.smtp.core.WelcomeMessageHandler
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler
@@ -10,17 +10,23 @@ import org.eknet.publet.james.mailets.IncomeMailEvent
 import java.util.Date
 import org.apache.mailet.{MailetContext, MailAddress}
 import org.eknet.publet.vfs.util.ByteSize
-import org.eknet.publet.james.server.{SmtpHookEvent, SmtpHandlerEvent}
+import org.eknet.publet.james.server.{SmtpBlacklistEvent, SmtpHookEvent, SmtpHandlerEvent}
+import com.google.inject.name.Named
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 10.01.13 13:25
  */
 @Singleton
-class SmtpStatsCollector extends SmtpStatsService {
+class SmtpStatsCollector @Inject() (@Named("connectionCounter") tree: CounterTree) extends SmtpStatsService {
   import SmtpStats.Keys._
 
-  private val stats = new SmtpStats
+  private val stats = new SmtpStats(tree)
+
+  @Subscribe
+  def noBlockedConnection(ev: SmtpBlacklistEvent) {
+    stats.count(blockedConnections)
+  }
 
   @Subscribe
   def onSmtpHandlerMessage(ev: SmtpHandlerEvent) {
@@ -36,7 +42,7 @@ class SmtpStatsCollector extends SmtpStatsService {
       case auth: UsersRepositoryAuthHook => {
         val success = ev.result.getResult == HookReturnCode.OK
         val login = Option(ev.session.getUser).getOrElse("dummy")
-        stats.loginStats.countLogin(login, success)
+        stats.countLogin(login, success, Some(ev.session.getRemoteAddress.getAddress.getHostAddress))
       }
       case rcpvalid: ValidRcptHandler => {
         if (ev.result.getResult == HookReturnCode.DENY) {
@@ -80,13 +86,16 @@ class SmtpStatsCollector extends SmtpStatsService {
     stats.clear()
   }
 
-  def getSuccessfulLogins(user: String) = stats.loginStats.getSuccessfulLogins(user).getOrElse(0L)
-  def getFailedLogins(user: String) = stats.loginStats.getFailedLogins(user).getOrElse(0L)
-  def getUsernames = stats.loginStats.getAllUsers.toArray
+  def getSuccessfulLogins(user: String) = stats.getSuccessfulLogins(user)
+  def getFailedLogins(user: String) = stats.getFailedLogins(user)
+  def getUsernames = stats.getAllUsers.toArray
+  def getIpAddresses = stats.getIpAddresses.toArray
+  def getFailedLoginsByIp(ip: String) = stats.getFailedLoginsByIp(ip)
+  def getSuccessfulLoginsByIp(ip: String) = stats.getSuccessfulLoginsByIp(ip)
 
   def getSince = new Date(stats.created.get())
-  def getSuccessfulLogins = stats.loginStats.getSuccessfulLogins
-  def getFailedLogins = stats.loginStats.getFailedLoginAttempts
+  def getSuccessfulLogins = stats.getSuccessfulLogins
+  def getFailedLogins = stats.getFailedLoginAttempts
   def getConnectionAttempts = stats.getCount(connections)
   def getAcceptedMails = stats.getCount(acceptedMails)
   def getUnknownLocalUser = stats.getCount(unknownUser)
@@ -99,4 +108,5 @@ class SmtpStatsCollector extends SmtpStatsService {
   def getLocalDeliveredSize = ByteSize.bytes.normalizeString(stats.getLocalDeliverySize)
   def getRemoteDeliveredBytes = stats.getRemoteDeliverySize
   def getRemoteDeliveredSize = ByteSize.bytes.normalizeString(stats.getRemoteDeliverySize)
+  def getBlockedConnections = stats.getCount(blockedConnections)
 }

@@ -27,6 +27,7 @@ import org.eknet.publet.web.Config
 import org.eknet.publet.web.asset.AssetManager
 import java.util.Locale
 import java.text.SimpleDateFormat
+import org.eknet.publet.james.server.ConnectionBlacklist
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
@@ -37,6 +38,7 @@ class ReportWriter @Inject() (publet: Publet,
                               config: Config,
                               smtpStats: SmtpStatsService,
                               assetMgr: AssetManager,
+                              blacklist: ConnectionBlacklist,
                               @Named("imap") imapStats: LoginStatsService,
                               @Named("pop3") pop3Stats: LoginStatsService,
                               @Named("james-reports") reportPart: FilesystemPartition) {
@@ -50,6 +52,7 @@ class ReportWriter @Inject() (publet: Publet,
     "smtpStats" -> smtpStats,
     "pop3Stats" -> pop3Stats,
     "imapStats" -> imapStats,
+    "blackList" -> blacklist,
     "includeLoader" -> new IncludeLoader(config, publet, assetMgr)
   )
 

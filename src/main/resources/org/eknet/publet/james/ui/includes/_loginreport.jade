@@ -14,7 +14,7 @@ h3 #{header}
 
 h4 Overall
 
-table.table
+table.table.table-striped
   tr
     th Since
     th = formatDate(stats.getSince)
@@ -23,6 +23,11 @@ table.table
     td
       span.badge.badge-info
         =stats.getSuccessfulLogins + stats.getFailedLogins
+  tr
+    td Blocked Connections (Blacklist)
+    td
+      span.badge.badge-important
+        =stats.getBlockedConnections
   tr
     td Successful Logins
     td
@@ -34,19 +39,38 @@ table.table
       span.badge.badge-important
         =stats.getFailedLogins
 
-h4 By User
+- if (!stats.getUsernames.isEmpty)
+  h4 By User
 
-table.table
-  tr
-    th Username
-    th Success
-    th Failed
-  - for (user <- stats.getUsernames)
+  table.table.table-striped.table-condensed
     tr
-      td =user
-      td
-        span.badge.badge-success
-          =stats.getSuccessfulLogins(user)
-      td
-        span.badge.badge-important
-          =stats.getFailedLogins(user)
+      th Username
+      th Success
+      th Failed
+    - for (user <- stats.getUsernames)
+      tr
+        td =user
+        td
+          span.badge.badge-success
+            =stats.getSuccessfulLogins(user)
+        td
+          span.badge.badge-important
+            =stats.getFailedLogins(user)
+
+- if (!stats.getIpAddresses.isEmpty)
+  h4 By IP Address
+
+  table.table.table-striped.table-condensed
+    tr
+      th IP
+      th Success
+      th Failed
+    - for (ip <- stats.getIpAddresses)
+      tr
+        td =ip
+        td
+          span.badge.badge-success
+            =stats.getSuccessfulLoginsByIp(ip)
+        td
+          span.badge.badge-important
+            =stats.getFailedLoginsByIp(ip)
