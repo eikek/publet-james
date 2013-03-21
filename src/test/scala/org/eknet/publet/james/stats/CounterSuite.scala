@@ -28,7 +28,7 @@ class CounterSuite extends FunSuite with ShouldMatchers {
   import org.eknet.publet.vfs.Path.stringToPath
 
   test ("adding counters") {
-    val tree = new CounterTree()
+    val tree = new CounterTree(1000)
 
     val n = tree.getCounter(Path.root)
     n.toString should be ("Inner(_root_,ListBuffer())")
@@ -72,7 +72,7 @@ class CounterSuite extends FunSuite with ShouldMatchers {
   }
 
   test ("remove counter") {
-    val tree = new CounterTree()
+    val tree = new CounterTree(1000)
     tree.getCompositeCounter("/a/b/c".p, "/a/d/e".p, "/z/d/f".p).increment()
     tree.getCompositeCounter("/a/b/c".p, "/a/d/e".p, "/z/d/f".p).increment()
     tree.getCompositeCounter("/a/b/c".p, "/a/d/e".p, "/z/d/f".p).increment()
@@ -86,5 +86,28 @@ class CounterSuite extends FunSuite with ShouldMatchers {
     rc.totalCount should be (6)
 
     tree.removeCounter("/xy/t".p) should be (None)
+  }
+
+  test ("search counters with globs") {
+    val tree = new CounterTree(1000)
+
+    tree.getCounter("/a/b1/c/x".p).add(1)
+    tree.getCounter("/a/b2/c/x".p).add(2)
+    tree.getCounter("/a/b3/c/x".p).add(3)
+
+    var cc = tree.searchCoutners("/a/*/c")
+    cc.counters should have size (3)
+    cc.totalCount should be (6)
+
+    cc = tree.searchCoutners("a/b?/c/x")
+    cc.counters should have size (3)
+    cc.totalCount should be (6)
+
+    tree.getCounter("/b/b1/c/x".p).add(5)
+    tree.getCounter("/c/b1/c/x".p).add(5)
+    tree.getCounter("/d/b1/c/x".p).add(5)
+    cc = tree.searchCoutners("*/b1/c")
+    cc.totalCount should be (16)
+    cc.counters should have size (4)
   }
 }

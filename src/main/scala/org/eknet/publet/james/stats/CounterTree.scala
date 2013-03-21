@@ -21,8 +21,19 @@ import annotation.tailrec
 import collection.mutable
 import org.eknet.publet.james.stats.CounterTree.{Leaf, Inner, Node}
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import org.eknet.publet.Glob
 
 /**
+ * This is a tree for organizing counters. Real counters are only valid at
+ * the leaf nodes and every inner node is just a view of all of its children.
+ *
+ * If an inner node counter is incremented, it increments all of its children.
+ * This yields in incrementing all real counters of all leaf nodes that are
+ * children to the inner node.
+ *
+ * Besides the inner node composite counters, you can create arbitary composite
+ * counters by using `getCompositeCounter` or `searchCoutners`.
+ *
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 21.03.13 17:36
  */
@@ -50,6 +61,13 @@ class CounterTree(interval: Long) {
     }
   }
 
+  /**
+   * Returns a counter for the given path. The counter is created
+   * if it does not exist yet.
+   *
+   * @param path
+   * @return
+   */
   def getCounter(path: Path): Counter = {
     if (path.isRoot) {
       root
@@ -61,16 +79,55 @@ class CounterTree(interval: Long) {
     }
   }
 
+  /**
+   * Finds a counter for the given path.
+   *
+   * @param path
+   * @return
+   */
   def findCounter(path: Path): Option[Counter] = lockRead {
     if (path.isRoot) Some(root) else find(root, path).map(_._2)
   }
 
-  def getCompositeCounter(path: Path*): Counter = {
+  /**
+   * Gets the counter for each given path and returns a composite
+   * counter of all of them.
+   *
+   * @param path
+   * @return
+   */
+  def getCompositeCounter(path: Path*): CompositeCounter = {
     new CompositeCounter() {
       val counters = path.map(p => getCounter(p))
     }
   }
 
+  /**
+   * Searches for counters using a list of search patterns. The search pattern
+   * are paths that may contain wildcards `?`, `*` or `**` as described at
+   * [[org.eknet.publet.Glob]] class.
+   *
+   * For example:
+   * {{{
+   *   searchCounters("logins/*/success", "logins/ip/192*/success")
+   * }}}
+   *
+   * @param path
+   * @return
+   */
+  def searchCoutners(path: String*): CompositeCounter = {
+    val all = lockRead( path.flatMap(p => search(List(root), p.split("/").filter(!_.isEmpty).toList)) )
+    new CompositeCounter {
+      val counters = all
+    }
+  }
+
+  /**
+   * Removes a counter at the given path, if it exists.
+   *
+   * @param path
+   * @return
+   */
   def removeCounter(path: Path): Option[Counter] = lockWrite {
     if (path.isRoot) {
       throw new IllegalArgumentException("Cannot remove root counter")
@@ -81,6 +138,13 @@ class CounterTree(interval: Long) {
     }
   }
 
+  /**
+   * Looks for a node for the given path and returns all of its
+   * children names.
+   *
+   * @param path
+   * @return
+   */
   def getChildren(path: Path): Seq[String] = {
     val node = lockRead(find(root, path).map(_._2))
     node match {
@@ -132,6 +196,24 @@ class CounterTree(interval: Long) {
           }
         }
         case Nil => sys.error("Unreachable code")
+      }
+    }
+  }
+
+  private[this] def search(nodes:List[Node], path: List[String]): List[Node] = {
+    def nextNodes(node: Node, name: String) = node match {
+      case inner:Inner => {
+        val glob = Glob(name)
+        inner.children.filter(n => glob.matches(n.name)).toList
+      }
+      case _ => List()
+    }
+
+    if (path.isEmpty) {
+      nodes
+    } else {
+      nodes flatMap { node =>
+        search(nextNodes(node, path.head), path.tail)
       }
     }
   }

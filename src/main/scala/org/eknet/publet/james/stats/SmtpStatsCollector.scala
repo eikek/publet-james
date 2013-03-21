@@ -24,7 +24,7 @@ class SmtpStatsCollector @Inject() (@Named("connectionCounter") tree: CounterTre
   private val stats = new SmtpStats(tree)
 
   @Subscribe
-  def noBlockedConnection(ev: SmtpBlacklistEvent) {
+  def onBlockedConnection(ev: SmtpBlacklistEvent) {
     stats.count(blockedConnections)
   }
 

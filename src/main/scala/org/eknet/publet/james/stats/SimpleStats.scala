@@ -13,23 +13,14 @@ class SimpleStats(protocol: String, tree: CounterTree) {
 
   protected val rootPath = Path(protocol)
   private val byLoginPath = rootPath / "loginstats" / "bylogin"
-  private val successPath = rootPath / "loginstats" / "success"
-  private val failedPath = rootPath / "loginstats" / "failed"
   private val byIpsPath = rootPath / "loginstats" / "byipaddress"
 
   val created = new AtomicLong(System.currentTimeMillis())
 
   private[this] def pathFor(username: String, success: Boolean) = byLoginPath / username / success.toString
-  private[this] def counterFor(login: String, success: Boolean) = {
-    val paths = Seq(
-      pathFor(login, success),
-      if (success) successPath else failedPath
-    )
-    tree.getCompositeCounter(paths: _*)
-  }
 
   def countLogin(username: String, success: Boolean, ip: Option[String]) {
-    counterFor(username, success).increment()
+    tree.getCompositeCounter(pathFor(username, success)).increment()
     if (ip.isDefined) {
       tree.getCounter(byIpsPath / ip.get / success.toString).increment()
     }
@@ -49,11 +40,11 @@ class SimpleStats(protocol: String, tree: CounterTree) {
   def getSuccessfulLogins(username: String) = tree.getCounter(pathFor(username, success = true)).totalCount
 
   def getFailedLoginAttempts = {
-    tree.findCounter(failedPath).map(_.totalCount).getOrElse(0L)
+    tree.searchCoutners((byLoginPath / "*" / "false").asString).totalCount
   }
 
   def getSuccessfulLogins = {
-    tree.findCounter(successPath).map(_.totalCount).getOrElse(0L)
+    tree.searchCoutners((byLoginPath / "*" / "true").asString).totalCount
   }
 
   def getAllUsers = {
