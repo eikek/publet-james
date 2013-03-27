@@ -66,6 +66,7 @@ import org.eknet.publet.james.mailets.{SimpleMailingListHeaders, PubletSieveMail
 import org.eknet.publet.james.maildir.lib.{JvmLocker, PathLock}
 import org.eknet.publet.james.maildir.{MaildirSessionMapperFactory, MaildirStore, MailboxPathLockerImpl}
 import org.eknet.publet.james.fetchmail.{FetchmailAccounts, FetchmailAccountsMBean, FetchmailScheduler}
+import org.eknet.county.{Granularity, BasicCounterPool, County}
 
 class PubletJamesModule extends AbstractPubletModule with PubletBinding with PubletModule {
 
@@ -179,8 +180,10 @@ class PubletJamesModule extends AbstractPubletModule with PubletBinding with Pub
   }
 
   @Provides@Singleton@Named("connectionCounter")
-  def createCounterTree(): CounterTree = {
-    new CounterTree(5000)
+  def createCounterTree(): County = {
+    val c = County.create()
+    c.counterFactories = List("**" -> new BasicCounterPool(Granularity.Hour))
+    c
   }
 
   // sieve partition

@@ -12,13 +12,14 @@ import org.apache.mailet.{MailetContext, MailAddress}
 import org.eknet.publet.vfs.util.ByteSize
 import org.eknet.publet.james.server.{SmtpBlacklistEvent, SmtpHookEvent, SmtpHandlerEvent}
 import com.google.inject.name.Named
+import org.eknet.county.County
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 10.01.13 13:25
  */
 @Singleton
-class SmtpStatsCollector @Inject() (@Named("connectionCounter") tree: CounterTree) extends SmtpStatsService {
+class SmtpStatsCollector @Inject() (@Named("connectionCounter") tree: County) extends SmtpStatsService {
   import SmtpStats.Keys._
 
   private val stats = new SmtpStats(tree)
@@ -83,7 +84,7 @@ class SmtpStatsCollector @Inject() (@Named("connectionCounter") tree: CounterTre
   }
 
   def reset() {
-    stats.clear()
+    stats.reset()
   }
 
   def getSuccessfulLogins(user: String) = stats.getSuccessfulLogins(user)

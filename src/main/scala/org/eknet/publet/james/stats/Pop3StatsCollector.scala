@@ -24,13 +24,14 @@ import org.apache.james.pop3server.core.PassCmdHandler
 import org.apache.james.protocols.pop3.POP3Response
 import org.eknet.publet.james.server.{Pop3BlacklistEvent, Pop3HandlerEvent}
 import com.google.inject.name.Named
+import org.eknet.county.County
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 01.02.13 20:59
  */
 @Singleton
-class Pop3StatsCollector @Inject() (@Named("connectionCounter") tree: CounterTree) extends LoginStatsService with Logging {
+class Pop3StatsCollector @Inject() (@Named("connectionCounter") tree: County) extends LoginStatsService with Logging {
 
   val stats = new SimpleStats("pop3", tree)
 

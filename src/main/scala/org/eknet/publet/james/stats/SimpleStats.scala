@@ -3,26 +3,22 @@ package org.eknet.publet.james.stats
 import java.util.concurrent.atomic.AtomicLong
 import javax.annotation.concurrent.ThreadSafe
 import org.eknet.publet.vfs.Path
+import org.eknet.county.County
 
 /**
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 10.01.13 15:18
  */
 @ThreadSafe
-class SimpleStats(protocol: String, tree: CounterTree) {
+class SimpleStats(protocol: String, root: County) {
 
-  protected val rootPath = Path(protocol)
-  private val byLoginPath = rootPath / "loginstats" / "bylogin"
-  private val byIpsPath = rootPath / "loginstats" / "byipaddress"
-
+  val county = root("publet-james")(protocol)
   val created = new AtomicLong(System.currentTimeMillis())
 
-  private[this] def pathFor(username: String, success: Boolean) = byLoginPath / username / success.toString
-
   def countLogin(username: String, success: Boolean, ip: Option[String]) {
-    tree.getCompositeCounter(pathFor(username, success)).increment()
+    county("loginstats.byusername")(username)(success.toString).increment()
     if (ip.isDefined) {
-      tree.getCounter(byIpsPath / ip.get / success.toString).increment()
+      county("loginstats.byip")(ip.get.replace('.', '-'))(success.toString).increment()
     }
   }
 
@@ -31,35 +27,36 @@ class SimpleStats(protocol: String, tree: CounterTree) {
   }
 
   def count(key: String, value: Long) {
-    tree.getCounter(rootPath / key).add(value)
+    county(key.replace('.', '-')).add(value)
   }
 
-  def getCount(key: String) = tree.findCounter(rootPath / key).map(_.totalCount).getOrElse(0L)
+  def getCount(key: String) = county(key).totalCount
 
-  def getFailedLogins(username: String) = tree.getCounter(pathFor(username, success = false)).totalCount
-  def getSuccessfulLogins(username: String) = tree.getCounter(pathFor(username, success = true)).totalCount
+  def getFailedLogins(username: String) = county("loginstats.byusername")(username)("false").totalCount
+  def getSuccessfulLogins(username: String) = county("loginstats.byusername")(username)("true").totalCount
 
   def getFailedLoginAttempts = {
-    tree.searchCoutners((byLoginPath / "*" / "false").asString).totalCount
+    county("loginstats.byusername.*.false").totalCount
   }
 
   def getSuccessfulLogins = {
-    tree.searchCoutners((byLoginPath / "*" / "true").asString).totalCount
+    county("loginstats.byusername.*.true").totalCount
   }
 
   def getAllUsers = {
-    tree.getChildren(byLoginPath).toSet
+    county("loginstats.byusername").children.toList.sorted
   }
 
   def getIpAddresses = {
-    tree.getChildren(byIpsPath).toList.sorted
+    county("loginstats.byip").children.map(_.replace('-', '.')).toList.sorted
   }
 
-  def getFailedLoginsByIp(ip: String) = tree.findCounter(byIpsPath / ip / "false").map(_.totalCount).getOrElse(0L)
-  def getSuccessfulLoginsByIp(ip: String) = tree.findCounter(byIpsPath / ip / "true").map(_.totalCount).getOrElse(0L)
+  def getFailedLoginsByIp(ip: String) = county("loginstats.byip")(ip.replace('.', '-'))("false").totalCount
+
+  def getSuccessfulLoginsByIp(ip: String) = county("loginstats.byip")(ip.replace('.', '-'))("true").totalCount
 
   def reset() {
-    tree.removeCounter(rootPath)
+    county.reset()
     created.set(System.currentTimeMillis())
   }
 }

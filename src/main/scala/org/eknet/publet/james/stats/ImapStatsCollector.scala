@@ -8,6 +8,7 @@ import org.apache.james.imap.message.request.{IRAuthenticateRequest, LoginReques
 import org.apache.commons.codec.binary.Base64
 import java.util.Date
 import com.google.inject.name.Named
+import org.eknet.county.County
 
 /**
  * Counts failed and successful logins per user.
@@ -16,7 +17,7 @@ import com.google.inject.name.Named
  * @since 10.01.13 12:55
  */
 @Singleton
-class ImapStatsCollector @Inject()(@Named("connectionCounter") counters: CounterTree) extends LoginStatsService {
+class ImapStatsCollector @Inject()(@Named("connectionCounter") counters: County) extends LoginStatsService {
 
   val stats = new SimpleStats("imap", counters)
 

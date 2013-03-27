@@ -38,6 +38,7 @@ object Version {
   val scue = "0.2.0"
   val james = "3.0-beta5-SNAPSHOT"
   val neoswing = "2.0.0-m1"
+  val county = "0.1.0-SNAPSHOT"
 }
 
 object Dependencies {
@@ -46,6 +47,7 @@ object Dependencies {
   val publetAppDev = "org.eknet.publet" %% "publet-app" % Version.publet  exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
   val publetAppPlugin = publetAppDev % "publet"  exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
   val publetQuartzPlugin = publetQuartz % "publet" exclude("org.restlet.jse", "org.restlet.ext.fileupload") exclude("org.restlet.jse", "org.restlet")
+  val county = "org.eknet.county" %% "county-api" % Version.county
 
   val mail = "javax.mail" % "mail" % "1.4"
 
@@ -200,7 +202,7 @@ object RootBuild extends Build {
 
   )
 
-  val deps = Seq(mail, publetAppPlugin, publetQuartzPlugin) ++ jamesServerAll ++ providedDeps ++ testDeps
+  val deps = Seq(mail, publetAppPlugin, publetQuartzPlugin, county) ++ jamesServerAll ++ providedDeps ++ testDeps
 }
 
 
