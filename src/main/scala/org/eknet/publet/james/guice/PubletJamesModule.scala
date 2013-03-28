@@ -61,7 +61,7 @@ import org.eknet.publet.vfs.fs.FilesystemPartition
 import java.nio.file
 import org.eknet.publet.james.Reflect
 import org.eknet.publet.james.server.{ConnectionBlacklistImpl, ConnectionBlacklist, NotifyingImapProcessor, PubletPop3ServerFactory, PubletImapServerFactory, PubletSmtpServerFactory}
-import org.eknet.publet.james.stats.{CounterTree, ReportJobScheduler, ReportJobMBean, Pop3StatsCollector, ImapStatsCollector, LoginStatsService, SmtpStatsCollector, SmtpStatsService}
+import org.eknet.publet.james.stats.{ReportJobScheduler, ReportJobMBean, Pop3StatsCollector, ImapStatsCollector, LoginStatsService, SmtpStatsCollector, SmtpStatsService}
 import org.eknet.publet.james.mailets.{SimpleMailingListHeaders, PubletSieveMailet, MailPoster, SieveScriptLocator}
 import org.eknet.publet.james.maildir.lib.{JvmLocker, PathLock}
 import org.eknet.publet.james.maildir.{MaildirSessionMapperFactory, MaildirStore, MailboxPathLockerImpl}
