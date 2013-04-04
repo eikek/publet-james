@@ -10,6 +10,16 @@ Required Extensions
 * Extra
 * Publet Quartz
 
+### Provides ...
+
+* POP3, Imap and SMTP Server based on [Apache James](http://james.apache.org) managed
+  via a web interface
+* [Maildir](http://en.wikipedia.org/wiki/Maildir) mail message storage on the local file system
+* Fetchmail; manage remote accounts via web interface
+* online sieve script editor; or edit them offline by using [git](http://git-scm.com/)
+* manage ip blacklist (connection attempts from ips listed in the blacklist are denied)
+* view statistics report
+
 ### Configuration
 
 There are 3 server threads started by default providing the following services
