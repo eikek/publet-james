@@ -42,7 +42,7 @@ class SmtpStatsCollector @Inject() (@Named("connectionCounter") tree: County) ex
     ev.hook match {
       case auth: UsersRepositoryAuthHook => {
         val success = ev.result.getResult == HookReturnCode.OK
-        val login = Option(ev.session.getUser).getOrElse("dummy")
+        val login = Option(ev.session.getUser).filter(!_.isEmpty).getOrElse("<no_user>")
         stats.countLogin(login, success, Some(ev.session.getRemoteAddress.getAddress.getHostAddress))
       }
       case rcpvalid: ValidRcptHandler => {
