@@ -56,7 +56,7 @@ class SimpleStats(protocol: String, root: County) {
   def getSuccessfulLoginsByIp(ip: String) = county("loginstats.byip")(ip.replace('.', '-'))("true").totalCount
 
   def reset() {
-    county.reset()
+    county.remove("*")
     created.set(System.currentTimeMillis())
   }
 }

@@ -38,7 +38,7 @@ object Version {
   val scue = "0.2.0"
   val james = "3.0-beta5-SNAPSHOT"
   val neoswing = "2.0.0-m1"
-  val county = "0.1.0"
+  val county = "0.2.0-SNAPSHOT"
 }
 
 object Dependencies {
