@@ -49,4 +49,11 @@ class MessageNameTest extends FunSuite with ShouldMatchers {
       MessageName(name.fullName) should be (name)
     }
   }
+
+  test ("parse message names from file") {
+    val file = getClass.getResource("/valid-messagenames.txt")
+    scala.io.Source.fromURL(file).getLines() foreach {line =>
+      MessageName(line)
+    }
+  }
 }

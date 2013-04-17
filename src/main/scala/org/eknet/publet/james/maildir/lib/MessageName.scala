@@ -193,8 +193,8 @@ object MessageName extends Logging {
       case x@_ => sys.error("Unknown attribute repetition: " + x)
     }
     private val emptySet = Set[String]()
-    private val flags = opt(":[21],".r ~ opt("[A-Z]+".r))  ^^ {
-      case Some(prefix ~ Some(f)) => (prefix, f.toCharArray.map(_.toString).toSet)
+    private val flags = opt(":[21],".r ~ opt("[a-zA-Z]+".r))  ^^ {
+      case Some(prefix ~ Some(f)) => (prefix, f.toCharArray.map(_.toString.toUpperCase).toSet)
       case Some(prefix ~ _) => (prefix, emptySet)
       case x@_ => ("", emptySet)
     }
