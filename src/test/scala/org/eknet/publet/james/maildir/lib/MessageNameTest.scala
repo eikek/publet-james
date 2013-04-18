@@ -27,13 +27,13 @@ import java.util.concurrent.TimeUnit
 class MessageNameTest extends FunSuite with ShouldMatchers {
 
   val validNames = Map(
-    "1355675651.f3dd564265174501.foohost,S=661:2," -> MessageName(1355675651, "f3dd564265174501", "foohost", Map("S"->"661"), Set(), ":2,"),
-    "1355675588.5c7e107958851103.foohost,S=654:2,S" -> MessageName(1355675588, "5c7e107958851103", "foohost", Map("S" -> "654"), Set("S"), ":2,"),
+    "1355675651.f3dd564265174501.foohost,S=661:2," -> MessageName(1355675651, "f3dd564265174501", "foohost", Map("S"->"661"), Nil, ":2,"),
+    "1355675588.5c7e107958851103.foohost,S=654:2,S" -> MessageName(1355675588, "5c7e107958851103", "foohost", Map("S" -> "654"), List("S"), ":2,"),
     "1355543030.15049_0.foo.org" -> MessageName(1355543030, "15049_0", "foo.org"),
-    "1106685752.12132_0.km1111:2,FRS" -> MessageName(1106685752, "12132_0", "km1111", Map(), Set("F", "R", "S"), ":2,"),
-    "1334580646.8700_0.km11111:2,S" -> MessageName(1334580646, "8700_0", "km11111", Map(), Set("S"), ":2,"),
-    "1356958317.V902I69c70fM941470.km20731:2," -> MessageName(1356958317, "V902I69c70fM941470", "km20731", Map(), Set(), ":2,"),
-    "1285145964.M884771P11730V0000000000000902I0066C039_2.blups.org,S=2848:2,S" -> MessageName(1285145964, "M884771P11730V0000000000000902I0066C039_2", "blups.org", Map("S"->"2848"), Set("S"), ":2,")
+    "1106685752.12132_0.km1111:2,FRS" -> MessageName(1106685752, "12132_0", "km1111", Map(), List("F", "R", "S"), ":2,"),
+    "1334580646.8700_0.km11111:2,S" -> MessageName(1334580646, "8700_0", "km11111", Map(), List("S"), ":2,"),
+    "1356958317.V902I69c70fM941470.km20731:2," -> MessageName(1356958317, "V902I69c70fM941470", "km20731", Map(), Nil, ":2,"),
+    "1285145964.M884771P11730V0000000000000902I0066C039_2.blups.org,S=2848:2,S" -> MessageName(1285145964, "M884771P11730V0000000000000902I0066C039_2", "blups.org", Map("S"->"2848"), List("S"), ":2,")
   )
 
   test ("Valid message file names") {
@@ -53,7 +53,21 @@ class MessageNameTest extends FunSuite with ShouldMatchers {
   test ("parse message names from file") {
     val file = getClass.getResource("/valid-messagenames.txt")
     scala.io.Source.fromURL(file).getLines() foreach {line =>
-      MessageName(line)
+      val mn = MessageName(line)
+      mn.fullName should be (line)
     }
+  }
+
+  test ("dont add flags twice") {
+    val mn = validNames("1355675588.5c7e107958851103.foohost,S=654:2,S")
+    mn.flags should have size (1)
+    mn.withFlagSeen.flags should have size (1)
+  }
+
+  test ("read attributes in correct order") {
+    val mn = MessageName("1355675588.5c7e107958851103.foohost,T=1,H=2,S=654:2,S")
+    mn.attributes.size should be (3)
+    val keys = for (kv <- mn.attributes) yield kv._1
+    keys.toList should be (List("T", "H", "S"))
   }
 }

@@ -38,8 +38,19 @@ final case class MessageName(time: Long,
                              unique: String,
                              host: String,
                              attributes: Map[String, String] = Map(),
-                             flags: Set[String] = Set(),
+                             flags: List[String] = Nil,
                              flagPrefix: String = "") {
+
+  private class ListHelp[A](list: List[A]) {
+    def <<+ (el: A) = {
+      if (!list.contains(el)) {
+        list ::: List(el)
+      } else {
+        list
+      }
+    }
+  }
+  private implicit def toListHelp(list:List[String])= new ListHelp(list)
 
   lazy val baseName = {
     val buf = new StringBuilder
@@ -70,17 +81,17 @@ final case class MessageName(time: Long,
     buf.toString()
   }
 
-  def withFlagDeleted = copy(flags = this.flags + "T")
-  def withFlagSeen = copy(flags = this.flags + "S")
-  def withFlagDraft = copy(flags = this.flags + "D")
-  def withFlagFlagged = copy(flags = this.flags + "F")
-  def withFlagAnswered = copy(flags = this.flags + "R")
+  def withFlagDeleted = copy(flags = this.flags <<+ "T")
+  def withFlagSeen = copy(flags = this.flags <<+ "S")
+  def withFlagDraft = copy(flags = this.flags <<+ "D")
+  def withFlagFlagged = copy(flags = this.flags <<+ "F")
+  def withFlagAnswered = copy(flags = this.flags <<+ "R")
 
   def withFlags(flags: Flags) = {
     import collection.JavaConversions._
     val set = (for (t <- MessageName.flagBiMap) yield {
       if (flags.contains(t._1)) Some(t._2) else None
-    }).flatten.toSet
+    }).flatten.toSet.toList
     copy(flags = set)
   }
 
@@ -96,7 +107,7 @@ final case class MessageName(time: Long,
    *
    * @return
    */
-  def toRecent = copy(flags = Set())
+  def toRecent = copy(flags = Nil)
 
   def getFlags: Flags = {
     val flags = new mail.Flags()
@@ -133,7 +144,7 @@ object MessageName extends Logging {
       UUID.randomUUID().toString.replaceAll("-", "") +"-"+ vmpid,
       hostname.getOrElse(InetAddress.getLocalHost.getHostName),
       size.filter(_ > 0).map(sz => Map("S"->sz.toString)).getOrElse(Map()),
-      Set(),
+      Nil,
       size.filter(_ > 0).map(s=>prefix).getOrElse("")
     )
   }
@@ -173,7 +184,7 @@ object MessageName extends Logging {
 
     def messageName = timestamp ~ "." ~ clientUnique ~ "." ~ hostname ~ attributes ~ flags ^^ {
       case (ts ~ "." ~ uniq ~ "." ~ host ~ attrMap ~ flag) => {
-        new MessageName(ts, uniq, host, attrMap, flag._2, flag._1)
+        new MessageName(ts, uniq, host, attrMap.toMap, flag._2, flag._1)
       }
       case x@_ => sys.error("Wrong message name: "+ x)
     }
@@ -187,16 +198,17 @@ object MessageName extends Logging {
       case k ~ "=" ~ v => (k ,v)
       case _ => sys.error("Wrong key-value value")
     }
+    private def newMap = new mutable.LinkedHashMap[String, String]()
+
     private val attributes = opt("," ~ repsep(keyValue, ",")) ^^ {
-      case Some(s ~ kv) => Map[String, String]() ++ kv
+      case Some(s ~ kv) => newMap ++ kv
       case None => Map[String, String]()
       case x@_ => sys.error("Unknown attribute repetition: " + x)
     }
-    private val emptySet = Set[String]()
     private val flags = opt(":[21],".r ~ opt("[a-zA-Z]+".r))  ^^ {
-      case Some(prefix ~ Some(f)) => (prefix, f.toCharArray.map(_.toString.toUpperCase).toSet)
-      case Some(prefix ~ _) => (prefix, emptySet)
-      case x@_ => ("", emptySet)
+      case Some(prefix ~ Some(f)) => (prefix, f.toCharArray.map(_.toString).toList)
+      case Some(prefix ~ _) => (prefix, Nil)
+      case x@_ => ("", Nil)
     }
   }
 }
