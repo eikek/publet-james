@@ -24,6 +24,6 @@ import org.apache.james.mailbox.model.MailboxPath
  * @author Eike Kettner eike.kettner@gmail.com
  * @since 14.01.13 20:31
  */
-class MaildirMailbox[Id](maildir: Maildir, path: MailboxPath) extends SimpleMailbox[Id](path, maildir.uidlist.getUidValidity) {
+class MaildirMailbox[Id](val maildir: Maildir, val path: MailboxPath) extends SimpleMailbox[Id](path, maildir.uidlist.getUidValidity) {
 
 }

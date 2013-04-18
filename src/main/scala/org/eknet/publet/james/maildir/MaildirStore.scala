@@ -62,7 +62,11 @@ class MaildirStore(maildirLocation: String, lock: PathLock[Path]) {
       getInbox(user)
     }
     else {
-      getInbox(user).resolve(stripInbox(name))
+      //some imap servers store INBOX.bla and .bla
+      getInbox(user).resolve(stripInbox(name)) match {
+        case box if (box.exists) => box
+        case box => getInbox(user).resolve(name)
+      }
     }
   }
 

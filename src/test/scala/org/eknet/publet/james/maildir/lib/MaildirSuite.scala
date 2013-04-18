@@ -16,11 +16,11 @@
 
 package org.eknet.publet.james.maildir.lib
 
-import org.scalatest.{BeforeAndAfterEach, BeforeAndAfter, FunSuite}
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.matchers.ShouldMatchers
 import java.nio.file.{Files, Paths}
 import java.util.UUID
-import org.eknet.publet.james.maildir.{MaildirMessage, MessageProvider}
+import org.eknet.publet.james.maildir.MessageProvider
 import javax.mail.Flags
 
 /**
@@ -56,7 +56,7 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
     flags.add(Flags.Flag.ANSWERED)
     val added3 = inbox.setFlags(added2, flags)
     inbox.isCurrent(added3.name) should be (true)
-    added3.name.flags should be (Set("R", "S"))
+    added3.name.flags should be (List("R", "S"))
   }
 
   test ("put and delete message") {
@@ -255,5 +255,21 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
     maildir.exists should be (false)
     Files.exists(maildir.folder) should be (true)
     maildir.folder.deleteTree()
+  }
+
+  test ("Maildir names with whitespace") {
+    val maildir = new Maildir(Paths.get(UUID.randomUUID().toString))
+    maildir.create()
+    val folder = maildir.folder
+    val subdir1 = folder.resolve(".Testbox1")
+    val subdir2 = folder.resolve(".Test box2")
+    val subdir3 = folder.resolve(".INBOX.Testbox3")
+    val subdir4 = folder.resolve(".INBOX.Test box 4")
+    List(subdir1, subdir2, subdir3, subdir4).foreach(_.createDirectories)
+    List(subdir1, subdir2, subdir3, subdir4).foreach(d => new Maildir(d).create())
+
+    maildir.listChildren(true).toList should have size (5)
+    maildir.listChildren(false).toList should have size (3)
+    folder.deleteTree()
   }
 }

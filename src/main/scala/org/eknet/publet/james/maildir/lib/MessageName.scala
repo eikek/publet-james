@@ -129,11 +129,11 @@ object MessageName extends Logging {
 
   private val flagBiMap = {
     val map: HashBiMap[Flags.Flag, String] = HashBiMap.create()
-    map.put(Flags.Flag.ANSWERED, "R")
-    map.put(Flags.Flag.DELETED , "T")
     map.put(Flags.Flag.DRAFT, "D")
     map.put(Flags.Flag.FLAGGED, "F")
+    map.put(Flags.Flag.ANSWERED, "R")
     map.put(Flags.Flag.SEEN, "S")
+    map.put(Flags.Flag.DELETED , "T")
     map
   }
 
