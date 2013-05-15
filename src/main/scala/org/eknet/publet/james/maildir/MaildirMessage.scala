@@ -51,7 +51,7 @@ class MaildirMessage(mailboxId: Int, var uid: Long, val name: MessageName, val f
     flags
   })
 
-  def getInternalDate = new Date(name.time)
+  def getInternalDate = new Date(name.time * 1000)
 
   def getMailboxId = mailboxId
 

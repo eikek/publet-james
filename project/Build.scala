@@ -25,6 +25,7 @@ object Resolvers {
   val eknet = "eknet.org" at "https://eknet.org/maven2"
   val milton = "milton.io" at "http://milton.io/maven"
   val apacheSnapshots = "apache-snapshots" at "https://repository.apache.org/content/repositories/snapshots/"
+  val localMaven = "Local Maven Repository" at "file:///" + Path.userHome + "/.m2/repository"
 }
 object Version {
   val bouncyCastle = "1.46"
@@ -51,7 +52,7 @@ object Dependencies {
 
   val mail = "javax.mail" % "mail" % "1.4"
 
-  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james excludeAll (
+  def jamesServer(str: String) = "org.apache.james" % ("james-server-"+ str) % Version.james withSources() excludeAll (
     ExclusionRule("commons-logging", "commons-logging"),
     ExclusionRule("commons-logging", "commons-logging-api"),
     ExclusionRule("ch.qos.logback", "logback-classic"),
@@ -191,7 +192,7 @@ object RootBuild extends Build {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     pomIncludeRepository := (_ => false),
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
-    resolvers ++= Seq(Resolvers.eknet, Resolvers.milton, Resolvers.apacheSnapshots),
+    resolvers ++= Seq(Resolvers.localMaven, Resolvers.eknet, Resolvers.milton, Resolvers.apacheSnapshots),
     licenses := Seq(("ASL2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
     scmInfo := Some(ScmInfo(new URL("https://eknet.org/gitr/?r=eike/publet-james.git"), "scm:git:https://eknet.org/git/eike/publet-james.git")),
    
