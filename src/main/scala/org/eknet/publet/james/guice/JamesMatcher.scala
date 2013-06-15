@@ -28,7 +28,11 @@ object JamesMatcher extends AbstractMatcher[TypeLiteral[_]] {
   private val jamesPackage = Matchers.inSubpackage("org.apache.james")
   private val eknetJamesPackage = Matchers.inSubpackage("org.eknet.publet.james")
 
-  def matches(t: TypeLiteral[_]) =
-    jamesPackage.matches(t.getRawType) || eknetJamesPackage.matches(t.getRawType)
+  def matches(t: TypeLiteral[_]) = {
+    val rt = t.getRawType
+    rt.getPackage != null && ( //for pakcage-less classes this yields in a NPE in guice Matcher@344
+      jamesPackage.matches(rt) || eknetJamesPackage.matches(rt)
+    )
+  }
 
 }
