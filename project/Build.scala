@@ -39,7 +39,7 @@ object Version {
   val scue = "0.2.0"
   val james = "3.0-beta5-SNAPSHOT"
   val neoswing = "2.0.0-m1"
-  val county = "0.2.0-SNAPSHOT"
+  val county = "0.2.0"
 }
 
 object Dependencies {
@@ -183,7 +183,7 @@ object RootBuild extends Build {
   ) ++ PubletPlugin.publetSettings
 
   override lazy val settings = super.settings ++ Seq(
-    version := "0.2.0-SNAPSHOT",
+    version := "0.2.0",
     organization := "org.eknet.publet.james",
     scalaVersion := Version.scala,
     exportJars := true,
