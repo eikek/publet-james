@@ -92,7 +92,8 @@ final case class MessageName(time: Long,
     val set = (for (t <- MessageName.flagBiMap) yield {
       if (flags.contains(t._1)) Some(t._2) else None
     }).flatten.toSet.toList
-    copy(flags = set)
+    // "Flags must be stored in ASCII order: e.g., '2,FRS'": http://cr.yp.to/proto/maildir.html
+    copy(flags = set.sorted)
   }
 
   /**

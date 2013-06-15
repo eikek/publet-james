@@ -56,6 +56,7 @@ class MaildirSuite extends FunSuite with ShouldMatchers with BeforeAndAfterEach 
     flags.add(Flags.Flag.ANSWERED)
     val added3 = inbox.setFlags(added2, flags)
     inbox.isCurrent(added3.name) should be (true)
+    // "Flags must be stored in ASCII order: e.g., '2,FRS'": http://cr.yp.to/proto/maildir.html
     added3.name.flags should be (List("R", "S"))
   }
 
